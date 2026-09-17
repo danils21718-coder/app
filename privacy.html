@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Политика конфиденциальности — Only Today Sober</title>
+<style>
+  :root{
+    --bg:#08130F; --card:#0E1D17; --line:#1E3329;
+    --text:#E8F0EC; --soft:#B9C9C1; --muted:#8AA096; --accent:#3FD18A;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font:400 17px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    padding:0 18px 64px;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+  .nav{position:sticky;top:0;background:var(--bg);padding:16px 0 12px;border-bottom:1px solid var(--line);margin-bottom:26px}
+  .nav a{color:var(--accent);text-decoration:none;font-weight:700;font-size:15px;margin-right:18px}
+  h1{font-size:27px;line-height:1.25;margin:28px 0 18px}
+  h2{font-size:19px;line-height:1.35;margin:34px 0 12px;color:var(--text)}
+  p{margin:0 0 14px;color:var(--soft)}
+  ul{margin:0 0 16px;padding-left:22px;color:var(--soft)}
+  li{margin-bottom:7px}
+  strong{color:var(--text)}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:0 0 18px}
+  .box p:last-child{margin-bottom:0}
+  .warn{border-color:#5C3B2E;background:#1A1310}
+  .tablewrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 0 20px}
+  table{border-collapse:collapse;width:100%;min-width:520px;font-size:14.5px}
+  th,td{border:1px solid var(--line);padding:9px 11px;text-align:left;vertical-align:top;color:var(--soft)}
+  th{background:var(--card);color:var(--text);font-weight:700}
+  hr{border:none;border-top:1px solid var(--line);margin:46px 0}
+  .meta{color:var(--muted);font-size:15px;margin-bottom:6px}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="nav"><a href="#ru">Русский</a><a href="#en">English</a></div>
+
+<h1 id="ru">Политика конфиденциальности</h1>
+
+<p class="meta">Приложение: <strong>Only Today Sober</strong> («Только сегодня я в воздержании»)</p>
+<p class="meta">Дата вступления в силу: <strong>10.09.2026</strong></p>
+<p class="meta">Оператор данных: <strong>ИП «Forward»</strong></p>
+<p class="meta">Контакт: <strong>forwip7@gmail.com</strong></p>
+
+<div class="box">
+<p><strong>Коротко.</strong> Аккаунта нет. Всё хранится на телефоне. Когда вы пишете ИИ-наставнику, вместе с сообщением уходит контекст о вас (в том числе выдержки из дневника и ответов на задания), чтобы ответ был по делу. Мы его не сохраняем. Рекламы в приложении сейчас нет.</p>
+</div>
+
+<div class="box warn">
+<p><strong>Важно о здоровье.</strong> Only Today Sober не является медицинским устройством и не диагностирует, не лечит, не исцеляет и не предотвращает какие-либо заболевания. Приложение не оказывает медицинскую помощь и не заменяет врача, психотерапевта или наркологическую службу. Ответы ИИ-наставника — это поддержка и самопомощь, а не диагноз, лечение или клиническая рекомендация. За медицинской консультацией, диагнозом и лечением обращайтесь к врачу или другому специалисту здравоохранения.</p>
+<p>Если вы в кризисе — мысли о самоубийстве, тяжёлая абстиненция, угроза для вашей жизни или жизни других — немедленно обратитесь в экстренные службы (в Казахстане 103 или 112) либо к живому специалисту. Не ждите ответа приложения.</p>
+</div>
+
+<h2>1. Что хранится только на вашем устройстве</h2>
+<p>Регистрации и аккаунтов в приложении нет. Мы не создаём профиль. Следующие данные вы вводите сами, они хранятся локально в памяти приложения (localStorage) на вашем телефоне. Постоянно на наших серверах они не хранятся; что из них и когда уходит наружу, описано в разделе 2:</p>
+<ul>
+<li>имя или ник, который вы указали;</li>
+<li>пол;</li>
+<li>тип зависимости;</li>
+<li>дата начала воздержания и посчитанный по ней срок;</li>
+<li>записи дневника чувств;</li>
+<li>ответы на задания;</li>
+<li>план дня.</li>
+</ul>
+<p>Мы не видим этих записей. Мы не можем их восстановить, экспортировать или удалить за вас — доступ есть только у того, кто держит телефон в руках. Если вы удалите приложение или очистите его данные, записи исчезнут безвозвратно.</p>
+
+<h2>2. Что уходит за пределы устройства</h2>
+<p>Наружу данные уходят в двух случаях: чат с ИИ-наставником и покупка подписки. Когда вы отправляете сообщение наставнику:</p>
+<ul>
+<li>текст вашего сообщения идёт через наш сервер-посредник (Supabase Edge Functions) в API языковой модели DeepSeek, которая формирует ответ;</li>
+<li>вместе с сообщением передаётся контекст, чтобы ответ был по делу: возраст, срок воздержания, тип зависимости, ответы стартовой анкеты, ваше «зачем», пройденные задания и ваши ответы в них, выдержки из дневника чувств (в режиме разбора дневника — записи целиком), при разборе плана дня — сам план;</li>
+<li>для защиты от злоупотреблений сервер учитывает случайный идентификатор установки и IP-адрес: только счётчик сообщений за день, без содержания; счётчики удаляются через 3 дня;</li>
+<li>обратно приходит ответ модели, который вы видите в чате.</li>
+</ul>
+<p>Переписка не привязана к личности: аккаунта нет, телефон, e-mail, паспортные и платёжные данные мы не запрашиваем и не передаём. Обратите внимание: имя вы указываете сами, поэтому если вы напишете настоящее имя или подробности, по которым вас можно узнать, они уйдут в модель вместе с сообщением. Рекомендуем использовать ник и не писать в чат данные других людей.</p>
+
+<h2>3. Категории данных и зачем они нужны</h2>
+<div class="tablewrap">
+<table>
+<tr><th>Данные</th><th>Зачем</th><th>Где</th></tr>
+<tr><td>Имя/ник, пол, тип зависимости</td><td>Персонализация интерфейса и содержательные ответы наставника</td><td>Устройство; имя и тип зависимости также в запросе к DeepSeek</td></tr>
+<tr><td>Дата начала воздержания</td><td>Счётчик срока, мотивация, содержание заданий</td><td>Устройство; срок в запросе к DeepSeek</td></tr>
+<tr><td>Дневник чувств, ответы на задания, «зачем», план дня</td><td>Самонаблюдение, работа над собой, содержательные ответы наставника</td><td>Устройство; выдержки — в запросе к DeepSeek при каждом сообщении наставнику</td></tr>
+<tr><td>Случайный ID установки, IP-адрес</td><td>Дневной лимит сообщений, защита от злоупотреблений</td><td>Supabase, только счётчики, до 3 дней</td></tr>
+<tr><td>Данные о покупке</td><td>Выдача и восстановление подписки</td><td>Google Play, RevenueCat</td></tr>
+<tr><td>Текст сообщений в чате</td><td>Генерация ответа ИИ-наставника</td><td>Передаётся в DeepSeek через Supabase</td></tr>
+<tr><td>Диалог, на который вы пожаловались</td><td>Проверка качества и безопасности ответа</td><td>Передаётся нам по вашей инициативе</td></tr>
+</table>
+</div>
+<p>Мы не ведём аналитику поведения, не строим профилей, не отслеживаем вас между приложениями и не продаём данные третьим лицам.</p>
+
+<h2>4. Реклама и подписки</h2>
+<p><strong>Реклама.</strong> Сейчас в приложении нет рекламы, и мы не собираем рекламный идентификатор. Если реклама появится, мы заранее обновим эту политику и сообщим об этом в приложении.</p>
+<p><strong>Подписки.</strong> Оплата проходит через Google Play, мы не видим и не храним данные карты. Для учёта подписки используется сервис RevenueCat: он получает анонимный идентификатор покупателя и сведения о покупке. Отменить подписку можно в Google Play → Платежи и подписки.</p>
+
+<h2>5. Модерация</h2>
+<p>В чате есть возможность пожаловаться на ответ ИИ. Если вы ею воспользуетесь, конкретный диалог (ваши сообщения и ответы модели в этой переписке) передаётся нам, и его просматривает модератор — чтобы понять, что пошло не так, и исправить поведение наставника. Просмотр происходит только по вашей жалобе. Такой диалог хранится до 90 дней с момента обращения, после чего удаляется; если разбор завершается раньше, диалог удаляется сразу после его завершения.</p>
+
+<h2>6. Правовые основания (GDPR)</h2>
+<ul>
+<li><strong>Согласие</strong> (ст. 6(1)(a) и, поскольку тип зависимости относится к данным о здоровье, ст. 9(2)(a) GDPR) — вы сами вводите данные и сами отправляете сообщения в чат. Согласие можно отозвать в любой момент: прекратите пользоваться чатом и очистите данные приложения.</li>
+<li><strong>Исполнение договора</strong> (ст. 6(1)(b)) — предоставление функций приложения.</li>
+<li><strong>Законный интерес</strong> (ст. 6(1)(f)) — рассмотрение вашей жалобы на ответ ИИ, безопасность приложения и защита от злоупотреблений.</li>
+</ul>
+<p>По законодательству Республики Казахстан о персональных данных и их защите обработка данных, которые вы вводите и отправляете, ведётся на основании вашего согласия и в объёме, необходимом для работы заявленных функций. Согласие даётся при использовании соответствующей функции и отзывается прекращением её использования и очисткой данных приложения; запрос по обработке можно направить на forwip7@gmail.com.</p>
+
+<h2>7. Сроки хранения и удаление</h2>
+<ul>
+<li><strong>На устройстве</strong> — данные хранятся, пока вы их не удалите. Удаление: Настройки Android → Приложения → Only Today Sober → Хранилище → Очистить данные, либо удалите приложение. Это стирает всё: имя, дневник, задания, срок воздержания, историю чата на устройстве.</li>
+<li><strong>Наш сервер-посредник</strong> — сообщения проходят транзитом и не сохраняются нами в постоянном хранилище. Технические журналы (без содержания сообщений) хранятся до 30 дней.</li>
+<li><strong>DeepSeek</strong> — срок хранения запросов определяется правилами DeepSeek как поставщика API.</li>
+<li><strong>Диалоги по жалобам</strong> — до 90 дней (см. раздел 5).</li>
+</ul>
+
+<h2>8. Передача третьим лицам</h2>
+<div class="tablewrap">
+<table>
+<tr><th>Получатель</th><th>Что получает</th><th>Роль</th></tr>
+<tr><td>DeepSeek</td><td>Текст сообщений в чате и контекст (раздел 2)</td><td>Обработчик: генерация ответов модели</td></tr>
+<tr><td>Supabase</td><td>Те же данные транзитом; технические журналы; дневные счётчики сообщений (ID установки, IP)</td><td>Обработчик: хостинг сервера-посредника</td></tr>
+<tr><td>RevenueCat</td><td>Анонимный ID покупателя, сведения о покупке</td><td>Обработчик: учёт подписок</td></tr>
+<tr><td>Netlify</td><td>Технические журналы обращений к сайту приложения (включая IP-адрес)</td><td>Обработчик: хостинг веб-части приложения</td></tr>
+<tr><td>Google (распространение через Play)</td><td>Технические данные, необходимые для установки и обновления приложения</td><td>Магазин приложений</td></tr>
+</table>
+</div>
+<p>Других получателей нет. Мы не продаём и не передаём данные брокерам данных. Данные могут быть раскрыты только по обязательному законному требованию уполномоченного органа.</p>
+
+<h2>9. Международная передача</h2>
+<p>Указанные сервисы находятся за пределами Казахстана и Европейской экономической зоны: инфраструктура DeepSeek расположена в Китайской Народной Республике, Supabase, Netlify и Google — в США и других странах. Это значит, что ваши сообщения в чате пересекают границу. Для передач из ЕЭЗ мы опираемся на стандартные договорные условия ЕС с поставщиками и на ваше явное согласие (ст. 49(1)(a) GDPR) при отправке сообщения. Для передач из Казахстана — на ваше согласие. Уровень защиты данных в стране получателя может отличаться от местного. Если это для вас неприемлемо, не пользуйтесь функцией чата: остальные функции работают полностью на устройстве.</p>
+
+<h2>10. Ваши права</h2>
+<p>Вы вправе: получить доступ к своим данным, исправить их, удалить, ограничить обработку или возразить против неё, забрать данные в переносимом виде, отозвать согласие и подать жалобу в надзорный орган по защите данных.</p>
+<p>Практическая сторона: большинство ваших данных находится физически у вас, поэтому доступ и удаление вы выполняете сами в приложении и настройках телефона — это быстрее любого запроса. По данным, которые есть у нас (диалог из жалобы), напишите на forwip7@gmail.com. Мы отвечаем в течение 30 дней. Так как аккаунтов нет, для поиска диалога по жалобе может потребоваться указать примерную дату и содержание обращения.</p>
+
+<h2>11. Данные детей</h2>
+<p>Приложение не предназначено для лиц младше 18 лет. Мы сознательно не собираем данные детей. Если вам меньше 18 лет, не пользуйтесь приложением. Если вы родитель или опекун и считаете, что ребёнок отправлял нам данные, напишите на forwip7@gmail.com — мы удалим то, что у нас есть; локальные записи удаляются очисткой данных приложения на телефоне.</p>
+
+<h2>12. Безопасность</h2>
+<p>Обмен с сервером-посредником и API модели идёт по HTTPS. Ключи доступа к API хранятся на сервере и не попадают в приложение. Основная мера защиты — сама архитектура: мы не собираем то, что не нужно. Данные на устройстве защищены средствами вашего телефона, поэтому используйте блокировку экрана.</p>
+
+<h2>13. Изменения политики</h2>
+<p>Мы можем обновлять этот документ. Актуальная версия всегда находится по этому адресу, дата вступления в силу указана в начале. О существенных изменениях — например, о новых получателях данных или новых категориях сбора — мы сообщим в приложении до вступления изменений в силу. Продолжение использования после этого означает согласие с обновлённой политикой.</p>
+
+<h2>14. Связь с нами</h2>
+<p>ИП «Forward», forwip7@gmail.com, Республика Казахстан, г. Экибастуз, ул. Машхур Жусупа, 31.</p>
+
+<h2>Приложение: соответствие анкете Data Safety</h2>
+<p>Эта таблица приведена, чтобы объявления в Google Play Console совпадали с текстом политики.</p>
+<div class="tablewrap">
+<table>
+<tr><th>Тип данных</th><th>Собирается</th><th>Передаётся</th><th>Цель</th></tr>
+<tr><td>Имя</td><td>Да (в чате)</td><td>Да — DeepSeek</td><td>Функциональность приложения</td></tr>
+<tr><td>Данные о здоровье (тип зависимости)</td><td>Да (в чате)</td><td>Да — DeepSeek</td><td>Функциональность приложения</td></tr>
+<tr><td>Сообщения в чате (другой контент, созданный пользователем)</td><td>Да</td><td>Да — DeepSeek</td><td>Функциональность приложения</td></tr>
+<tr><td>Дневник, задания, план дня, дата воздержания</td><td>Нет — только на устройстве</td><td>Нет</td><td>—</td></tr>
+<tr><td>Идентификаторы (рекламный ID)</td><td>Нет</td><td>Нет</td><td>—</td></tr>
+<tr><td>История покупок / подписка</td><td>Нет</td><td>Нет</td><td>—</td></tr>
+<tr><td>Платёжные данные</td><td>Нет</td><td>Нет</td><td>—</td></tr>
+<tr><td>Точное местоположение, контакты, файлы, фото</td><td>Нет</td><td>Нет</td><td>—</td></tr>
+</table>
+</div>
+<p>Шифрование при передаче: да. Удаление данных: пользователь удаляет данные самостоятельно через очистку данных приложения; по данным, находящимся у нас, — запрос на forwip7@gmail.com.</p>
+
+<hr>
+
+<h1 id="en">Privacy Policy</h1>
+
+<p class="meta">App: <strong>Only Today Sober</strong></p>
+<p class="meta">Effective date: <strong>10.09.2026</strong></p>
+<p class="meta">Data controller: <strong>Forward IP</strong></p>
+<p class="meta">Contact: <strong>forwip7@gmail.com</strong></p>
+
+<div class="box">
+<p><strong>In short.</strong> There are no accounts. Everything is stored on your phone. When you write to the AI mentor, context about you (including excerpts from your diary and task answers) is sent with your message so the reply is relevant. We do not store it. The app currently shows no ads.</p>
+</div>
+
+<div class="box warn">
+<p><strong>Important health notice.</strong> Only Today Sober is not a medical device and does not diagnose, treat, cure, or prevent any medical condition. This app does not provide medical care and does not replace a doctor, therapist or addiction service. The AI mentor's replies are support and self-help, not a diagnosis, treatment or clinical recommendation. For medical advice, diagnosis or treatment consult a doctor or another healthcare professional.</p>
+<p>If you are in crisis — suicidal thoughts, severe withdrawal, a threat to your life or the life of others — contact emergency services immediately (in Kazakhstan 103 or 112) or a human professional. Do not wait for the app to reply.</p>
+</div>
+
+<h2>1. Stored only on your device</h2>
+<p>There is no registration and no account. We do not create a profile for you. The following data is entered by you and stored locally (localStorage) on your phone. It is not permanently stored on our servers; what is sent out and when is described in section 2: your name or nickname, gender, type of addiction, the start date of your abstinence and the resulting count, feelings diary entries, task answers, and your day plan.</p>
+<p>We cannot see, restore, export or delete these records for you — only the person holding the phone has access. Deleting the app or clearing its data erases them permanently.</p>
+
+<h2>2. What leaves your device</h2>
+<p>Data leaves your device in two cases: the AI mentor chat and subscription purchases. When you send a message to the mentor, the text goes through our proxy server (Supabase Edge Functions) to the DeepSeek language model API, which generates the reply. Context is sent along with it so the reply is relevant: age, abstinence period, addiction type, onboarding survey answers, your "why", completed tasks and your answers in them, and excerpts from your feelings diary (the full diary in diary-review mode; the plan itself in day-plan review). To prevent abuse, the server counts daily messages per random install ID and IP address — counters only, no content, deleted after 3 days. The model's reply comes back and is shown in the chat.</p>
+<p>The conversation is not linked to an identity: there is no account, and we do not request or transmit your phone number, e-mail, identity documents or payment details. Note that you choose the name yourself — if you enter your real name or identifying details, they will be sent to the model along with your message. We recommend using a nickname and not writing other people's data in the chat.</p>
+
+<h2>3. Data categories and purposes</h2>
+<div class="tablewrap">
+<table>
+<tr><th>Data</th><th>Purpose</th><th>Where</th></tr>
+<tr><td>Name/nickname, gender, type of addiction</td><td>Interface personalisation and relevant mentor replies</td><td>Device; name and addiction type also sent to DeepSeek</td></tr>
+<tr><td>Abstinence start date</td><td>Counter, motivation, task content</td><td>Device; period sent to DeepSeek</td></tr>
+<tr><td>Feelings diary, task answers, "why", day plan</td><td>Self-observation, personal work, relevant mentor replies</td><td>Device; excerpts sent to DeepSeek with each mentor message</td></tr>
+<tr><td>Random install ID, IP address</td><td>Daily message limit, abuse prevention</td><td>Supabase, counters only, up to 3 days</td></tr>
+<tr><td>Purchase data</td><td>Granting and restoring subscriptions</td><td>Google Play, RevenueCat</td></tr>
+<tr><td>Chat messages</td><td>Generating the AI mentor's reply</td><td>Sent to DeepSeek via Supabase</td></tr>
+<tr><td>A conversation you reported</td><td>Quality and safety review</td><td>Sent to us at your initiative</td></tr>
+</table>
+</div>
+<p>We do not run behavioural analytics, do not build profiles, do not track you across apps and do not sell data to third parties.</p>
+
+<h2>4. Advertising and subscriptions</h2>
+<p><strong>Ads.</strong> The app currently contains no advertising and we do not collect an advertising identifier. If ads are added, we will update this policy and announce it in the app beforehand.</p>
+<p><strong>Subscriptions.</strong> Payments are processed by Google Play; we never see or store card details. Subscriptions are tracked via RevenueCat, which receives an anonymous customer ID and purchase details. You can cancel in Google Play → Payments & subscriptions.</p>
+
+<h2>5. Moderation</h2>
+<p>You can report an AI reply from within the chat. If you do, that specific conversation (your messages and the model's replies in it) is sent to us and reviewed by a moderator, in order to understand what went wrong and correct the mentor's behaviour. Review happens only on your report. Such a conversation is kept for up to 90 days from the report and then deleted; if the review finishes sooner, it is deleted immediately afterwards.</p>
+
+<h2>6. Legal bases (GDPR)</h2>
+<ul>
+<li><strong>Consent</strong> (Art. 6(1)(a) and, as addiction type is health data, Art. 9(2)(a) GDPR) — you enter the data and send the messages yourself. Consent can be withdrawn at any time by stopping use of the chat and clearing app data.</li>
+<li><strong>Performance of a contract</strong> (Art. 6(1)(b)) — providing app features.</li>
+<li><strong>Legitimate interest</strong> (Art. 6(1)(f)) — reviewing your report about an AI reply, app security and abuse prevention.</li>
+</ul>
+<p>Under the personal data legislation of the Republic of Kazakhstan, the data you enter and send is processed on the basis of your consent and only to the extent necessary for the stated features.</p>
+
+<h2>7. Retention and deletion</h2>
+<ul>
+<li><strong>On your device</strong> — kept until you delete it: Android Settings → Apps → Only Today Sober → Storage → Clear data, or uninstall the app.</li>
+<li><strong>Our proxy server</strong> — messages pass through in transit and are not stored by us in permanent storage. Technical logs (without message content) are kept for up to 30 days.</li>
+<li><strong>DeepSeek</strong> — retention is governed by DeepSeek's own API terms.</li>
+<li><strong>Reported conversations</strong> — up to 90 days (see section 5).</li>
+</ul>
+
+<h2>8. Third parties</h2>
+<div class="tablewrap">
+<table>
+<tr><th>Recipient</th><th>Receives</th><th>Role</th></tr>
+<tr><td>DeepSeek</td><td>Chat message text and context (section 2)</td><td>Processor: generating model replies</td></tr>
+<tr><td>Supabase</td><td>The same data in transit; technical logs; daily message counters (install ID, IP)</td><td>Processor: hosting the proxy server</td></tr>
+<tr><td>RevenueCat</td><td>Anonymous customer ID, purchase details</td><td>Processor: subscription tracking</td></tr>
+<tr><td>Netlify</td><td>Technical access logs for the app's web part (including IP address)</td><td>Processor: hosting the web part</td></tr>
+<tr><td>Google (Play distribution)</td><td>Technical data required to install and update the app</td><td>App store</td></tr>
+</table>
+</div>
+<p>There are no other recipients. We do not sell or share data with data brokers. Data may be disclosed only under a binding lawful request from an authorised body.</p>
+
+<h2>9. International transfers</h2>
+<p>These services are located outside Kazakhstan and the European Economic Area: DeepSeek's infrastructure is in the People's Republic of China; Supabase, Netlify and Google are in the United States and other countries. This means your chat messages cross borders. For transfers from the EEA we rely on EU standard contractual clauses with our providers and on your explicit consent (Art. 49(1)(a) GDPR) when you send a message. For transfers from Kazakhstan we rely on your consent. The level of data protection in the recipient country may differ from local standards. If this is unacceptable to you, do not use the chat feature: all other features work entirely on your device.</p>
+
+<h2>10. Your rights</h2>
+<p>You have the right to access, rectify, erase, restrict or object to processing, to data portability, to withdraw consent, and to lodge a complaint with a supervisory authority. In practice most of your data is physically with you, so access and deletion are done by you in the app and phone settings — faster than any request. For data we hold (a reported conversation), write to forwip7@gmail.com. We respond within 30 days.</p>
+
+<h2>11. Children's data</h2>
+<p>The app is not intended for anyone under 18. We do not knowingly collect children's data. If you are under 18, do not use the app. If you are a parent or guardian and believe a child sent us data, write to forwip7@gmail.com — we will delete what we hold; local records are removed by clearing the app's data on the phone.</p>
+
+<h2>12. Security</h2>
+<p>Communication with the proxy server and the model API uses HTTPS. API keys are stored on the server and never shipped inside the app. Our main safeguard is the architecture itself: we do not collect what we do not need. Data on your device is protected by your phone's own security, so please use a screen lock.</p>
+
+<h2>13. Changes to this policy</h2>
+<p>We may update this document. The current version is always at this address, with the effective date shown at the top. We will announce material changes — such as new data recipients or new collection categories — in the app before they take effect. Continued use after that constitutes acceptance.</p>
+
+<h2>14. Contact</h2>
+<p>Forward IP, forwip7@gmail.com, Republic of Kazakhstan, Ekibastuz, Mashkur Zhusip 31.</p>
+
+</div>
+</body>
+</html>
