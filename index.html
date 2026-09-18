@@ -40,19 +40,9 @@
    замени на свой, когда создашь блок в AdMob.                              */
 
 window.OT_ADS = (function () {
-  var BANNER_ANDROID       = "ca-app-pub-1286571991466831/8828247168";
   var INTERSTITIAL_ANDROID = "ca-app-pub-1286571991466831/4870664165";
 
-  var banner = null, inter = null, interReady = false;
-
-  function initBanner() {
-    try {
-      banner = new NativelyAdmobBanner(
-        { androidUnitId: BANNER_ANDROID, position: "BOTTOM", sizeType: "AUTO" },
-        function () {}, true, function () {}, true, function () {}
-      );
-    } catch (e) {}
-  }
+  var inter = null, interReady = false;
 
   function initInterstitial() {
     try {
@@ -74,8 +64,10 @@ window.OT_ADS = (function () {
   return {
     _onDone: null,
     init: function () {
-      if (typeof NativelyAdmobBanner === "undefined") return;
-      initBanner();
+      if (typeof NativelyAdmobInterstitial === "undefined") return;
+      // Баннер убран: нативный SDK рисует его поверх WebView внизу экрана,
+      // закрепить его внутри вёрстки невозможно, и он перекрывал нижнее меню.
+      // Деньги приносит межстраничная по кнопке «посмотреть рекламу».
       initInterstitial();
     },
     /* Показать межстраничную. onDone срабатывает РОВНО ОДИН раз:
@@ -872,6 +864,7 @@ const T = {
         consentAgree: "Понятно, продолжить",
         consentRead: "Подробнее",
         trialBadge: "Пробный период",
+        trialUsedAlert: "Пробный период уже был использован",
         trialLeft: (d) => d === 1 ? "Заканчивается завтра" : `Осталось ${d} дн.`,
         trialEndsToday: "Заканчивается сегодня",
         trialWarnTitle: "Завтра пробный период закончится",
@@ -888,7 +881,7 @@ const T = {
         adYearFullSub: "Без рекламы и безлимитный наставник. Выгоднее всего на длинной дистанции",
         adLife: "Навсегда — 120$",
         adLifeSub: "Полный доступ навсегда. Один раз и больше не думать об этом",
-        bnTitle: "Бонусы и приглашения", bnBank: "ТВОИ БОНУСНЫЕ ДНИ", bnDaysWord: "суток полного доступа", bnUseDay: "Использовать 1 день", bnActiveNow: "Премиум активен, осталось", bnHours: "ч", bnDaysShort: "дн", bnStackHint: "Можно нажимать несколько раз подряд — дни сложатся.", bnHowTitle: "ОТКУДА БЕРУТСЯ ДНИ", bnHowNew: "3 дня сразу при установке приложения", bnHowRefMe: "3 дня тебе за каждого приглашённого друга", bnHowRefThem: "3 дня твоему другу — он тоже начнёт с полного доступа", bnFriends: "ТВОИ ПРИГЛАШЕНИЯ", bnFriendAnon: "Друг", bnWaiting: "ждём", bnWaitHint: "Дни начислятся, когда друг проведёт в приложении первый день или запустит счётчик.", bnShareText: "Позови того, кому это нужно. Вам обоим по 3 дня полного доступа.", limTitle: "На сегодня бесплатные сообщения закончились", limTextPrem: "Сегодня было 25 сообщений — это много даже для тяжёлого дня. Посмотри короткое видео, и открою ещё три. Или возвращайся завтра.", limFreePrem: "Завтра снова 25 сообщений.", tourNext: "Понял, дальше", tourDone: "Всё ясно, начинаем", tourSkip: "Пропустить", tourOpen: "Навигация по приложению", tourOpenSub: "Как всё устроено — пройти подсказки заново", stMyDate: "Своя дата начала", stMyDateSub: "Поставь реальную дату последнего употребления", lockedNoTask: "Задания и дневник для этой зависимости пока в работе", lockedNoTaskSub: "Материалы под неё ещё готовятся. Наставник уже работает с ней — пиши ему, он разберёт твою ситуацию.", aboutSoonLine: "История создателя и путь проекта", soonBadge: "скоро", photoSoon: "Разбор фото пока в работе — подключим в ближайшем обновлении. Пока просто напиши, что у тебя в тетради, своими словами. Разберём так же.", limText: "Наставник бесплатно отвечает 5 раз в день. Дневник, задания и счётчик остаются открытыми всегда.", limSub: "Оформить подписку", limSubSub: "Безлимит с наставником и все задания", limUseBonus: "Открыть на сутки бонусным днём", limAd: "Посмотреть рекламу и получить ещё 5 сообщений", limLater: "Вернуться завтра", limFree: "Завтра снова будет 5 бесплатных сообщений.", limAdSoon: "Реклама подключится перед публикацией в магазине.", invTitle: "Пригласить друга",
+        bnTitle: "Бонусы и приглашения", bnBank: "ТВОИ БОНУСНЫЕ ДНИ", bnDaysWord: "суток полного доступа", bnUseDay: "Использовать 1 день", bnActiveNow: "Премиум активен, осталось", bnHours: "ч", bnDaysShort: "дн", bnStackHint: "Можно нажимать несколько раз подряд — дни сложатся.", bnHowTitle: "ОТКУДА БЕРУТСЯ ДНИ", bnHowNew: "3 дня сразу при установке приложения", bnHowRefMe: "3 дня тебе за каждого приглашённого друга", bnHowRefThem: "3 дня твоему другу — он тоже начнёт с полного доступа", bnFriends: "ТВОИ ПРИГЛАШЕНИЯ", bnFriendAnon: "Друг", bnWaiting: "ждём", bnWaitHint: "Дни начислятся, когда друг проведёт в приложении первый день или запустит счётчик.", bnShareText: "Позови того, кому это нужно. Вам обоим по 3 дня полного доступа.", limTitle: "На сегодня бесплатные сообщения закончились", limTextPrem: "Сегодня было 25 сообщений — это много даже для тяжёлого дня. Посмотри короткое видео, и открою ещё три. Или возвращайся завтра.", limFreePrem: "Завтра снова 25 сообщений.", tourNext: "Понял, дальше", tourDone: "Всё ясно, начинаем", tourSkip: "Пропустить", tourOpen: "Навигация по приложению", tourOpenSub: "Как всё устроено — пройти подсказки заново", stMyDate: "Своя дата начала", stMyDateSub: "Поставь реальную дату последнего употребления", lockedNoTask: "Задания и дневник для этой зависимости пока в работе", lockedNoTaskSub: "Материалы под неё ещё готовятся. Наставник уже работает с ней — пиши ему, он разберёт твою ситуацию.", aboutSoonLine: "История создателя и путь проекта", soonBadge: "скоро", photoSoon: "Разбор фото пока в работе — подключим в ближайшем обновлении. Пока просто напиши, что у тебя в тетради, своими словами. Разберём так же.", limText: "Наставник бесплатно отвечает 5 раз в день. Дневник, задания и счётчик остаются открытыми всегда.", limSub: "Оформить подписку", limSubSub: "Безлимит с наставником и все задания", limUseBonus: "Открыть на сутки бонусным днём", limAd: "Посмотреть рекламу и получить ещё 3 сообщения", limLater: "Вернуться завтра", limFree: "Завтра снова будет 5 бесплатных сообщений.", limAdSoon: "Реклама подключится перед публикацией в магазине.", invTitle: "Пригласить друга",
         invText: "За каждого друга — сутки без рекламы и безлимит с наставником. Бонусы копятся.",
         invWa: "WhatsApp",
         invTg: "Telegram",
@@ -1325,6 +1318,7 @@ const T = {
         consentAgree: "Entendido, continuar",
         consentRead: "Más detalles",
         trialBadge: "Período de prueba",
+        trialUsedAlert: "El período de prueba ya fue utilizado",
         trialLeft: (d) => d === 1 ? "Termina mañana" : `Quedan ${d} días`,
         trialEndsToday: "Termina hoy",
         trialWarnTitle: "Mañana termina el período de prueba",
@@ -1341,7 +1335,7 @@ const T = {
         adYearFullSub: "Lo más conveniente a largo plazo",
         adLife: "Para siempre — 120$",
         adLifeSub: "Una vez y no pensar más en ello",
-        bnTitle: "Bonos e invitaciones", bnBank: "TUS DÍAS DE BONO", bnDaysWord: "días de acceso completo", bnUseDay: "Usar 1 día", bnActiveNow: "Premium activo, queda", bnHours: "h", bnDaysShort: "d", bnStackHint: "Puedes pulsar varias veces: los días se suman.", bnHowTitle: "DE DÓNDE SALEN LOS DÍAS", bnHowNew: "3 días al instalar la app", bnHowRefMe: "3 días por cada amigo que invites", bnHowRefThem: "3 días para tu amigo — también empieza con acceso completo", bnFriends: "TUS INVITACIONES", bnFriendAnon: "Amigo", bnWaiting: "pendiente", bnWaitHint: "Los días se acreditan cuando tu amigo pase su primer día en la app o inicie el contador.", bnShareText: "Invita a quien lo necesite. Tres días de acceso completo para los dos.", limTitle: "Se acabaron los mensajes gratis de hoy", limTextPrem: "Hoy fueron 25 mensajes, mucho incluso para un día difícil. Mira un vídeo corto y te abro tres más. O vuelve mañana.", limFreePrem: "Mañana tendrás otra vez 25 mensajes.", tourNext: "Got it, next", tourDone: "Clear, let’s start", tourSkip: "Skip", tourOpen: "App navigation", tourOpenSub: "How it all works — see the tips again", stMyDate: "Your own start date", stMyDateSub: "Set the real date of your last use", lockedNoTask: "Tasks and diary for this addiction are in progress", lockedNoTaskSub: "The materials are still being prepared. The mentor already works with it — write to him.", aboutSoonLine: "La historia del creador y del proyecto", soonBadge: "pronto", photoSoon: "El análisis de fotos está en camino, llegará en una próxima actualización. Por ahora escribe con tus palabras lo que tienes en el cuaderno. Lo trabajamos igual.", limText: "El mentor responde 5 veces al día gratis. El diario, las tareas y el contador siguen abiertos siempre.", limSub: "Suscribirse", limSubSub: "Mentor ilimitado y todas las tareas", limUseBonus: "Abrir 24h con un día de bono", limAd: "Ver un anuncio y recibir 5 mensajes más", limLater: "Volver mañana", limFree: "Mañana tendrás otros 5 mensajes gratis.", limAdSoon: "Los anuncios se conectarán antes de publicar en la tienda.", invTitle: "Invitar a un amigo",
+        bnTitle: "Bonos e invitaciones", bnBank: "TUS DÍAS DE BONO", bnDaysWord: "días de acceso completo", bnUseDay: "Usar 1 día", bnActiveNow: "Premium activo, queda", bnHours: "h", bnDaysShort: "d", bnStackHint: "Puedes pulsar varias veces: los días se suman.", bnHowTitle: "DE DÓNDE SALEN LOS DÍAS", bnHowNew: "3 días al instalar la app", bnHowRefMe: "3 días por cada amigo que invites", bnHowRefThem: "3 días para tu amigo — también empieza con acceso completo", bnFriends: "TUS INVITACIONES", bnFriendAnon: "Amigo", bnWaiting: "pendiente", bnWaitHint: "Los días se acreditan cuando tu amigo pase su primer día en la app o inicie el contador.", bnShareText: "Invita a quien lo necesite. Tres días de acceso completo para los dos.", limTitle: "Se acabaron los mensajes gratis de hoy", limTextPrem: "Hoy fueron 25 mensajes, mucho incluso para un día difícil. Mira un vídeo corto y te abro tres más. O vuelve mañana.", limFreePrem: "Mañana tendrás otra vez 25 mensajes.", tourNext: "Got it, next", tourDone: "Clear, let’s start", tourSkip: "Skip", tourOpen: "App navigation", tourOpenSub: "How it all works — see the tips again", stMyDate: "Your own start date", stMyDateSub: "Set the real date of your last use", lockedNoTask: "Tasks and diary for this addiction are in progress", lockedNoTaskSub: "The materials are still being prepared. The mentor already works with it — write to him.", aboutSoonLine: "La historia del creador y del proyecto", soonBadge: "pronto", photoSoon: "El análisis de fotos está en camino, llegará en una próxima actualización. Por ahora escribe con tus palabras lo que tienes en el cuaderno. Lo trabajamos igual.", limText: "El mentor responde 5 veces al día gratis. El diario, las tareas y el contador siguen abiertos siempre.", limSub: "Suscribirse", limSubSub: "Mentor ilimitado y todas las tareas", limUseBonus: "Abrir 24h con un día de bono", limAd: "Ver un anuncio y recibir 3 mensajes más", limLater: "Volver mañana", limFree: "Mañana tendrás otros 5 mensajes gratis.", limAdSoon: "Los anuncios se conectarán antes de publicar en la tienda.", invTitle: "Invitar a un amigo",
         invText: "Por cada amigo — un día sin anuncios y mentor ilimitado. Los bonos se acumulan.",
         invWa: "WhatsApp",
         invTg: "Telegram",
@@ -1778,6 +1772,7 @@ const T = {
         consentAgree: "Got it, continue",
         consentRead: "More details",
         trialBadge: "Free trial",
+        trialUsedAlert: "Your free trial has already been used",
         trialLeft: (d) => d === 1 ? "Ends tomorrow" : `${d} days left`,
         trialEndsToday: "Ends today",
         trialWarnTitle: "Your trial ends tomorrow",
@@ -1794,7 +1789,7 @@ const T = {
         adYearFullSub: "Best value over the long run",
         adLife: "Forever — $120",
         adLifeSub: "Pay once and stop thinking about it",
-        bnTitle: "Bonuses and invites", bnBank: "YOUR BONUS DAYS", bnDaysWord: "days of full access", bnUseDay: "Use 1 day", bnActiveNow: "Premium active, left", bnHours: "h", bnDaysShort: "d", bnStackHint: "You can tap several times — the days add up.", bnHowTitle: "WHERE DAYS COME FROM", bnHowNew: "3 days right after you install the app", bnHowRefMe: "3 days for every friend you invite", bnHowRefThem: "3 days for your friend — they start with full access too", bnFriends: "YOUR INVITES", bnFriendAnon: "Friend", bnWaiting: "pending", bnWaitHint: "Days are credited once your friend spends their first day in the app or starts the counter.", bnShareText: "Invite someone who needs this. Three days of full access for both of you.", limTitle: "You\u2019ve used today\u2019s free messages", limTextPrem: "That is 25 messages today — a lot even for a hard day. Watch a short video and I will open three more. Or come back tomorrow.", limFreePrem: "Tomorrow you get 25 messages again.", tourNext: "Got it, next", tourDone: "Clear, let’s start", tourSkip: "Skip", tourOpen: "App navigation", tourOpenSub: "How it all works — see the tips again", stMyDate: "Your own start date", stMyDateSub: "Set the real date of your last use", lockedNoTask: "Tasks and diary for this addiction are in progress", lockedNoTaskSub: "The materials are still being prepared. The mentor already works with it — write to him.", aboutSoonLine: "The creator story and how the project began", soonBadge: "soon", photoSoon: "Photo review is still in the works — coming in one of the next updates. For now just type what you wrote in your notebook. We can work with that just as well.", limText: "The mentor replies 5 times a day for free. The diary, tasks and counter stay open always.", limSub: "Get the subscription", limSubSub: "Unlimited mentor and all tasks", limUseBonus: "Open for 24h with a bonus day", limAd: "Watch an ad for 5 more messages", limLater: "Come back tomorrow", limFree: "Tomorrow you\u2019ll have 5 free messages again.", limAdSoon: "Ads will be connected before the store release.", invTitle: "Invite a friend",
+        bnTitle: "Bonuses and invites", bnBank: "YOUR BONUS DAYS", bnDaysWord: "days of full access", bnUseDay: "Use 1 day", bnActiveNow: "Premium active, left", bnHours: "h", bnDaysShort: "d", bnStackHint: "You can tap several times — the days add up.", bnHowTitle: "WHERE DAYS COME FROM", bnHowNew: "3 days right after you install the app", bnHowRefMe: "3 days for every friend you invite", bnHowRefThem: "3 days for your friend — they start with full access too", bnFriends: "YOUR INVITES", bnFriendAnon: "Friend", bnWaiting: "pending", bnWaitHint: "Days are credited once your friend spends their first day in the app or starts the counter.", bnShareText: "Invite someone who needs this. Three days of full access for both of you.", limTitle: "You\u2019ve used today\u2019s free messages", limTextPrem: "That is 25 messages today — a lot even for a hard day. Watch a short video and I will open three more. Or come back tomorrow.", limFreePrem: "Tomorrow you get 25 messages again.", tourNext: "Got it, next", tourDone: "Clear, let’s start", tourSkip: "Skip", tourOpen: "App navigation", tourOpenSub: "How it all works — see the tips again", stMyDate: "Your own start date", stMyDateSub: "Set the real date of your last use", lockedNoTask: "Tasks and diary for this addiction are in progress", lockedNoTaskSub: "The materials are still being prepared. The mentor already works with it — write to him.", aboutSoonLine: "The creator story and how the project began", soonBadge: "soon", photoSoon: "Photo review is still in the works — coming in one of the next updates. For now just type what you wrote in your notebook. We can work with that just as well.", limText: "The mentor replies 5 times a day for free. The diary, tasks and counter stay open always.", limSub: "Get the subscription", limSubSub: "Unlimited mentor and all tasks", limUseBonus: "Open for 24h with a bonus day", limAd: "Watch an ad for 3 more messages", limLater: "Come back tomorrow", limFree: "Tomorrow you\u2019ll have 5 free messages again.", limAdSoon: "Ads will be connected before the store release.", invTitle: "Invite a friend",
         invText: "For every friend — a day ad-free with unlimited mentor. Bonuses stack up.",
         invWa: "WhatsApp",
         invTg: "Telegram",
@@ -2231,6 +2226,7 @@ const T = {
         consentAgree: "Entendi, continuar",
         consentRead: "Mais detalhes",
         trialBadge: "Período de teste",
+        trialUsedAlert: "Сынақ мерзімі бұрын пайдаланылған",
         trialLeft: (d) => d === 1 ? "Termina amanhã" : `Faltam ${d} dias`,
         trialEndsToday: "Termina hoje",
         trialWarnTitle: "Amanhã o período de teste termina",
@@ -2247,7 +2243,7 @@ const T = {
         adYearFullSub: "Mais vantajoso a longo prazo",
         adLife: "Para sempre — 120$",
         adLifeSub: "Uma vez e não pensar mais nisso",
-        bnTitle: "Bônus e convites", bnBank: "SEUS DIAS DE BÔNUS", bnDaysWord: "dias de acesso completo", bnUseDay: "Usar 1 dia", bnActiveNow: "Premium ativo, resta", bnHours: "h", bnDaysShort: "d", bnStackHint: "Pode tocar várias vezes: os dias se somam.", bnHowTitle: "DE ONDE VÊM OS DIAS", bnHowNew: "3 dias assim que instalar o app", bnHowRefMe: "3 dias por cada amigo que você convidar", bnHowRefThem: "3 dias para o seu amigo — ele também começa com acesso completo", bnFriends: "SEUS CONVITES", bnFriendAnon: "Amigo", bnWaiting: "aguardando", bnWaitHint: "Os dias entram quando seu amigo passar o primeiro dia no app ou iniciar o contador.", bnShareText: "Chame quem precisa disso. Três dias de acesso completo para vocês dois.", limTitle: "As mensagens grátis de hoje acabaram", limTextPrem: "Foram 25 mensagens hoje — bastante até para um dia difícil. Assista a um vídeo curto e abro mais três. Ou volte amanhã.", limFreePrem: "Amanhã você tem 25 mensagens de novo.", tourNext: "Got it, next", tourDone: "Clear, let’s start", tourSkip: "Skip", tourOpen: "App navigation", tourOpenSub: "How it all works — see the tips again", stMyDate: "Your own start date", stMyDateSub: "Set the real date of your last use", lockedNoTask: "Tasks and diary for this addiction are in progress", lockedNoTaskSub: "The materials are still being prepared. The mentor already works with it — write to him.", aboutSoonLine: "A historia do criador e do projeto", soonBadge: "em breve", photoSoon: "A leitura de fotos ainda está em desenvolvimento, chega numa próxima atualização. Por enquanto escreva com suas palavras o que está no caderno. Damos conta assim também.", limText: "O mentor responde 5 vezes por dia de graça. O diário, as tarefas e o contador continuam sempre abertos.", limSub: "Assinar", limSubSub: "Mentor ilimitado e todas as tarefas", limUseBonus: "Abrir 24h com um dia de bônus", limAd: "Ver um anúncio e ganhar mais 5 mensagens", limLater: "Voltar amanhã", limFree: "Amanhã você terá 5 mensagens grátis de novo.", limAdSoon: "Os anúncios serão conectados antes da publicação na loja.", invTitle: "Convidar um amigo",
+        bnTitle: "Bônus e convites", bnBank: "SEUS DIAS DE BÔNUS", bnDaysWord: "dias de acesso completo", bnUseDay: "Usar 1 dia", bnActiveNow: "Premium ativo, resta", bnHours: "h", bnDaysShort: "d", bnStackHint: "Pode tocar várias vezes: os dias se somam.", bnHowTitle: "DE ONDE VÊM OS DIAS", bnHowNew: "3 dias assim que instalar o app", bnHowRefMe: "3 dias por cada amigo que você convidar", bnHowRefThem: "3 dias para o seu amigo — ele também começa com acesso completo", bnFriends: "SEUS CONVITES", bnFriendAnon: "Amigo", bnWaiting: "aguardando", bnWaitHint: "Os dias entram quando seu amigo passar o primeiro dia no app ou iniciar o contador.", bnShareText: "Chame quem precisa disso. Três dias de acesso completo para vocês dois.", limTitle: "As mensagens grátis de hoje acabaram", limTextPrem: "Foram 25 mensagens hoje — bastante até para um dia difícil. Assista a um vídeo curto e abro mais três. Ou volte amanhã.", limFreePrem: "Amanhã você tem 25 mensagens de novo.", tourNext: "Got it, next", tourDone: "Clear, let’s start", tourSkip: "Skip", tourOpen: "App navigation", tourOpenSub: "How it all works — see the tips again", stMyDate: "Your own start date", stMyDateSub: "Set the real date of your last use", lockedNoTask: "Tasks and diary for this addiction are in progress", lockedNoTaskSub: "The materials are still being prepared. The mentor already works with it — write to him.", aboutSoonLine: "A historia do criador e do projeto", soonBadge: "em breve", photoSoon: "A leitura de fotos ainda está em desenvolvimento, chega numa próxima atualização. Por enquanto escreva com suas palavras o que está no caderno. Damos conta assim também.", limText: "O mentor responde 5 vezes por dia de graça. O diário, as tarefas e o contador continuam sempre abertos.", limSub: "Assinar", limSubSub: "Mentor ilimitado e todas as tarefas", limUseBonus: "Abrir 24h com um dia de bônus", limAd: "Ver um anúncio e ganhar mais 3 mensagens", limLater: "Voltar amanhã", limFree: "Amanhã você terá 5 mensagens grátis de novo.", limAdSoon: "Os anúncios serão conectados antes da publicação na loja.", invTitle: "Convidar um amigo",
         invText: "Por cada amigo — um dia sem anúncios e mentor ilimitado. Os bônus acumulam.",
         invWa: "WhatsApp",
         invTg: "Telegram",
@@ -2684,6 +2680,7 @@ const T = {
         consentAgree: "Түсінікті, жалғастыру",
         consentRead: "Толығырақ",
         trialBadge: "Сынақ мерзімі",
+        trialUsedAlert: "O período de teste já foi utilizado",
         trialLeft: (d) => d === 1 ? "Ертең аяқталады" : `${d} күн қалды`,
         trialEndsToday: "Бүгін аяқталады",
         trialWarnTitle: "Ертең сынақ мерзімі аяқталады",
@@ -2700,7 +2697,7 @@ const T = {
         adYearFullSub: "Ұзақ мерзімде ең тиімдісі",
         adLife: "Мәңгілікке — 120$",
         adLifeSub: "Бір рет төлеп, бұл туралы ұмыту",
-        bnTitle: "Бонустар мен шақырулар", bnBank: "СЕНІҢ БОНУС КҮНДЕРІҢ", bnDaysWord: "тәулік толық қолжетімділік", bnUseDay: "1 күнді пайдалану", bnActiveNow: "Премиум қосулы, қалды", bnHours: "сағ", bnDaysShort: "күн", bnStackHint: "Бірнеше рет басуға болады — күндер қосылады.", bnHowTitle: "КҮНДЕР ҚАЙДАН КЕЛЕДІ", bnHowNew: "Қолданбаны орнатқанда бірден 3 күн", bnHowRefMe: "Шақырған әр досың үшін саған 3 күн", bnHowRefThem: "Досыңа да 3 күн — ол да толық қолжетімділікпен бастайды", bnFriends: "СЕНІҢ ШАҚЫРУЛАРЫҢ", bnFriendAnon: "Дос", bnWaiting: "күтуде", bnWaitHint: "Күндер досың қолданбада бірінші күнін өткізгенде немесе санауышты қосқанда есептеледі.", bnShareText: "Мұны қажет ететін адамды шақыр. Екеуіңе де 3 күн толық қолжетімділік.", limTitle: "Бүгінгі тегін хабарламалар бітті", limTextPrem: "Бүгін 25 хабарлама болды — ауыр күн үшін де көп. Қысқа бейне көр, тағы үшеуін ашамын. Немесе ертең орал.", limFreePrem: "Ертең тағы 25 хабарлама болады.", tourNext: "Got it, next", tourDone: "Clear, let’s start", tourSkip: "Skip", tourOpen: "App navigation", tourOpenSub: "How it all works — see the tips again", stMyDate: "Your own start date", stMyDateSub: "Set the real date of your last use", lockedNoTask: "Tasks and diary for this addiction are in progress", lockedNoTaskSub: "The materials are still being prepared. The mentor already works with it — write to him.", aboutSoonLine: "Жасаушының тарихы және жобаның жолы", soonBadge: "жақында", photoSoon: "Суретті талдау әзірге дайындалып жатыр — жақын жаңартуда қосамыз. Әзірге дәптеріңдегіні өз сөзіңмен жазып жібер. Солай да талдаймыз.", limText: "Тәлімгер күніне 5 рет тегін жауап береді. Күнделік, тапсырмалар мен санауыш әрқашан ашық.", limSub: "Жазылым рәсімдеу", limSubSub: "Шексіз тәлімгер және барлық тапсырмалар", limUseBonus: "Бонус күнмен тәулікке ашу", limAd: "Жарнама көріп, тағы 5 хабарлама алу", limLater: "Ертең оралу", limFree: "Ертең тағы 5 тегін хабарлама болады.", limAdSoon: "Жарнама дүкенде жарияланар алдында қосылады.", invTitle: "Досты шақыру",
+        bnTitle: "Бонустар мен шақырулар", bnBank: "СЕНІҢ БОНУС КҮНДЕРІҢ", bnDaysWord: "тәулік толық қолжетімділік", bnUseDay: "1 күнді пайдалану", bnActiveNow: "Премиум қосулы, қалды", bnHours: "сағ", bnDaysShort: "күн", bnStackHint: "Бірнеше рет басуға болады — күндер қосылады.", bnHowTitle: "КҮНДЕР ҚАЙДАН КЕЛЕДІ", bnHowNew: "Қолданбаны орнатқанда бірден 3 күн", bnHowRefMe: "Шақырған әр досың үшін саған 3 күн", bnHowRefThem: "Досыңа да 3 күн — ол да толық қолжетімділікпен бастайды", bnFriends: "СЕНІҢ ШАҚЫРУЛАРЫҢ", bnFriendAnon: "Дос", bnWaiting: "күтуде", bnWaitHint: "Күндер досың қолданбада бірінші күнін өткізгенде немесе санауышты қосқанда есептеледі.", bnShareText: "Мұны қажет ететін адамды шақыр. Екеуіңе де 3 күн толық қолжетімділік.", limTitle: "Бүгінгі тегін хабарламалар бітті", limTextPrem: "Бүгін 25 хабарлама болды — ауыр күн үшін де көп. Қысқа бейне көр, тағы үшеуін ашамын. Немесе ертең орал.", limFreePrem: "Ертең тағы 25 хабарлама болады.", tourNext: "Got it, next", tourDone: "Clear, let’s start", tourSkip: "Skip", tourOpen: "App navigation", tourOpenSub: "How it all works — see the tips again", stMyDate: "Your own start date", stMyDateSub: "Set the real date of your last use", lockedNoTask: "Tasks and diary for this addiction are in progress", lockedNoTaskSub: "The materials are still being prepared. The mentor already works with it — write to him.", aboutSoonLine: "Жасаушының тарихы және жобаның жолы", soonBadge: "жақында", photoSoon: "Суретті талдау әзірге дайындалып жатыр — жақын жаңартуда қосамыз. Әзірге дәптеріңдегіні өз сөзіңмен жазып жібер. Солай да талдаймыз.", limText: "Тәлімгер күніне 5 рет тегін жауап береді. Күнделік, тапсырмалар мен санауыш әрқашан ашық.", limSub: "Жазылым рәсімдеу", limSubSub: "Шексіз тәлімгер және барлық тапсырмалар", limUseBonus: "Бонус күнмен тәулікке ашу", limAd: "Жарнама көріп, тағы 3 хабарлама алу", limLater: "Ертең оралу", limFree: "Ертең тағы 5 тегін хабарлама болады.", limAdSoon: "Жарнама дүкенде жарияланар алдында қосылады.", invTitle: "Досты шақыру",
         invText: "Әр дос үшін — жарнамасыз бір тәулік және шексіз тәлімгер. Бонустар жинақталады.",
         invWa: "WhatsApp",
         invTg: "Telegram",
@@ -3137,6 +3134,7 @@ const T = {
         consentAgree: "明白了，继续",
         consentRead: "了解详情",
         trialBadge: "试用期",
+        trialUsedAlert: "Deneme süresi zaten kullanıldı",
         trialLeft: (d) => d === 1 ? "明天结束" : `还剩 ${d} 天`,
         trialEndsToday: "今天结束",
         trialWarnTitle: "试用期明天结束",
@@ -3153,7 +3151,7 @@ const T = {
         adYearFullSub: "长期来看最划算",
         adLife: "永久 — 120美元",
         adLifeSub: "一次付清，从此不必再想",
-        bnTitle: "奖励与邀请", bnBank: "你的奖励天数", bnDaysWord: "天完整权限", bnUseDay: "使用 1 天", bnActiveNow: "高级版生效中，还剩", bnHours: "小时", bnDaysShort: "天", bnStackHint: "可以连续点几次——天数会累加。", bnHowTitle: "天数从哪里来", bnHowNew: "安装应用后立即获得 3 天", bnHowRefMe: "每邀请一位朋友，你得 3 天", bnHowRefThem: "你的朋友也得 3 天，同样以完整权限开始", bnFriends: "你的邀请", bnFriendAnon: "朋友", bnWaiting: "等待中", bnWaitHint: "朋友在应用里度过第一天或启动计时后，天数就会到账。", bnShareText: "叫上真正需要它的人。你们两人各得 3 天完整权限。", limTitle: "今天的免费消息用完了", limTextPrem: "今天已经 25 条了——就算是难熬的一天也不少。看一段短视频，我再给你开三条。或者明天再来。", limFreePrem: "明天又有 25 条消息。", tourNext: "Got it, next", tourDone: "Clear, let’s start", tourSkip: "Skip", tourOpen: "App navigation", tourOpenSub: "How it all works — see the tips again", stMyDate: "Your own start date", stMyDateSub: "Set the real date of your last use", lockedNoTask: "Tasks and diary for this addiction are in progress", lockedNoTaskSub: "The materials are still being prepared. The mentor already works with it — write to him.", aboutSoonLine: "创作者的故事和项目的由来", soonBadge: "即将", photoSoon: "照片识别还在开发中，会在后续更新里上线。现在先用自己的话把本子上的内容写出来，一样可以一起梳理。", limText: "引导者每天免费回复 5 次。日记、任务和计时器始终开放。", limSub: "开通订阅", limSubSub: "无限次引导者和全部任务", limUseBonus: "用一个奖励日开通 24 小时", limAd: "看广告再获得 5 条消息", limLater: "明天再来", limFree: "明天还会有 5 条免费消息。", limAdSoon: "广告将在上架前接入。", invTitle: "邀请朋友",
+        bnTitle: "奖励与邀请", bnBank: "你的奖励天数", bnDaysWord: "天完整权限", bnUseDay: "使用 1 天", bnActiveNow: "高级版生效中，还剩", bnHours: "小时", bnDaysShort: "天", bnStackHint: "可以连续点几次——天数会累加。", bnHowTitle: "天数从哪里来", bnHowNew: "安装应用后立即获得 3 天", bnHowRefMe: "每邀请一位朋友，你得 3 天", bnHowRefThem: "你的朋友也得 3 天，同样以完整权限开始", bnFriends: "你的邀请", bnFriendAnon: "朋友", bnWaiting: "等待中", bnWaitHint: "朋友在应用里度过第一天或启动计时后，天数就会到账。", bnShareText: "叫上真正需要它的人。你们两人各得 3 天完整权限。", limTitle: "今天的免费消息用完了", limTextPrem: "今天已经 25 条了——就算是难熬的一天也不少。看一段短视频，我再给你开三条。或者明天再来。", limFreePrem: "明天又有 25 条消息。", tourNext: "Got it, next", tourDone: "Clear, let’s start", tourSkip: "Skip", tourOpen: "App navigation", tourOpenSub: "How it all works — see the tips again", stMyDate: "Your own start date", stMyDateSub: "Set the real date of your last use", lockedNoTask: "Tasks and diary for this addiction are in progress", lockedNoTaskSub: "The materials are still being prepared. The mentor already works with it — write to him.", aboutSoonLine: "创作者的故事和项目的由来", soonBadge: "即将", photoSoon: "照片识别还在开发中，会在后续更新里上线。现在先用自己的话把本子上的内容写出来，一样可以一起梳理。", limText: "引导者每天免费回复 5 次。日记、任务和计时器始终开放。", limSub: "开通订阅", limSubSub: "无限次引导者和全部任务", limUseBonus: "用一个奖励日开通 24 小时", limAd: "看广告再获得 3 条消息", limLater: "明天再来", limFree: "明天还会有 5 条免费消息。", limAdSoon: "广告将在上架前接入。", invTitle: "邀请朋友",
         invText: "每邀请一位朋友，就得到一天无广告和与引导者的无限对话。奖励可以累积。",
         invWa: "WhatsApp",
         invTg: "Telegram",
@@ -8342,7 +8340,8 @@ function ResourcesSection({ lang, onAskMentor }) {
     // Лекции есть на русском и английском; остальным языкам показываем английские,
     // это лучше, чем четыре пустые заглушки
     const lectures = lang === "ru" ? LECTURES_RU : LECTURES_EN;
-    const LEC_IMG = ["selflove", "compulsive", "change", "craving", "ei"];
+    const LEC_IMG = ["selflove", "compulsive", "change", "craving", "ei",
+        "mature", "berne", "warning", "goals", "defects", "recovery", "paws", "codep"];
     const lecImg = (id) => LEC_IMG.indexOf(id) !== -1 ? "/lectures/lecture-" + id + ".jpg" : null;
     const meta = [
         { g: ["#1E4B57", "#2E7D8A"] }, { g: ["#265A3A", "#3E8E5A"] },
@@ -8788,7 +8787,10 @@ function App() {
     const [lastCheckin, setLastCheckin] = useSaved("lastCheckin", null);
     const [pathShownFor, setPathShownFor] = useSaved("pathShownFor", null);
     // пробный период: 4 дня, без автосписаний. Предупреждаем за день и в последний день.
+    const TRIAL_DAYS = 4;
     const [trialStart, setTrialStart] = useSaved("trialStart", null);
+    // триал даётся один раз за установку: без этого его можно брать бесконечно
+    const [trialUsed, setTrialUsed] = useSaved("trialUsed", false);
     const [adsPersonalized, setAdsPersonalized] = useSaved("adsPersonalized", false);
     const [showPrivacy, setShowPrivacy] = useState(false);
     const [trackerOnly, setTrackerOnly] = useSaved("trackerOnly", false);
@@ -8816,7 +8818,6 @@ function App() {
     const [myStory, setMyStory] = useSaved("myStory", "");
     const [bioOn, setBioOn] = useSaved("bioOn", false);
     const [trialNoticeShown, setTrialNoticeShown] = useSaved("trialNoticeShown", null);
-    const TRIAL_DAYS = 4;
     const trialLeft = trialStart !== null
         ? TRIAL_DAYS - Math.floor((Date.now() - trialStart) / 86400000)
         : null;
@@ -8918,7 +8919,16 @@ function App() {
             return;
         }
         if (c === "trial") {
+            // Повторно триал не выдаём. Раньше можно было заходить сюда
+            // сколько угодно раз и бесконечно пользоваться бесплатно.
+            if (trialUsed) {
+                alert(tr(lang).trialUsedAlert);
+                return;
+            }
             setTrialStart(Date.now());
+            setTrialUsed(true);
+            // теперь триал действительно даёт премиум и действительно кончается
+            setPremiumUntil(Date.now() + TRIAL_DAYS * 86400000);
             setScreen("main");
             return;
         }
@@ -9067,15 +9077,87 @@ function App() {
                 React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 } },
                     React.createElement("div", { style: { fontSize: 19, fontWeight: 800, color: C.text } }, t.settings),
                     React.createElement("button", { onClick: () => setShowSettings(false), style: { background: "none", border: "none", color: C.muted, fontSize: 13, fontWeight: 700, cursor: "pointer" } }, t.stClose)),
+                React.createElement("button", { onClick: () => { setShowSettings(false); setSubFromMenu(true); setScreen("adWarning"); }, style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 12, padding: "14px 14px", marginBottom: 9, borderRadius: 14, background: C.amberSoft, border: `1px solid ${C.amber}55`, color: C.text, fontSize: 15, fontWeight: 600, cursor: "pointer" } },
+                    React.createElement("span", { style: { fontSize: 19 } }, "\u2B50"),
+                    React.createElement("span", { style: { flex: 1 } }, t.stSubscription),
+                    React.createElement("span", { style: { color: C.amber, fontSize: 17 } }, "\u203A")),
+
+                React.createElement("button", { onClick: () => alert(t.stFeedbackAlert), style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 12, padding: "14px 14px", marginBottom: 9, borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, color: C.text, fontSize: 15, fontWeight: 600, cursor: "pointer" } },
+                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDCAC"),
+                    React.createElement("span", { style: { flex: 1 } }, t.stFeedback),
+                    React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")),
+
+                React.createElement("button", { onClick: () => alert(t.stPsychologistAlert), style: { display: "flex", alignItems: "center", gap: 12, padding: "14px 14px", marginBottom: 9, borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, opacity: 0.7, width: "100%", textAlign: "left", cursor: "pointer" } },
+                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83E\uDDE0"),
+                    React.createElement("span", { style: { flex: 1, fontSize: 15, fontWeight: 600, color: C.textSoft } }, t.stPsychologist),
+                    React.createElement("span", { style: { fontSize: 10.5, color: C.amber, fontWeight: 800, background: C.amberSoft, border: `1px solid ${C.amber}44`, borderRadius: 999, padding: "3px 9px" } }, t.badgeSoon)),
+
+                React.createElement("button", { onClick: () => alert(t.stRehabsAlert), style: { display: "flex", alignItems: "center", gap: 12, padding: "14px 14px", borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, opacity: 0.7, width: "100%", textAlign: "left", cursor: "pointer" } },
+                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83C\uDFE5"),
+                    React.createElement("span", { style: { flex: 1, fontSize: 15, fontWeight: 600, color: C.textSoft } }, t.stRehabs),
+                    React.createElement("span", { style: { fontSize: 10.5, color: C.amber, fontWeight: 800, background: C.amberSoft, border: `1px solid ${C.amber}44`, borderRadius: 999, padding: "3px 9px" } }, t.badgeSoon)),
+
+                React.createElement("button", { onClick: () => alert(t.stDetoxAlert), style: stRow },
+                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDCA7"),
+                    React.createElement("span", { style: { flex: 1 } }, t.stDetox),
+                    React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")),
+
+                React.createElement("button", { onClick: () => { setShowInvite(true); }, style: { ...stRow, background: C.amberSoft, border: `1px solid ${C.amber}55` } },
+                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83C\uDF81"),
+                    React.createElement("span", { style: { flex: 1 } }, t.stInvite),
+                    React.createElement("span", { style: { color: C.amber, fontSize: 17 } }, "\u203A")),
+
+                React.createElement("div", { style: { ...stRow, cursor: "default", alignItems: "flex-start" } },
+                    React.createElement("span", { style: { fontSize: 19, marginTop: 1 } }, "\uD83D\uDEAB"),
+                    React.createElement("div", { style: { flex: 1 } },
+                        React.createElement("div", { style: { fontSize: 15, fontWeight: 600, color: C.text } }, t.stHide12),
+                        React.createElement("div", { style: { fontSize: 11.5, color: C.muted, marginTop: 3, lineHeight: 1.4 } }, t.stHide12Sub)),
+                    React.createElement("button", { onClick: () => setHide12(v => !v), style: {
+                            flexShrink: 0, width: 48, height: 28, borderRadius: 999, cursor: "pointer", padding: 3,
+                            background: hide12 ? C.amber : C.card2, border: `1px solid ${hide12 ? C.amber : C.border}`,
+                            display: "flex", justifyContent: hide12 ? "flex-end" : "flex-start", alignItems: "center",
+                        } },
+                        React.createElement("span", { style: { width: 20, height: 20, borderRadius: "50%", background: hide12 ? C.onAccent : C.muted, display: "block" } }))),
+
+                React.createElement("button", { onClick: () => alert(t.stCommunityAlert), style: { ...stSoon, cursor: "pointer", width: "100%", textAlign: "left" } },
+                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDCAC"),
+                    React.createElement("span", { style: { flex: 1, fontSize: 15, fontWeight: 600, color: C.textSoft } }, t.stCommunity),
+                    React.createElement("span", { style: stSoonBadge }, t.badgeSoon)),
+
+                React.createElement("div", { style: stSoon },
+                    React.createElement("span", { style: { fontSize: 19 } }, "\u23F0"),
+                    React.createElement("span", { style: { flex: 1, fontSize: 15, fontWeight: 600, color: C.textSoft } }, t.stReminders),
+                    React.createElement("span", { style: stSoonBadge }, t.badgeSoon)),
+
+                React.createElement("button", { onClick: () => alert(t.stRelapseAlert), style: { ...stSoon, marginBottom: 0, cursor: "pointer", width: "100%", textAlign: "left" } },
+                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83C\uDD98"),
+                    React.createElement("span", { style: { flex: 1, fontSize: 15, fontWeight: 600, color: C.textSoft } }, t.stRelapse),
+                    React.createElement("span", { style: stSoonBadge }, t.badgeSoon)),
+
+                React.createElement("button", { onClick: () => alert(t.stReportAlert), style: stRow },
+                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDC1E"),
+                    React.createElement("span", { style: { flex: 1 } }, t.stReport),
+                    React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")),
+
+                React.createElement("button", { onClick: deleteData, style: { ...stRow, border: `1px solid ${C.danger}44`, color: C.danger } },
+                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDDD1\uFE0F"),
+                    React.createElement("span", { style: { flex: 1 } }, t.stDelete)),
+                React.createElement("details", { style: { marginTop: 6 } },
+                    React.createElement("summary", { style: { listStyle: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, padding: "14px 14px", marginBottom: 9, borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, color: C.text, fontSize: 15, fontWeight: 600 } },
+                        React.createElement("span", { style: { fontSize: 19 } }, "\u2699\uFE0F"),
+                        React.createElement("span", { style: { flex: 1 } }, t.settings)),
+
                 React.createElement("button", { onClick: () => setLangPick(v => !v), style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 12, padding: "14px 14px", marginBottom: langPick ? 0 : 9, borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, color: C.text, fontSize: 15, fontWeight: 600, cursor: "pointer" } },
                     React.createElement("span", { style: { fontSize: 19 } }, "\uD83C\uDF0D"),
                     React.createElement("span", { style: { flex: 1 } }, t.stChangeLang),
                     React.createElement("span", { style: { fontSize: 13, color: C.muted, marginRight: 6 } }, (LANGS.find(l => l.code === lang) || {}).native || ""),
                     React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, langPick ? "\u2304" : "\u203A")),
+
                 langPick && (React.createElement("div", { style: { maxHeight: 240, overflowY: "auto", marginBottom: 9, borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, padding: 6 } }, LANGS_MENU.filter(l => !l.soon).map(l => (React.createElement("button", { key: l.code, onClick: () => { setLang(l.code); setLangPick(false); }, style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 10, padding: "11px 10px", borderRadius: 10, background: l.code === lang ? C.bg2 : "transparent", border: "none", color: C.text, fontSize: 14.5, fontWeight: 600, cursor: "pointer" } },
                     React.createElement("span", { style: { fontSize: 18 } }, l.flag),
                     React.createElement("span", { style: { flex: 1 } }, l.native),
                     l.code === lang && React.createElement("span", { style: { color: C.success, fontSize: 15 } }, "\u2713")))))),
+
                 React.createElement("div", { style: { padding: "14px 14px", marginBottom: 9, borderRadius: 14, background: C.card, border: `1px solid ${C.border}` } },
                     React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, marginBottom: 11 } },
                         React.createElement("span", { style: { fontSize: 19 } }, "\uD83C\uDFA8"),
@@ -9086,22 +9168,7 @@ function App() {
                             border: `1.5px solid ${theme === mode ? C.amber : C.border}`,
                             color: theme === mode ? C.amber : C.textSoft,
                         } }, label))))),
-                React.createElement("button", { onClick: () => { setShowSettings(false); setSubFromMenu(true); setScreen("adWarning"); }, style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 12, padding: "14px 14px", marginBottom: 9, borderRadius: 14, background: C.amberSoft, border: `1px solid ${C.amber}55`, color: C.text, fontSize: 15, fontWeight: 600, cursor: "pointer" } },
-                    React.createElement("span", { style: { fontSize: 19 } }, "\u2B50"),
-                    React.createElement("span", { style: { flex: 1 } }, t.stSubscription),
-                    React.createElement("span", { style: { color: C.amber, fontSize: 17 } }, "\u203A")),
-                React.createElement("button", { onClick: () => alert(t.stFeedbackAlert), style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 12, padding: "14px 14px", marginBottom: 9, borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, color: C.text, fontSize: 15, fontWeight: 600, cursor: "pointer" } },
-                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDCAC"),
-                    React.createElement("span", { style: { flex: 1 } }, t.stFeedback),
-                    React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")),
-                React.createElement("button", { onClick: () => alert(t.stPsychologistAlert), style: { display: "flex", alignItems: "center", gap: 12, padding: "14px 14px", marginBottom: 9, borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, opacity: 0.7, width: "100%", textAlign: "left", cursor: "pointer" } },
-                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83E\uDDE0"),
-                    React.createElement("span", { style: { flex: 1, fontSize: 15, fontWeight: 600, color: C.textSoft } }, t.stPsychologist),
-                    React.createElement("span", { style: { fontSize: 10.5, color: C.amber, fontWeight: 800, background: C.amberSoft, border: `1px solid ${C.amber}44`, borderRadius: 999, padding: "3px 9px" } }, t.badgeSoon)),
-                React.createElement("button", { onClick: () => alert(t.stRehabsAlert), style: { display: "flex", alignItems: "center", gap: 12, padding: "14px 14px", borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, opacity: 0.7, width: "100%", textAlign: "left", cursor: "pointer" } },
-                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83C\uDFE5"),
-                    React.createElement("span", { style: { flex: 1, fontSize: 15, fontWeight: 600, color: C.textSoft } }, t.stRehabs),
-                    React.createElement("span", { style: { fontSize: 10.5, color: C.amber, fontWeight: 800, background: C.amberSoft, border: `1px solid ${C.amber}44`, borderRadius: 999, padding: "3px 9px" } }, t.badgeSoon)),
+
                 React.createElement("div", { style: { ...stRow, cursor: "default", alignItems: "flex-start" } },
                     React.createElement("span", { style: { fontSize: 19, marginTop: 1 } }, "\uD83D\uDCC5"),
                     React.createElement("span", { style: { flex: 1 } },
@@ -9110,18 +9177,21 @@ function App() {
                         React.createElement("input", { type: "datetime-local", max: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), value: new Date(startMs - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), onChange: e => { const v = e.target.value; if (!v)
                                 return; const d = new Date(v); if (!isNaN(d.getTime()) && d.getTime() <= Date.now())
                                 setStartMs(d.getTime()); }, style: { ...S.input, width: "100%", padding: "9px 11px", fontSize: 14, colorScheme: "dark" } }))),
+
                 React.createElement("button", { onClick: () => { setShowSettings(false); setShowTour(true); }, style: { ...stRow, alignItems: "flex-start" } },
                     React.createElement("span", { style: { fontSize: 19, marginTop: 1 } }, "\uD83E\uDDED"),
                     React.createElement("span", { style: { flex: 1 } },
                         React.createElement("span", { style: { display: "block", fontSize: 15, fontWeight: 600, color: C.text } }, t.tourOpen),
                         React.createElement("span", { style: { display: "block", fontSize: 11.5, color: C.muted, marginTop: 3 } }, t.tourOpenSub)),
                     React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")),
+
                 React.createElement("button", { onClick: () => { setShowAbout(true); }, style: { ...stRow, alignItems: "flex-start" } },
                     React.createElement("span", { style: { fontSize: 19, marginTop: 1 } }, "\uD83D\uDD4A\uFE0F"),
                     React.createElement("span", { style: { flex: 1 } },
                         React.createElement("span", { style: { display: "block", fontSize: 15, fontWeight: 600, color: C.text } }, t.aboutTitle),
                         React.createElement("span", { style: { display: "block", fontSize: 11.5, color: C.muted, marginTop: 3 } }, t.aboutSub)),
                     React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")),
+
                 React.createElement("div", { style: { ...stRow, cursor: "default", alignItems: "flex-start" } },
                     React.createElement("span", { style: { fontSize: 19, marginTop: 1 } }, "\uD83E\uDEC6"),
                     React.createElement("div", { style: { flex: 1 } },
@@ -9145,18 +9215,21 @@ function App() {
                             display: "flex", justifyContent: bioOn ? "flex-end" : "flex-start", alignItems: "center",
                         } },
                         React.createElement("span", { style: { width: 20, height: 20, borderRadius: "50%", background: bioOn ? C.onAccent : C.muted, display: "block" } }))),
+
                 React.createElement("button", { onClick: () => { setShowBackup(true); }, style: { ...stRow, alignItems: "flex-start" } },
                     React.createElement("span", { style: { fontSize: 19, marginTop: 1 } }, "\uD83D\uDCBE"),
                     React.createElement("span", { style: { flex: 1 } },
                         React.createElement("span", { style: { display: "block", fontSize: 15, fontWeight: 600, color: C.text } }, t.stBackup),
                         React.createElement("span", { style: { display: "block", fontSize: 11.5, color: C.muted, marginTop: 3 } }, t.stBackupH)),
                     React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")),
+
                 React.createElement("button", { onClick: () => { setShowReport(true); }, style: { ...stRow, alignItems: "flex-start" } },
                     React.createElement("span", { style: { fontSize: 19, marginTop: 1 } }, "\uD83D\uDCC4"),
                     React.createElement("span", { style: { flex: 1 } },
                         React.createElement("span", { style: { display: "block", fontSize: 15, fontWeight: 600, color: C.text } }, t.rpTitle),
                         React.createElement("span", { style: { display: "block", fontSize: 11.5, color: C.muted, marginTop: 3, lineHeight: 1.4 } }, t.rpSub)),
                     React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")),
+
                 React.createElement("div", { style: { ...stRow, flexDirection: "column", alignItems: "stretch", gap: designOpen ? 10 : 0, cursor: "default" } },
                     React.createElement("div", { onClick: () => setDesignOpen(v => !v), style: { display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" } },
                         React.createElement("span", { style: { fontSize: 19, marginTop: 1 } }, "\uD83C\uDFA8"),
@@ -9194,18 +9267,21 @@ function App() {
                         ownBg && (React.createElement("button", { onClick: () => { setOwnBg(null); setDesign("green"); }, style: {
                                 background: "none", border: "none", color: C.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", padding: 4,
                             } }, t.dsRemove))))),
+
                 React.createElement("button", { onClick: () => { setShowPrivacy(true); }, style: { ...stRow, alignItems: "flex-start" } },
                     React.createElement("span", { style: { fontSize: 19, marginTop: 1 } }, "\uD83D\uDD12"),
                     React.createElement("span", { style: { flex: 1 } },
                         React.createElement("span", { style: { display: "block", fontSize: 15, fontWeight: 600, color: C.text } }, t.privTitle),
                         React.createElement("span", { style: { display: "block", fontSize: 11.5, color: C.muted, marginTop: 3 } }, t.privSub)),
                     React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")),
+
                 React.createElement("button", { onClick: () => { setShowTrusted(true); }, style: { ...stRow, alignItems: "flex-start" } },
                     React.createElement("span", { style: { fontSize: 19, marginTop: 1 } }, "\uD83E\uDD1D"),
                     React.createElement("span", { style: { flex: 1 } },
                         React.createElement("span", { style: { display: "block", fontSize: 15, fontWeight: 600, color: C.text } }, t.trustTitle),
                         React.createElement("span", { style: { display: "block", fontSize: 11.5, color: C.muted, marginTop: 3, lineHeight: 1.4 } }, trusted.name ? `${trusted.name} · ${t[trusted.who === "sponsor" ? "trustSponsor" : trusted.who === "friend" ? "trustFriend" : "trustFamily"]}` : t.trustSub)),
                     React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")),
+
                 React.createElement("div", { style: { ...stRow, cursor: "default", alignItems: "flex-start" } },
                     React.createElement("span", { style: { fontSize: 19, marginTop: 1 } }, "\uD83D\uDCCA"),
                     React.createElement("div", { style: { flex: 1 } },
@@ -9217,17 +9293,7 @@ function App() {
                             display: "flex", justifyContent: showRisk ? "flex-end" : "flex-start", alignItems: "center",
                         } },
                         React.createElement("span", { style: { width: 20, height: 20, borderRadius: "50%", background: showRisk ? C.onAccent : C.muted, display: "block" } }))),
-                React.createElement("div", { style: { ...stRow, cursor: "default", alignItems: "flex-start" } },
-                    React.createElement("span", { style: { fontSize: 19, marginTop: 1 } }, "\uD83D\uDEAB"),
-                    React.createElement("div", { style: { flex: 1 } },
-                        React.createElement("div", { style: { fontSize: 15, fontWeight: 600, color: C.text } }, t.stHide12),
-                        React.createElement("div", { style: { fontSize: 11.5, color: C.muted, marginTop: 3, lineHeight: 1.4 } }, t.stHide12Sub)),
-                    React.createElement("button", { onClick: () => setHide12(v => !v), style: {
-                            flexShrink: 0, width: 48, height: 28, borderRadius: 999, cursor: "pointer", padding: 3,
-                            background: hide12 ? C.amber : C.card2, border: `1px solid ${hide12 ? C.amber : C.border}`,
-                            display: "flex", justifyContent: hide12 ? "flex-end" : "flex-start", alignItems: "center",
-                        } },
-                        React.createElement("span", { style: { width: 20, height: 20, borderRadius: "50%", background: hide12 ? C.onAccent : C.muted, display: "block" } }))),
+
                 React.createElement("div", { style: { ...stRow, flexDirection: "column", alignItems: "stretch", gap: 10, cursor: "default" } },
                     React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
                         React.createElement("span", { style: { fontSize: 19 } }, "\uD83C\uDF9A\uFE0F"),
@@ -9238,10 +9304,12 @@ function App() {
                             border: `1.5px solid ${mentorTone === v ? C.amber : C.border}`,
                             color: mentorTone === v ? C.amber : C.textSoft,
                         } }, label))))),
+
                 React.createElement("button", { onClick: () => { setShowProfile(true); }, style: stRow },
                     React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDC64"),
                     React.createElement("span", { style: { flex: 1 } }, t.stProfile),
                     React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")),
+
                 pin ? (React.createElement("div", { style: { ...stRow, flexWrap: "wrap", cursor: "default" } },
                     React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDD12"),
                     React.createElement("span", { style: { flex: 1 } },
@@ -9252,37 +9320,11 @@ function App() {
                     React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDD12"),
                     React.createElement("span", { style: { flex: 1 } }, t.stPin),
                     React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A"))),
+
                 React.createElement("button", { onClick: shareProgress, style: stRow },
                     React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDCE4"),
                     React.createElement("span", { style: { flex: 1 } }, t.stExport),
-                    React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")),
-                React.createElement("button", { onClick: () => { setShowInvite(true); }, style: { ...stRow, background: C.amberSoft, border: `1px solid ${C.amber}55` } },
-                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83C\uDF81"),
-                    React.createElement("span", { style: { flex: 1 } }, t.stInvite),
-                    React.createElement("span", { style: { color: C.amber, fontSize: 17 } }, "\u203A")),
-                React.createElement("div", { style: stSoon },
-                    React.createElement("span", { style: { fontSize: 19 } }, "\u23F0"),
-                    React.createElement("span", { style: { flex: 1, fontSize: 15, fontWeight: 600, color: C.textSoft } }, t.stReminders),
-                    React.createElement("span", { style: stSoonBadge }, t.badgeSoon)),
-                React.createElement("button", { onClick: () => alert(t.stDetoxAlert), style: stRow },
-                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDCA7"),
-                    React.createElement("span", { style: { flex: 1 } }, t.stDetox),
-                    React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")),
-                React.createElement("button", { onClick: () => alert(t.stCommunityAlert), style: { ...stSoon, cursor: "pointer", width: "100%", textAlign: "left" } },
-                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDCAC"),
-                    React.createElement("span", { style: { flex: 1, fontSize: 15, fontWeight: 600, color: C.textSoft } }, t.stCommunity),
-                    React.createElement("span", { style: stSoonBadge }, t.badgeSoon)),
-                React.createElement("button", { onClick: () => alert(t.stReportAlert), style: stRow },
-                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDC1E"),
-                    React.createElement("span", { style: { flex: 1 } }, t.stReport),
-                    React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")),
-                React.createElement("button", { onClick: deleteData, style: { ...stRow, border: `1px solid ${C.danger}44`, color: C.danger } },
-                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDDD1\uFE0F"),
-                    React.createElement("span", { style: { flex: 1 } }, t.stDelete)),
-                React.createElement("button", { onClick: () => alert(t.stRelapseAlert), style: { ...stSoon, marginBottom: 0, cursor: "pointer", width: "100%", textAlign: "left" } },
-                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83C\uDD98"),
-                    React.createElement("span", { style: { flex: 1, fontSize: 15, fontWeight: 600, color: C.textSoft } }, t.stRelapse),
-                    React.createElement("span", { style: stSoonBadge }, t.badgeSoon))))),
+                    React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")))))),
         showTrialNotice && (React.createElement(TrialNotice, { lang: lang, daysLeft: trialLeft, onOffer: () => { setTrialNoticeShown(trialLeft); setShowSettings(true); }, onLater: () => setTrialNoticeShown(trialLeft) })),
         showAbout && React.createElement(AboutScreen, { lang: lang, onClose: () => setShowAbout(false) }),
         showTour && React.createElement(TourScreen, { lang: lang, onClose: () => { setShowTour(false); setTourSeen(true); } }),
@@ -9323,13 +9365,14 @@ function App() {
                 // сколько сообщений открывает один ролик — зависит от рынка:
                 // доход с показа в СНГ ниже, поэтому там меньше
                 const perAd = 3;
+                const AD_BONUS_CAP = 9; // не больше трёх роликов в сутки
                 // Бонус помечаем в хранилище ДО показа ролика. Если человек
                 // убьёт приложение во время рекламы, отметка переживёт перезапуск
                 // и сообщения начислятся при следующем открытии — потерять их нельзя.
                 try { putSaved("pendingAdBonus", perAd); } catch (e) { }
                 const grant = () => {
                     try { putSaved("pendingAdBonus", 0); } catch (e) { }
-                    setAdBonus(n => n + perAd);
+                    setAdBonus(n => Math.min(AD_BONUS_CAP, n + perAd));
                     setShowPaywall(false);
                 };
                 try {
