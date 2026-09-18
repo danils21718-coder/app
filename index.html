@@ -2226,7 +2226,7 @@ const T = {
         consentAgree: "Entendi, continuar",
         consentRead: "Mais detalhes",
         trialBadge: "Período de teste",
-        trialUsedAlert: "Сынақ мерзімі бұрын пайдаланылған",
+        trialUsedAlert: "O período de teste já foi utilizado",
         trialLeft: (d) => d === 1 ? "Termina amanhã" : `Faltam ${d} dias`,
         trialEndsToday: "Termina hoje",
         trialWarnTitle: "Amanhã o período de teste termina",
@@ -2680,7 +2680,7 @@ const T = {
         consentAgree: "Түсінікті, жалғастыру",
         consentRead: "Толығырақ",
         trialBadge: "Сынақ мерзімі",
-        trialUsedAlert: "O período de teste já foi utilizado",
+        trialUsedAlert: "Сынақ мерзімі бұрын пайдаланылған",
         trialLeft: (d) => d === 1 ? "Ертең аяқталады" : `${d} күн қалды`,
         trialEndsToday: "Бүгін аяқталады",
         trialWarnTitle: "Ертең сынақ мерзімі аяқталады",
@@ -3134,7 +3134,7 @@ const T = {
         consentAgree: "明白了，继续",
         consentRead: "了解详情",
         trialBadge: "试用期",
-        trialUsedAlert: "Deneme süresi zaten kullanıldı",
+        trialUsedAlert: "试用期已经使用过了",
         trialLeft: (d) => d === 1 ? "明天结束" : `还剩 ${d} 天`,
         trialEndsToday: "今天结束",
         trialWarnTitle: "试用期明天结束",
@@ -3594,7 +3594,7 @@ function AddictionScreen({ lang, onSelect }) {
         React.createElement("div", { style: { padding: "20px 16px 8px" } },
             React.createElement("div", { style: { fontSize: 19, fontWeight: 800, color: C.text } }, t.chooseAddiction),
             React.createElement("div", { style: { fontSize: 12, color: C.muted, marginTop: 4 } }, lang === "zh" ? `最多可选${MAX}项（已选${chosen.length}）` : lang === "kk" ? `${MAX} дейін таңдауға болады (таңдалғаны ${chosen.length})` : lang === "ru" ? `Можно выбрать до ${MAX} (выбрано ${chosen.length})` : lang === "es" ? `Puedes elegir hasta ${MAX} (seleccionados ${chosen.length})` : lang === "pt" ? `Pode escolher até ${MAX} (selecionados ${chosen.length})` : `Choose up to ${MAX} (selected ${chosen.length})`)),
-        React.createElement("div", { style: { padding: "0 14px 20px", overflowY: "auto", flex: 1 } },
+        React.createElement("div", { style: { padding: "0 14px 20px", overflowY: "auto", WebkitOverflowScrolling: "touch", flex: "1 1 auto", minHeight: 0 } },
             React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 } }, t.addictions.map(a => {
                 const isOn = chosen.includes(a.id);
                 const disabled = !isOn && chosen.length >= MAX;
@@ -6703,7 +6703,9 @@ ${diarySummary ? `- ЕГО ДНЕВНИК ЧУВСТВ:\n${diarySummary}` : "- �
             onNeedPremium && onNeedPremium();
             return;
         }
-        onSpendMsg && onSpendMsg();
+        // повтор ранее НЕ доставленного сообщения бесплатен: за него уже списали
+        if (typeof forcedText !== "string")
+            onSpendMsg && onSpendMsg();
         const userMsg = source;
         if (typeof forcedText !== "string")
             setInput("");
@@ -8341,7 +8343,8 @@ function ResourcesSection({ lang, onAskMentor }) {
     // это лучше, чем четыре пустые заглушки
     const lectures = lang === "ru" ? LECTURES_RU : LECTURES_EN;
     const LEC_IMG = ["selflove", "compulsive", "change", "craving", "ei",
-        "mature", "berne", "warning", "goals", "defects", "recovery", "paws", "codep"];
+        "mature", "berne", "warning", "goals", "defects", "recovery", "paws", "codep",
+        "bpsd", "sub"];
     const lecImg = (id) => LEC_IMG.indexOf(id) !== -1 ? "/lectures/lecture-" + id + ".jpg" : null;
     const meta = [
         { g: ["#1E4B57", "#2E7D8A"] }, { g: ["#265A3A", "#3E8E5A"] },
@@ -8569,6 +8572,16 @@ const mentorFailReason = (status, data) => {
     return "пустой ответ модели (" + status + ")";
 };
 const STORE_KEY = "onlytoday.v1";
+// Флаг «пробный период уже брали» хранится ОТДЕЛЬНО от общего объекта данных.
+// Общий объект стирается кнопкой «удалить мои данные», и раньше вместе с ним
+// стирался флаг — после чего триал можно было брать заново сколько угодно раз.
+function trialUsedHard() {
+    try { return window.localStorage.getItem("onlytoday.trial") === "1"; }
+    catch (e) { return false; }
+}
+function markTrialUsedHard() {
+    try { window.localStorage.setItem("onlytoday.trial", "1"); } catch (e) { }
+}
 const storeAvailable = (() => {
     try {
         const k = "__ot_test__";
@@ -8686,6 +8699,7 @@ function App() {
     const [mentorTopic, setMentorTopic] = useState(null);
     const [task1IntroShown, setTask1IntroShown] = useSaved("task1IntroShown", false);
     const [showSettings, setShowSettings] = useState(false);
+    const [showSettingsScreen, setShowSettingsScreen] = useState(false);
     const [theme, setTheme] = useSaved("theme", "dark");
     const [avatar, setAvatar] = useSaved("avatar", null);
     const [myWhy, setMyWhy] = useSaved("myWhy", "");
@@ -8734,6 +8748,11 @@ function App() {
     const [msgsDate, setMsgsDate] = useSaved("msgsDate", new Date().toDateString());
     const [showPaywall, setShowPaywall] = useState(false);
     const [adBonus, setAdBonus] = useSaved("adBonus", 0); // сообщения, добытые просмотром рекламы за сегодня
+    // Бонус за рекламу действует только в тот день, когда его получили.
+    // Раньше он обнулялся лишь при отправке сообщения в новый день, и наутро
+    // счётчик показывал завышенный остаток, а после первого сообщения падал.
+    const isToday = msgsDate === new Date().toDateString();
+    const adBonusToday = isToday ? adBonus : 0;
     // Если приложение закрыли прямо во время рекламного ролика, отметка о награде
     // осталась в хранилище — начисляем её при первом же запуске.
     useEffect(() => {
@@ -8741,7 +8760,7 @@ function App() {
             const pend = SAVED.pendingAdBonus;
             if (pend > 0) {
                 putSaved("pendingAdBonus", 0);
-                setAdBonus(n => n + pend);
+                setAdBonus(n => Math.min(9, n + pend));
             }
         }
         catch (e) { }
@@ -8921,12 +8940,13 @@ function App() {
         if (c === "trial") {
             // Повторно триал не выдаём. Раньше можно было заходить сюда
             // сколько угодно раз и бесконечно пользоваться бесплатно.
-            if (trialUsed) {
+            if (trialUsed || trialUsedHard()) {
                 alert(tr(lang).trialUsedAlert);
                 return;
             }
             setTrialStart(Date.now());
             setTrialUsed(true);
+            markTrialUsedHard();
             // теперь триал действительно даёт премиум и действительно кончается
             setPremiumUntil(Date.now() + TRIAL_DAYS * 86400000);
             setScreen("main");
@@ -9062,7 +9082,7 @@ function App() {
             else {
                 setMentorSOS(true);
             } setTab("mentor"); }, myWhy: myWhy, emergency: emergency, sosOpen: sosOpen, clearSosOpen: () => setSosOpen(false), onFirstTestDone: () => { setMentorTopic("after_first_test"); setTab("mentor"); } }),
-        tab === "mentor" && React.createElement(MentorTab, { lang: lang, isPremium: isPremium, msgsLeft: Math.max(0, (isPremium ? 25 : 5) + adBonus - (msgsDate === new Date().toDateString() ? msgsToday : 0)), onSpendMsg: () => {
+        tab === "mentor" && React.createElement(MentorTab, { lang: lang, isPremium: isPremium, msgsLeft: Math.max(0, (isPremium ? 25 : 5) + adBonusToday - (isToday ? msgsToday : 0)), onSpendMsg: () => {
                 const today = new Date().toDateString();
                 if (msgsDate !== today) {
                     setMsgsDate(today);
@@ -9080,6 +9100,11 @@ function App() {
                 React.createElement("button", { onClick: () => { setShowSettings(false); setSubFromMenu(true); setScreen("adWarning"); }, style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 12, padding: "14px 14px", marginBottom: 9, borderRadius: 14, background: C.amberSoft, border: `1px solid ${C.amber}55`, color: C.text, fontSize: 15, fontWeight: 600, cursor: "pointer" } },
                     React.createElement("span", { style: { fontSize: 19 } }, "\u2B50"),
                     React.createElement("span", { style: { flex: 1 } }, t.stSubscription),
+                    React.createElement("span", { style: { color: C.amber, fontSize: 17 } }, "\u203A")),
+
+                React.createElement("button", { onClick: () => { setShowInvite(true); }, style: { ...stRow, background: C.amberSoft, border: `1px solid ${C.amber}55` } },
+                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83C\uDF81"),
+                    React.createElement("span", { style: { flex: 1 } }, t.stInvite),
                     React.createElement("span", { style: { color: C.amber, fontSize: 17 } }, "\u203A")),
 
                 React.createElement("button", { onClick: () => alert(t.stFeedbackAlert), style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 12, padding: "14px 14px", marginBottom: 9, borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, color: C.text, fontSize: 15, fontWeight: 600, cursor: "pointer" } },
@@ -9101,11 +9126,6 @@ function App() {
                     React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDCA7"),
                     React.createElement("span", { style: { flex: 1 } }, t.stDetox),
                     React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")),
-
-                React.createElement("button", { onClick: () => { setShowInvite(true); }, style: { ...stRow, background: C.amberSoft, border: `1px solid ${C.amber}55` } },
-                    React.createElement("span", { style: { fontSize: 19 } }, "\uD83C\uDF81"),
-                    React.createElement("span", { style: { flex: 1 } }, t.stInvite),
-                    React.createElement("span", { style: { color: C.amber, fontSize: 17 } }, "\u203A")),
 
                 React.createElement("div", { style: { ...stRow, cursor: "default", alignItems: "flex-start" } },
                     React.createElement("span", { style: { fontSize: 19, marginTop: 1 } }, "\uD83D\uDEAB"),
@@ -9134,6 +9154,15 @@ function App() {
                     React.createElement("span", { style: { flex: 1, fontSize: 15, fontWeight: 600, color: C.textSoft } }, t.stRelapse),
                     React.createElement("span", { style: stSoonBadge }, t.badgeSoon)),
 
+                React.createElement("button", { onClick: () => { setShowSettings(false); setShowSettingsScreen(true); }, style: { ...stRow, marginTop: 4 } },
+                    React.createElement("span", { style: { fontSize: 19 } }, "\u2699\uFE0F"),
+                    React.createElement("span", { style: { flex: 1 } }, t.settings),
+                    React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A")))),
+        showSettingsScreen && (React.createElement("div", { style: { position: "absolute", inset: 0, zIndex: 120, background: C.bg, display: "flex", flexDirection: "column" } },
+            React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "16px 16px 12px", flexShrink: 0, borderBottom: `1px solid ${C.border}` } },
+                React.createElement("button", { onClick: () => setShowSettingsScreen(false), style: { background: "none", border: "none", color: C.text, fontSize: 22, cursor: "pointer", padding: 0, lineHeight: 1 } }, "\u2039"),
+                React.createElement("div", { style: { fontSize: 19, fontWeight: 800, color: C.text, flex: 1 } }, t.settings)),
+            React.createElement("div", { style: { flex: "1 1 auto", minHeight: 0, overflowY: "auto", WebkitOverflowScrolling: "touch", padding: "14px 16px 28px" } },
                 React.createElement("button", { onClick: () => alert(t.stReportAlert), style: stRow },
                     React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDC1E"),
                     React.createElement("span", { style: { flex: 1 } }, t.stReport),
@@ -9142,11 +9171,6 @@ function App() {
                 React.createElement("button", { onClick: deleteData, style: { ...stRow, border: `1px solid ${C.danger}44`, color: C.danger } },
                     React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDDD1\uFE0F"),
                     React.createElement("span", { style: { flex: 1 } }, t.stDelete)),
-                React.createElement("details", { style: { marginTop: 6 } },
-                    React.createElement("summary", { style: { listStyle: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, padding: "14px 14px", marginBottom: 9, borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, color: C.text, fontSize: 15, fontWeight: 600 } },
-                        React.createElement("span", { style: { fontSize: 19 } }, "\u2699\uFE0F"),
-                        React.createElement("span", { style: { flex: 1 } }, t.settings)),
-
                 React.createElement("button", { onClick: () => setLangPick(v => !v), style: { width: "100%", textAlign: "left", display: "flex", alignItems: "center", gap: 12, padding: "14px 14px", marginBottom: langPick ? 0 : 9, borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, color: C.text, fontSize: 15, fontWeight: 600, cursor: "pointer" } },
                     React.createElement("span", { style: { fontSize: 19 } }, "\uD83C\uDF0D"),
                     React.createElement("span", { style: { flex: 1 } }, t.stChangeLang),
@@ -9178,7 +9202,7 @@ function App() {
                                 return; const d = new Date(v); if (!isNaN(d.getTime()) && d.getTime() <= Date.now())
                                 setStartMs(d.getTime()); }, style: { ...S.input, width: "100%", padding: "9px 11px", fontSize: 14, colorScheme: "dark" } }))),
 
-                React.createElement("button", { onClick: () => { setShowSettings(false); setShowTour(true); }, style: { ...stRow, alignItems: "flex-start" } },
+                React.createElement("button", { onClick: () => { setShowSettingsScreen(false); setShowTour(true); }, style: { ...stRow, alignItems: "flex-start" } },
                     React.createElement("span", { style: { fontSize: 19, marginTop: 1 } }, "\uD83E\uDDED"),
                     React.createElement("span", { style: { flex: 1 } },
                         React.createElement("span", { style: { display: "block", fontSize: 15, fontWeight: 600, color: C.text } }, t.tourOpen),
@@ -9204,7 +9228,7 @@ function App() {
                                 return;
                             }
                             if (!pin && !bioOn) {
-                                setShowSettings(false);
+                                setShowSettingsScreen(false);
                                 setPinSetup(true);
                                 return;
                             }
@@ -9315,8 +9339,8 @@ function App() {
                     React.createElement("span", { style: { flex: 1 } },
                         t.stPin,
                         " \u2713"),
-                    React.createElement("button", { onClick: () => { setShowSettings(false); setLocked(true); }, style: { fontSize: 12, fontWeight: 800, borderRadius: 999, padding: "6px 12px", cursor: "pointer", border: "none", background: C.amberSoft, color: C.amber } }, t.stLockNow),
-                    React.createElement("button", { onClick: () => setPin(""), style: { fontSize: 12, fontWeight: 700, borderRadius: 999, padding: "6px 12px", cursor: "pointer", border: `1px solid ${C.border}`, background: "transparent", color: C.muted } }, t.stPinOff))) : (React.createElement("button", { onClick: () => { setShowSettings(false); setPinSetup(true); }, style: stRow },
+                    React.createElement("button", { onClick: () => { setShowSettingsScreen(false); setLocked(true); }, style: { fontSize: 12, fontWeight: 800, borderRadius: 999, padding: "6px 12px", cursor: "pointer", border: "none", background: C.amberSoft, color: C.amber } }, t.stLockNow),
+                    React.createElement("button", { onClick: () => setPin(""), style: { fontSize: 12, fontWeight: 700, borderRadius: 999, padding: "6px 12px", cursor: "pointer", border: `1px solid ${C.border}`, background: "transparent", color: C.muted } }, t.stPinOff))) : (React.createElement("button", { onClick: () => { setShowSettingsScreen(false); setPinSetup(true); }, style: stRow },
                     React.createElement("span", { style: { fontSize: 19 } }, "\uD83D\uDD12"),
                     React.createElement("span", { style: { flex: 1 } }, t.stPin),
                     React.createElement("span", { style: { color: C.muted, fontSize: 17 } }, "\u203A"))),
@@ -9369,9 +9393,9 @@ function App() {
                 // Бонус помечаем в хранилище ДО показа ролика. Если человек
                 // убьёт приложение во время рекламы, отметка переживёт перезапуск
                 // и сообщения начислятся при следующем открытии — потерять их нельзя.
-                try { putSaved("pendingAdBonus", perAd); } catch (e) { }
+                try { putSaved("pendingAdBonus", perAd); flushStore(); } catch (e) { }
                 const grant = () => {
-                    try { putSaved("pendingAdBonus", 0); } catch (e) { }
+                    try { putSaved("pendingAdBonus", 0); flushStore(); } catch (e) { }
                     setAdBonus(n => Math.min(AD_BONUS_CAP, n + perAd));
                     setShowPaywall(false);
                 };
