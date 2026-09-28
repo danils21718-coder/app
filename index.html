@@ -104,6 +104,88 @@ window.OT_ADS = (function () {
   };
 })();
 </script>
+<script>
+/* ── CAPACITOR-АДАПТЕР ───────────────────────────────────────────────────────
+   В сборке на Capacitor нет Natively. Здесь подменяем NativelyPurchases и
+   NativelyAdmobInterstitial на плагины RevenueCat и AdMob с тем же API,
+   поэтому остальной код приложения не меняется. В браузере и в старой
+   сборке Natively этот блок ничего не делает.                               */
+(function () {
+  var Cap = window.Capacitor;
+  if (!Cap || typeof Cap.isNativePlatform !== "function" || !Cap.isNativePlatform()) return;
+  window.__OT_CAP = true;
+  try { document.documentElement.classList.add("ot-cap"); } catch (e) {}
+  var platform = Cap.getPlatform ? Cap.getPlatform() : "android";
+  var RC_KEY = platform === "ios" ? "appl_JRvKDyFuKxynPaqPoJvuoYnjzyn" : "goog_qhWisXnbVqPlmlevIJmsyeVimZk";
+  var Purchases = Cap.registerPlugin("Purchases");
+  var AdMob = Cap.registerPlugin("AdMob");
+
+  var rcReady = Purchases.configure({ apiKey: RC_KEY }).catch(function () {});
+  var pkgs = {};
+
+  function Shim() {}
+  Shim.prototype.getOfferings = function (cb) {
+    rcReady.then(function () { return Purchases.getOfferings(); }).then(function (res) {
+      var all = (res && res.all) || {};
+      var out = {};
+      Object.keys(all).forEach(function (k) {
+        var list = (all[k] && all[k].availablePackages) || [];
+        list.forEach(function (p) { if (p && p.identifier) pkgs[p.identifier] = p; });
+        out[k] = { availablePackages: list };
+      });
+      cb({ status: "SUCCESS", offerings: out });
+    }).catch(function (e) { cb({ status: "FAILED", error: e && e.message }); });
+  };
+  Shim.prototype.purchasePackage = function (id, cb) {
+    var p = pkgs[id];
+    if (!p) { cb({ status: "FAILED", error: "package " + id }); return; }
+    rcReady.then(function () { return Purchases.purchasePackage({ aPackage: p }); })
+      .then(function () { cb({ status: "SUCCESS" }); })
+      .catch(function (e) {
+        var cancelled = e && (e.userCancelled || e.code === "1" || e.code === 1 || e.code === "PURCHASE_CANCELLED");
+        cb(cancelled ? { status: "CANCELLED" } : { status: "FAILED", error: e && (e.message || e.code) });
+      });
+  };
+  Shim.prototype.restore = function (cb) {
+    rcReady.then(function () { return Purchases.restorePurchases(); }).then(function (r) {
+      var ci = (r && r.customerInfo) || {};
+      var active = (ci.activeSubscriptions && ci.activeSubscriptions.length) ||
+        (ci.entitlements && ci.entitlements.active && Object.keys(ci.entitlements.active).length) ||
+        (ci.nonSubscriptionTransactions && ci.nonSubscriptionTransactions.length);
+      cb({ status: active ? "SUCCESS" : "FAILED" });
+    }).catch(function () { cb({ status: "FAILED" }); });
+  };
+
+  var adReady = AdMob.initialize({}).catch(function () {});
+  function AdShim(iosId, androidId, cb) {
+    var self = this;
+    self.adId = platform === "ios" ? iosId : androidId;
+    function load() { adReady.then(function () { return AdMob.prepareInterstitial({ adId: self.adId }); }).catch(function () {}); }
+    AdMob.addListener("interstitialAdLoaded", function () { cb && cb({ event: "DID_LOAD_AD" }); });
+    AdMob.addListener("interstitialAdShowed", function () { cb && cb({ event: "DID_SHOW_AD" }); });
+    AdMob.addListener("interstitialAdDismissed", function () { cb && cb({ event: "DID_DISMISS_AD" }); load(); });
+    AdMob.addListener("interstitialAdFailedToShow", function () { cb && cb({ event: "DID_DISMISS_AD" }); load(); });
+    load();
+  }
+  AdShim.prototype.showInterstitialAd = function () {
+    AdMob.showInterstitial().catch(function () {});
+  };
+
+  try { Object.defineProperty(window, "NativelyPurchases", { value: Shim, writable: false, configurable: false }); } catch (e) {}
+  try { Object.defineProperty(window, "NativelyAdmobInterstitial", { value: AdShim, writable: false, configurable: false }); } catch (e) {}
+  // Natively здесь не нужен: рекламу запускаем сами, его загрузчик отключаем
+  window.nativelyOnLoad = function () {};
+  try { window.OT_ADS && window.OT_ADS.init(); } catch (e) {}
+})();
+</script>
+<style>
+  /* Capacitor на Android 15+ рисует приложение под системными панелями — отступаем */
+  html.ot-cap #root {
+    box-sizing: border-box;
+    padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+    padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  }
+</style>
 <script>/* React 18.3.1 UMD — встроен локально, сеть не требуется */
 /**
  * @license React
