@@ -156,7 +156,7 @@ window.OT_ADS = (function () {
     }).catch(function () { cb({ status: "FAILED" }); });
   };
 
-  var adReady = AdMob.initialize({}).catch(function () {});
+  var adReady = platform === "android" ? AdMob.initialize({}).catch(function () {}) : Promise.resolve();
   function AdShim(iosId, androidId, cb) {
     var self = this;
     self.adId = platform === "ios" ? iosId : androidId;
@@ -172,7 +172,10 @@ window.OT_ADS = (function () {
   };
 
   try { Object.defineProperty(window, "NativelyPurchases", { value: Shim, writable: false, configurable: false }); } catch (e) {}
-  try { Object.defineProperty(window, "NativelyAdmobInterstitial", { value: AdShim, writable: false, configurable: false }); } catch (e) {}
+  // реклама пока только на Android: в iOS-сборке AdMob нет
+  if (platform === "android") {
+    try { Object.defineProperty(window, "NativelyAdmobInterstitial", { value: AdShim, writable: false, configurable: false }); } catch (e) {}
+  }
   // Natively здесь не нужен: рекламу запускаем сами, его загрузчик отключаем
   window.nativelyOnLoad = function () {};
   try { window.OT_ADS && window.OT_ADS.init(); } catch (e) {}
