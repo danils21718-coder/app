@@ -114,6 +114,8 @@ window.OT_ADS = (function () {
   var Cap = window.Capacitor;
   if (!Cap || typeof Cap.isNativePlatform !== "function" || !Cap.isNativePlatform()) return;
   window.__OT_CAP = true;
+  var Browser = Cap.registerPlugin("Browser");
+  window.__OT_OPEN = function (url) { Browser.open({ url: url }).catch(function () { try { window.open(url, "_blank"); } catch (e) {} }); };
   try { document.documentElement.classList.add("ot-cap"); } catch (e) {}
   var platform = Cap.getPlatform ? Cap.getPlatform() : "android";
   var RC_KEY = platform === "ios" ? "appl_JRvKDyFuKxynPaqPoJvuoYnjzyn" : "goog_qhWisXnbVqPlmlevIJmsyeVimZk";
@@ -750,7 +752,7 @@ const T = {
         stThemeDark: "Тёмная", stThemeLight: "Светлая",
         stPsychologist: "Найти психолога онлайн", stRehabs: "Проверенные реабилитационные центры",
         stBack: "← Назад", stClose: "Закрыть", stFeedbackAlert: "Расскажи, что работает, а что нет — это поможет сделать приложение лучше. Форма отзыва появится в ближайшем обновлении.",
-        stSubAlert: "Подписка пока не подключена. Появится перед публикацией в магазине приложений.",
+        stSubAlert: "Не удалось открыть оплату. Проверьте интернет и попробуйте ещё раз.",
         langSwitch: "RU",
         savings: "Я сэкономил",
         savingsQ: "Сколько ты тратил в день на зависимость?",
@@ -977,8 +979,8 @@ const T = {
         trialWarnText: "Мы ничего не спишем автоматически. Реклама просто вернётся, а всё, что ты написал, останется на месте.",
         trialEndTitle: "Сегодня последний день без рекламы",
         trialEndText: "Списаний не будет — решаешь только ты. Если хочешь продолжить без рекламы, первый месяц дешевле.",
-        trialOffer: "Первый месяц — 2.49$",
-        trialOfferSub: "Дальше 4.99$, отменить можно в любой момент",
+        trialOffer: "Выбрать подписку",
+        trialOfferSub: "Цена в вашей валюте, отменить можно в любой момент",
         trialLater: "Не сейчас",
         trialNoCharge: "Мы не списываем деньги без твоего согласия",
         adWeek: "Неделя — 1.1$",
@@ -1204,7 +1206,7 @@ const T = {
         stThemeDark: "Oscuro", stThemeLight: "Claro",
         stPsychologist: "Buscar un psicólogo en línea", stRehabs: "Centros de rehabilitación verificados",
         stBack: "← Atrás", stClose: "Cerrar", stFeedbackAlert: "Cuéntanos qué funciona y qué no — ayuda a mejorar la aplicación. El formulario llegará en la próxima actualización.",
-        stSubAlert: "Las suscripciones aún no están disponibles. Llegarán antes del lanzamiento en la tienda de aplicaciones.",
+        stSubAlert: "No se pudo abrir el pago. Revisa tu conexión e inténtalo de nuevo.",
         langSwitch: "ES",
         savings: "He ahorrado",
         savingsQ: "¿Cuánto gastabas al día en tu adicción?",
@@ -1431,8 +1433,8 @@ const T = {
         trialWarnText: "No cobraremos nada automáticamente. Solo volverán los anuncios, y todo lo que escribiste seguirá donde está.",
         trialEndTitle: "Hoy es el último día sin anuncios",
         trialEndText: "No habrá ningún cobro — lo decides tú. Si quieres seguir sin anuncios, el primer mes sale más barato.",
-        trialOffer: "Primer mes — 2.49$",
-        trialOfferSub: "Después 4.99$, puedes cancelar cuando quieras",
+        trialOffer: "Elegir suscripción",
+        trialOfferSub: "Precio en tu moneda, puedes cancelar cuando quieras",
         trialLater: "Ahora no",
         trialNoCharge: "No cobramos nada sin tu consentimiento",
         adWeek: "Una semana — 1.1$",
@@ -1658,7 +1660,7 @@ const T = {
         stThemeDark: "Dark", stThemeLight: "Light",
         stPsychologist: "Find a psychologist online", stRehabs: "Verified rehab centers",
         stBack: "← Back", stClose: "Close", stFeedbackAlert: "Tell us what works and what doesn't — it helps make the app better. The feedback form is coming in the next update.",
-        stSubAlert: "Subscriptions aren't connected yet. They'll arrive before the app store release.",
+        stSubAlert: "Couldn't open payment. Check your connection and try again.",
         langSwitch: "EN",
         savings: "I Saved",
         savingsQ: "How much did you spend per day on your addiction?",
@@ -1885,8 +1887,8 @@ const T = {
         trialWarnText: "We won't charge you anything automatically. The ads simply come back, and everything you've written stays where it is.",
         trialEndTitle: "Today is your last ad-free day",
         trialEndText: "Nothing will be charged — it's your call. If you want to keep it ad-free, the first month is cheaper.",
-        trialOffer: "First month — $2.49",
-        trialOfferSub: "Then $4.99, cancel any time",
+        trialOffer: "Choose a plan",
+        trialOfferSub: "Price in your currency, cancel any time",
         trialLater: "Not now",
         trialNoCharge: "We never charge without your consent",
         adWeek: "One week — $1.1",
@@ -2112,7 +2114,7 @@ const T = {
         stThemeDark: "Escuro", stThemeLight: "Claro",
         stPsychologist: "Encontrar um psicólogo on-line", stRehabs: "Clínicas de reabilitação verificadas",
         stBack: "← Voltar", stClose: "Fechar", stFeedbackAlert: "Conte o que funciona e o que não funciona — isso ajuda a melhorar o aplicativo. O formulário chegará na próxima atualização.",
-        stSubAlert: "As assinaturas ainda não estão disponíveis. Elas chegarão antes do lançamento na loja de aplicativos.",
+        stSubAlert: "Não foi possível abrir o pagamento. Verifique a conexão e tente novamente.",
         langSwitch: "PT",
         savings: "Já economizei",
         savingsQ: "Quanto você gastava por dia com sua dependência?",
@@ -2339,8 +2341,8 @@ const T = {
         trialWarnText: "Não vamos cobrar nada automaticamente. Os anúncios simplesmente voltam, e tudo o que você escreveu continua no lugar.",
         trialEndTitle: "Hoje é o último dia sem anúncios",
         trialEndText: "Não haverá cobrança — a decisão é sua. Se quiser continuar sem anúncios, o primeiro mês sai mais barato.",
-        trialOffer: "Primeiro mês — 2.49$",
-        trialOfferSub: "Depois 4.99$, dá para cancelar quando quiser",
+        trialOffer: "Escolher assinatura",
+        trialOfferSub: "Preço na sua moeda, dá para cancelar quando quiser",
         trialLater: "Agora não",
         trialNoCharge: "Não cobramos nada sem o seu consentimento",
         adWeek: "Uma semana — 1.1$",
@@ -2566,7 +2568,7 @@ const T = {
         stThemeDark: "Қараңғы", stThemeLight: "Ашық",
         stPsychologist: "Онлайн психолог табу", stRehabs: "Тексерілген оңалту орталықтары",
         stBack: "← Артқа", stClose: "Жабу", stFeedbackAlert: "Не жұмыс істейді, не істемейді — жаз. Бұл қолданбаны жақсартуға көмектеседі. Пікір формасы жақын жаңартуда шығады.",
-        stSubAlert: "Жазылым әзірге қосылмаған. Дүкенде жарияланар алдында пайда болады.",
+        stSubAlert: "Төлемді ашу мүмкін болмады. Интернетті тексеріп, қайталап көріңіз.",
         langSwitch: "KK",
         savings: "Мен үнемдедім",
         savingsQ: "Тәуелділікке күніне қанша жұмсадың?",
@@ -2793,8 +2795,8 @@ const T = {
         trialWarnText: "Біз автоматты түрде ештеңе шешіп алмаймыз. Жарнама ғана қайта оралады, ал жазғаныңның бәрі орнында қалады.",
         trialEndTitle: "Бүгін жарнамасыз соңғы күн",
         trialEndText: "Ешқандай шешіп алу болмайды — шешім сенікі. Жарнамасыз жалғастырғың келсе, бірінші ай арзанырақ.",
-        trialOffer: "Бірінші ай — 2.49$",
-        trialOfferSub: "Одан кейін 4.99$, кез келген уақытта бас тартуға болады",
+        trialOffer: "Жазылымды таңдау",
+        trialOfferSub: "Баға өз валютаңызда, кез келген уақытта бас тартуға болады",
         trialLater: "Қазір емес",
         trialNoCharge: "Келісіміңсіз ақша шешіп алмаймыз",
         adWeek: "Бір апта — 1.1$",
@@ -3020,7 +3022,7 @@ const T = {
         stThemeDark: "深色", stThemeLight: "浅色",
         stPsychologist: "寻找线上心理咨询师", stRehabs: "经过核实的康复中心",
         stBack: "← 返回", stClose: "关闭", stFeedbackAlert: "告诉我们哪些有用、哪些没用——这能让应用变得更好。反馈表单会在近期更新中上线。",
-        stSubAlert: "订阅功能尚未接入，会在应用商店上架前开放。",
+        stSubAlert: "无法打开支付。请检查网络后重试。",
         langSwitch: "中文",
         savings: "我省下了",
         savingsQ: "你每天在这上面花多少钱？",
@@ -3247,8 +3249,8 @@ const T = {
         trialWarnText: "我们不会自动扣款。只是广告会回来，而你写下的一切都会留在原处。",
         trialEndTitle: "今天是无广告的最后一天",
         trialEndText: "不会有任何扣款——决定权在你。如果你想继续无广告，第一个月更便宜。",
-        trialOffer: "首月 — 2.49美元",
-        trialOfferSub: "之后每月4.6美元，随时可取消",
+        trialOffer: "选择订阅",
+        trialOfferSub: "价格以您的货币显示，随时可取消",
         trialLater: "现在不用",
         trialNoCharge: "未经你同意，我们不会扣款",
         adWeek: "一周 — 1.3美元",
@@ -3926,6 +3928,7 @@ function isNativeApp() {
     return typeof window !== "undefined" && typeof window.NativelyPurchases === "function";
 }
 let PKG_CACHE = null;
+let PRICE_BY_ID = {};
 function loadPackages(cb) {
     if (PKG_CACHE) { cb(PKG_CACHE); return; }
     if (!isNativeApp()) { cb(null); return; }
@@ -3940,6 +3943,7 @@ function loadPackages(cb) {
                 const off = resp.offerings[k];
                 (off && off.availablePackages ? off.availablePackages : []).forEach(pk => {
                     if (pk && pk.identifier && ids.indexOf(pk.identifier) < 0) ids.push(pk.identifier);
+                    if (pk && pk.identifier && pk.product && pk.product.priceString) PRICE_BY_ID[pk.identifier] = pk.product.priceString;
                 });
             });
             PKG_CACHE = ids;
@@ -3955,6 +3959,18 @@ function resolvePackageId(planKey, available) {
         return null;
     }
     return names[0] || null;
+}
+// Цена тарифа из магазина (в валюте покупателя) или null
+function planPrice(planKey) {
+    const names = PKG_CANDIDATES[planKey] || [];
+    for (let i = 0; i < names.length; i++) if (PRICE_BY_ID[names[i]]) return PRICE_BY_ID[names[i]];
+    return null;
+}
+// "Неделя — 1.1$" -> "Неделя — <цена из магазина>" или просто "Неделя"
+function planLabel(text, planKey) {
+    const name = String(text || "").split(" — ")[0];
+    const p = planKey ? planPrice(planKey) : null;
+    return p ? name + " — " + p : name;
 }
 // Покупка тарифа. onDone(ok, msg) — ok=true если куплено.
 function buyPlan(planKey, onDone) {
@@ -3994,7 +4010,9 @@ function restorePlan(onDone) {
 function AdWarningScreen({ lang, onChoice, fromMenu, onRestore, trialUsed }) {
     const t = tr(lang);
     const [infoHidden, setInfoHidden] = useState(false);
-    const openLink = (url) => { try { window.open(url, "_blank"); } catch (e) { } };
+    const [, setPricesTick] = useState(0);
+    useEffect(() => { loadPackages(() => setPricesTick(x => x + 1)); }, []);
+    const openLink = (url) => { try { if (window.__OT_OPEN) window.__OT_OPEN(url); else window.open(url, "_blank"); } catch (e) { } };
     const linkSt = { background: "none", border: "none", padding: 0, color: C.amber, fontSize: 12, fontWeight: 700, cursor: "pointer", textDecoration: "underline" };
     const planBox = (bg, brd, glow, fg) => ({
         flex: 1, textAlign: "left", padding: "14px 14px", borderRadius: 16, cursor: "pointer",
@@ -4021,20 +4039,20 @@ function AdWarningScreen({ lang, onChoice, fromMenu, onRestore, trialUsed }) {
                 React.createElement("div", { style: { fontSize: 12.5, fontWeight: 600, opacity: 0.82, marginTop: 3 } }, t.adTrialSub)),
             React.createElement("div", { style: { display: "flex", gap: 10, marginBottom: 10 } },
                 React.createElement("button", { onClick: () => onChoice("week"), style: planBox("linear-gradient(160deg, #14523A, #0C3626)", `${C.amber}44`, "none", onDark) },
-                    React.createElement("div", { style: { fontSize: 14, fontWeight: 900, color: C.amber, lineHeight: 1.25 } }, t.adWeek),
+                    React.createElement("div", { style: { fontSize: 14, fontWeight: 900, color: C.amber, lineHeight: 1.25 } }, planLabel(t.adWeek, "week")),
                     React.createElement("div", { style: { fontSize: 11.5, color: onDarkSoft, marginTop: 5, lineHeight: 1.35 } }, t.adWeekSub)),
                 React.createElement("button", { onClick: () => onChoice("month"), style: planBox("linear-gradient(160deg, #14523A, #0C3626)", `${C.amber}55`, "0 6px 22px rgba(16,185,129,0.18, onDark)") },
-                    React.createElement("div", { style: { fontSize: 14, fontWeight: 900, color: C.amber, lineHeight: 1.25 } }, t.adMonth),
+                    React.createElement("div", { style: { fontSize: 14, fontWeight: 900, color: C.amber, lineHeight: 1.25 } }, planLabel(t.adMonth, "month")),
                     React.createElement("div", { style: { fontSize: 11.5, color: onDarkSoft, marginTop: 5, lineHeight: 1.35 } }, t.adMonthSub))),
             React.createElement("div", { style: { display: "flex", gap: 10, marginBottom: 10 } },
                 React.createElement("button", { onClick: () => onChoice("year"), style: planBox("linear-gradient(160deg, #16386E, #0D2247)", "#5BA8FF55", "0 6px 22px rgba(91,168,255,0.18, onDark)") },
-                    React.createElement("div", { style: { fontSize: 14, fontWeight: 900, color: "#7FBEFF", lineHeight: 1.25 } }, t.adYearFull),
+                    React.createElement("div", { style: { fontSize: 14, fontWeight: 900, color: "#7FBEFF", lineHeight: 1.25 } }, planLabel(t.adYearFull, "year")),
                     React.createElement("div", { style: { fontSize: 11.5, color: onDarkSoft, marginTop: 5, lineHeight: 1.35 } }, t.adYearFullSub)),
                 React.createElement("button", { onClick: () => onChoice("life"), style: planBox("linear-gradient(160deg, #4A2E6B, #2A1940)", "#9B7BE855", "0 6px 22px rgba(155,123,232,0.18, onDark)") },
-                    React.createElement("div", { style: { fontSize: 14, fontWeight: 900, color: "#C0A6FF", lineHeight: 1.25 } }, t.adLife),
+                    React.createElement("div", { style: { fontSize: 14, fontWeight: 900, color: "#C0A6FF", lineHeight: 1.25 } }, planLabel(t.adLife, "life")),
                     React.createElement("div", { style: { fontSize: 11.5, color: onDarkSoft, marginTop: 5, lineHeight: 1.35 } }, t.adLifeSub))),
             React.createElement("div", { style: { ...planBox(C.card, C.border, "none"), width: "100%", marginBottom: 12, cursor: "default" } },
-                React.createElement("div", { style: { fontSize: 13.5, fontWeight: 800, color: C.text } }, t.adYear),
+                React.createElement("div", { style: { fontSize: 13.5, fontWeight: 800, color: C.text } }, planLabel(t.adYear, null)),
                 React.createElement("div", { style: { fontSize: 11.5, color: C.muted, marginTop: 4 } }, t.adYearSub)),
             !infoHidden && React.createElement("div", { style: { position: "relative", background: C.card, border: `1px solid ${C.border}`, borderRadius: 14, padding: "12px 34px 12px 14px", marginBottom: 12 } },
                 React.createElement("button", { onClick: () => setInfoHidden(true), "aria-label": t.stClose, style: { position: "absolute", top: 6, right: 8, background: "none", border: "none", color: C.muted, fontSize: 18, lineHeight: 1, cursor: "pointer" } }, "\u00D7"),
@@ -5753,7 +5771,7 @@ function InviteScreen({ lang, onClose, bonusDays, invites, premiumUntil, onUseDa
     const link = "https://app.forwardip.online" + (myRef ? "?ref=" + myRef : "");
     const msg = `${t.stInviteText} ${link}`;
     const openUrl = (url) => { try {
-        window.open(url, "_blank");
+        if (window.__OT_OPEN) window.__OT_OPEN(url); else window.open(url, "_blank");
     }
     catch (e) { } };
     const list = invites || [];
