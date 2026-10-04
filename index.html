@@ -127,7 +127,11 @@ window.OT_ADS = (function () {
 
   function Shim() {}
   Shim.prototype.getOfferings = function (cb) {
+    var done = false;
+    var tm = setTimeout(function () { if (done) return; done = true; window.__OT_RC_ERR = "timeout"; cb({ status: "FAILED", error: "timeout" }); }, 15000);
     rcReady.then(function () { return Purchases.getOfferings(); }).then(function (res) {
+      if (done) return; done = true; clearTimeout(tm);
+      if (!res || !res.all || !Object.keys(res.all).length) window.__OT_RC_ERR = "no-offerings";
       var all = (res && res.all) || {};
       var out = {};
       Object.keys(all).forEach(function (k) {
@@ -136,7 +140,7 @@ window.OT_ADS = (function () {
         out[k] = { availablePackages: list };
       });
       cb({ status: "SUCCESS", offerings: out });
-    }).catch(function (e) { cb({ status: "FAILED", error: e && e.message }); });
+    }).catch(function (e) { if (done) return; done = true; clearTimeout(tm); window.__OT_RC_ERR = (e && (e.message || e.code)) || "rc-error"; cb({ status: "FAILED", error: window.__OT_RC_ERR }); });
   };
   Shim.prototype.purchasePackage = function (id, cb) {
     var p = pkgs[id];
@@ -6880,7 +6884,7 @@ ${diarySummary ? `- ЕГО ДНЕВНИК ЧУВСТВ:\n${diarySummary}` : "- �
             // сервер мог его принять, а ответ потеряться по дороге
             setMsgs(m => [...(m || []), {
                     from: "ai", time: nowTime(), canRetry: true, retryText: userMsg,
-                    text: (offline ? t.mentorErrOffline : busy ? t.mentorErrBusy : t.mentorError),
+                    text: (offline ? t.mentorErrOffline : busy ? t.mentorErrBusy : t.mentorError + (e && e.message ? " [" + String(e.message).slice(0, 120) + "]" : "")),
                 }]);
         }
         setLoading(false);
@@ -9265,7 +9269,7 @@ function App() {
             }
             else if (msg === "cancelled") { /* пользователь передумал — молча */ }
             else {
-                console.log("[buy]", msg); alert(tr(lang).stSubAlert);
+                console.log("[buy]", msg); alert(tr(lang).stSubAlert + "\n\n[" + String(msg).slice(0, 140) + (window.__OT_RC_ERR ? " | " + String(window.__OT_RC_ERR).slice(0, 100) : "") + "]");
             }
         });
     };
