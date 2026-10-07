@@ -118,6 +118,7 @@ window.OT_ADS = (function () {
   window.__OT_OPEN = function (url) { Browser.open({ url: url }).catch(function () { try { window.open(url, "_blank"); } catch (e) {} }); };
   try { document.documentElement.classList.add("ot-cap"); } catch (e) {}
   var platform = Cap.getPlatform ? Cap.getPlatform() : "android";
+  try { document.documentElement.classList.add("ot-" + platform); } catch (e) {}
   var RC_KEY = platform === "ios" ? "appl_JRvKDyFuKxynPaqPoJvuoYnjzyn" : "goog_qhWisXnbVqPlmlevIJmsyeVimZk";
   var Purchases = Cap.registerPlugin("Purchases");
   var AdMob = Cap.registerPlugin("AdMob");
@@ -188,8 +189,8 @@ window.OT_ADS = (function () {
 })();
 </script>
 <style>
-  /* Capacitor на Android 15+ рисует приложение под системными панелями — отступаем */
-  html.ot-cap #root {
+  /* iOS: отступ под вырез и полоску «домой». На Android отступ делает нативный код (MainActivity) */
+  html.ot-cap:not(.ot-android) #root {
     box-sizing: border-box;
     padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
     padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
@@ -6884,7 +6885,7 @@ ${diarySummary ? `- ЕГО ДНЕВНИК ЧУВСТВ:\n${diarySummary}` : "- �
             // сервер мог его принять, а ответ потеряться по дороге
             setMsgs(m => [...(m || []), {
                     from: "ai", time: nowTime(), canRetry: true, retryText: userMsg,
-                    text: (offline ? t.mentorErrOffline : busy ? t.mentorErrBusy : t.mentorError + (e && e.message ? " [" + String(e.message).slice(0, 120) + "]" : "")),
+                    text: (offline ? t.mentorErrOffline : busy ? t.mentorErrBusy : t.mentorError + (e && e.message && document.documentElement.classList.contains("ot-android") ? " [" + String(e.message).slice(0, 120) + "]" : "")),
                 }]);
         }
         setLoading(false);
@@ -9269,7 +9270,7 @@ function App() {
             }
             else if (msg === "cancelled") { /* пользователь передумал — молча */ }
             else {
-                console.log("[buy]", msg); alert(tr(lang).stSubAlert + "\n\n[" + String(msg).slice(0, 140) + (window.__OT_RC_ERR ? " | " + String(window.__OT_RC_ERR).slice(0, 100) : "") + "]");
+                console.log("[buy]", msg); alert(tr(lang).stSubAlert + (document.documentElement.classList.contains("ot-android") ? "\n\n[" + String(msg).slice(0, 140) + (window.__OT_RC_ERR ? " | " + String(window.__OT_RC_ERR).slice(0, 100) : "") + "]" : ""));
             }
         });
     };
