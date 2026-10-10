@@ -500,21 +500,6 @@ function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmoun
 })();
 
 </script>
-<script>
-(function(){
-  if(!/; wv\)/.test(navigator.userAgent)) return;
-  var d=document.createElement('div');
-  d.style.cssText='position:fixed;left:4px;top:45%;z-index:99999;background:#000;color:#0f0;font:11px monospace;padding:4px;pointer-events:none;max-width:90%';
-  function u(){
-    var h=document.documentElement,cs=getComputedStyle(h),r=document.getElementById('root'),rs=r?getComputedStyle(r):{};
-    d.textContent='cap:'+(!!window.Capacitor)+' cls:'+h.className+
-      ' nt:'+cs.getPropertyValue('--native-inset-top')+' nb:'+cs.getPropertyValue('--native-inset-bottom')+
-      ' st:'+cs.getPropertyValue('--safe-area-inset-top')+' sb:'+cs.getPropertyValue('--safe-area-inset-bottom')+
-      ' pt:'+rs.paddingTop+' pb:'+rs.paddingBottom+' h:'+innerHeight+' sh:'+screen.height+' dpr:'+devicePixelRatio;
-  }
-  document.addEventListener('DOMContentLoaded',function(){document.body.appendChild(d);u();setInterval(u,1000);});
-})();
-</script>
 </head>
 <body>
 <div id="splash"><div class="dot"></div><div class="t">Загрузка…</div></div>
