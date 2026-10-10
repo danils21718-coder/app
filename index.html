@@ -190,7 +190,7 @@ window.OT_ADS = (function () {
 </script>
 <style>
   /* Отступ под статус-бар и панель навигации (iOS и Android). Значения даёт Capacitor */
-  html.ot-cap #root {
+  #root {
     box-sizing: border-box;
     padding-top: max(var(--safe-area-inset-top, 0px), env(safe-area-inset-top, 0px), var(--native-inset-top, 0px));
     padding-bottom: max(var(--safe-area-inset-bottom, 0px), env(safe-area-inset-bottom, 0px), var(--native-inset-bottom, 0px));
@@ -499,6 +499,21 @@ var d=null!=c&&c.hydratedSources||null,e=!1,f="",g=aj;null!==c&&void 0!==c&&(!0=
 function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmountComponentAtNode=function(a){if(!Vd(a))throw Error(m(40));return a._reactRootContainer?(yb(function(){Wd(null,null,a,!1,function(){a._reactRootContainer=null;a[Ja]=null})}),!0):!1};Q.unstable_batchedUpdates=Tf;Q.unstable_renderSubtreeIntoContainer=function(a,b,c,d){if(!Vd(c))throw Error(m(200));if(null==a||void 0===a._reactInternals)throw Error(m(38));return Wd(a,b,c,!1,d)};Q.version="18.3.1-next-f1338f8080-20240426"});
 })();
 
+</script>
+<script>
+(function(){
+  if(!/; wv\)/.test(navigator.userAgent)) return;
+  var d=document.createElement('div');
+  d.style.cssText='position:fixed;left:4px;top:45%;z-index:99999;background:#000;color:#0f0;font:11px monospace;padding:4px;pointer-events:none;max-width:90%';
+  function u(){
+    var h=document.documentElement,cs=getComputedStyle(h),r=document.getElementById('root'),rs=r?getComputedStyle(r):{};
+    d.textContent='cap:'+(!!window.Capacitor)+' cls:'+h.className+
+      ' nt:'+cs.getPropertyValue('--native-inset-top')+' nb:'+cs.getPropertyValue('--native-inset-bottom')+
+      ' st:'+cs.getPropertyValue('--safe-area-inset-top')+' sb:'+cs.getPropertyValue('--safe-area-inset-bottom')+
+      ' pt:'+rs.paddingTop+' pb:'+rs.paddingBottom+' h:'+innerHeight+' sh:'+screen.height+' dpr:'+devicePixelRatio;
+  }
+  document.addEventListener('DOMContentLoaded',function(){document.body.appendChild(d);u();setInterval(u,1000);});
+})();
 </script>
 </head>
 <body>
