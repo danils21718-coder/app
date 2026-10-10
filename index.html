@@ -115,6 +115,12 @@ window.OT_ADS = (function () {
  function otCapInit() {
   if (window.__OT_CAP) return true;
   var Cap = window.Capacitor;
+  if (Cap && !window.__OT_CAPLOG && window.__OT_LOG) { window.__OT_CAPLOG = 1; try {
+    window.__OT_LOG("Cap keys: " + Object.keys(Cap).join(","));
+    window.__OT_LOG("isNative fn:" + typeof Cap.isNativePlatform + " val:" + (Cap.isNativePlatform ? Cap.isNativePlatform() : "-") + " plat:" + (Cap.getPlatform ? Cap.getPlatform() : "-"));
+    window.__OT_LOG("Plugins: " + (Cap.Plugins ? Object.keys(Cap.Plugins).join(",") : "none"));
+    window.__OT_LOG("Natively: " + typeof window.NativelyPurchases + " url:" + location.href.slice(0,40));
+  } catch (e) { window.__OT_LOG("caplog err " + e.message); } }
   if (!Cap || typeof Cap.isNativePlatform !== "function" || !Cap.isNativePlatform()) return false;
   window.__OT_CAP = true;
   var Browser = Cap.registerPlugin("Browser");
