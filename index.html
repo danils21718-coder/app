@@ -111,16 +111,9 @@ window.OT_ADS = (function () {
    поэтому остальной код приложения не меняется. В браузере и в старой
    сборке Natively этот блок ничего не делает.                               */
 (function () {
- /* Capacitor на Android с server.url появляется позже этого скрипта: ждём его */
  function otCapInit() {
   if (window.__OT_CAP) return true;
   var Cap = window.Capacitor;
-  if (Cap && !window.__OT_CAPLOG && window.__OT_LOG) { window.__OT_CAPLOG = 1; try {
-    window.__OT_LOG("Cap keys: " + Object.keys(Cap).join(","));
-    window.__OT_LOG("isNative fn:" + typeof Cap.isNativePlatform + " val:" + (Cap.isNativePlatform ? Cap.isNativePlatform() : "-") + " plat:" + (Cap.getPlatform ? Cap.getPlatform() : "-"));
-    window.__OT_LOG("Plugins: " + (Cap.Plugins ? Object.keys(Cap.Plugins).join(",") : "none"));
-    window.__OT_LOG("Natively: " + typeof window.NativelyPurchases + " url:" + location.href.slice(0,40));
-  } catch (e) { window.__OT_LOG("caplog err " + e.message); } }
   if (!Cap || typeof Cap.isNativePlatform !== "function" || !Cap.isNativePlatform()) return false;
   window.__OT_CAP = true;
   var Browser = Cap.registerPlugin("Browser");
@@ -132,8 +125,7 @@ window.OT_ADS = (function () {
   var Purchases = Cap.registerPlugin("Purchases");
   var AdMob = Cap.registerPlugin("AdMob");
 
-  window.__OT_LOG&&window.__OT_LOG("cap ok, rc configure...");
-  var rcReady = Purchases.configure({ apiKey: RC_KEY }).then(function(){window.__OT_LOG&&window.__OT_LOG("rc configure OK");}).catch(function (e) {window.__OT_LOG&&window.__OT_LOG("rc configure ERR: "+(e&&(e.message||e.code)));});
+  var rcReady = Purchases.configure({ apiKey: RC_KEY }).catch(function () {});
   var pkgs = {};
 
   function Shim() {}
@@ -150,9 +142,8 @@ window.OT_ADS = (function () {
         list.forEach(function (p) { if (p && p.identifier) pkgs[p.identifier] = p; });
         out[k] = { availablePackages: list };
       });
-      window.__OT_LOG&&window.__OT_LOG("offerings: "+Object.keys(all).join(",")+" pkgs: "+Object.keys(pkgs).join(","));
       cb({ status: "SUCCESS", offerings: out });
-    }).catch(function (e) { if (done) return; done = true; clearTimeout(tm); window.__OT_RC_ERR = (e && (e.message || e.code)) || "rc-error"; window.__OT_LOG&&window.__OT_LOG("offerings ERR: "+window.__OT_RC_ERR); cb({ status: "FAILED", error: window.__OT_RC_ERR }); });
+    }).catch(function (e) { if (done) return; done = true; clearTimeout(tm); window.__OT_RC_ERR = (e && (e.message || e.code)) || "rc-error"; cb({ status: "FAILED", error: window.__OT_RC_ERR }); });
   };
   Shim.prototype.purchasePackage = function (id, cb) {
     var p = pkgs[id];
@@ -515,16 +506,6 @@ var d=null!=c&&c.hydratedSources||null,e=!1,f="",g=aj;null!==c&&void 0!==c&&(!0=
 function(a,b,c){if(!Vd(b))throw Error(m(200));return Wd(null,a,b,!1,c)};Q.unmountComponentAtNode=function(a){if(!Vd(a))throw Error(m(40));return a._reactRootContainer?(yb(function(){Wd(null,null,a,!1,function(){a._reactRootContainer=null;a[Ja]=null})}),!0):!1};Q.unstable_batchedUpdates=Tf;Q.unstable_renderSubtreeIntoContainer=function(a,b,c,d){if(!Vd(c))throw Error(m(200));if(null==a||void 0===a._reactInternals)throw Error(m(38));return Wd(a,b,c,!1,d)};Q.version="18.3.1-next-f1338f8080-20240426"});
 })();
 
-</script>
-<script>
-window.__OT_LOG=function(m){try{
-  if(!/; wv\)/.test(navigator.userAgent))return;
-  var d=document.getElementById('otlog');
-  if(!d){d=document.createElement('div');d.id='otlog';
-    d.style.cssText='position:fixed;left:4px;right:4px;top:40%;z-index:99999;background:#000;color:#0f0;font:11px monospace;padding:4px;pointer-events:none;white-space:pre-wrap';
-    (document.body||document.documentElement).appendChild(d);}
-  d.textContent=(d.textContent+'\n'+m).split('\n').slice(-8).join('\n');
-}catch(e){}};
 </script>
 </head>
 <body>
@@ -9256,7 +9237,6 @@ function App() {
         });
     };
     const handlePlanChoice = (c) => {
-        window.__OT_LOG && window.__OT_LOG("tap " + c + " native:" + isNativeApp());
         if (c === "close") {
             setSubFromMenu(false);
             setScreen("main");
@@ -9290,7 +9270,6 @@ function App() {
             return;
         }
         buyPlan(c, (ok, msg) => {
-            window.__OT_LOG && window.__OT_LOG("buy result: " + ok + " " + msg);
             if (ok) {
                 grantPlan(c);
                 setSubFromMenu(false);
