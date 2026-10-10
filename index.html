@@ -189,8 +189,8 @@ window.OT_ADS = (function () {
 })();
 </script>
 <style>
-  /* iOS: отступ под вырез и полоску «домой». На Android отступ делает нативный код (MainActivity) */
-  html.ot-cap:not(.ot-android) #root {
+  /* Отступ под статус-бар и панель навигации (iOS и Android). Значения даёт Capacitor */
+  html.ot-cap #root {
     box-sizing: border-box;
     padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
     padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
@@ -746,7 +746,7 @@ const T = {
         ],
         notify: "Уведомить за 30 мин",
         notifyOn: "Уведомление включено ✓",
-        mentorTitle: "Наставник",
+        mentorTitle: "Рука помощи",
         mentorPlaceholder: "Напиши что тебя беспокоит...",
         mentorSend: "Отправить",
         mentorWelcome: "🕊️ Прежде чем мы начнём.\n\nМоя задача — не стать тебе незаменимым.\n\nХороший наставник помогает человеку всё чаще справляться без него. Поэтому я не буду пытаться решать за тебя каждую проблему. Я буду помогать тебе лучше понимать себя, замечать свои триггеры, осваивать полезные инструменты и постепенно учиться справляться самостоятельно.\n\nИ ещё: самостоятельность — это не значит справляться со всем в одиночку. Умение вовремя попросить о помощи — тоже самостоятельность.\n\nЯ всегда на связи, когда тебе нужна поддержка. Но моя цель — чтобы со временем ты всё чаще мог справляться сам.",
@@ -1200,7 +1200,7 @@ const T = {
         ],
         notify: "Avisar 30 min antes",
         notifyOn: "Notificación activada ✓",
-        mentorTitle: "Mentor",
+        mentorTitle: "Mano amiga",
         mentorPlaceholder: "Escribe lo que te preocupa...",
         mentorSend: "Enviar",
         mentorWelcome: "🕊️ Antes de empezar.\n\nMi objetivo no es volverme indispensable para ti.\n\nUn buen mentor ayuda a que la persona se las arregle sin él cada vez más. Por eso no voy a intentar resolver cada problema en tu lugar. Voy a ayudarte a entenderte mejor, a notar tus desencadenantes, a manejar herramientas útiles y a aprender poco a poco a sostenerte por ti mismo.\n\nY algo más: ser autónomo no significa cargar con todo en soledad. Saber pedir ayuda a tiempo también es autonomía.\n\nSiempre estoy aquí cuando necesites apoyo. Pero mi meta es que, con el tiempo, cada vez puedas más por tu cuenta.",
@@ -1654,7 +1654,7 @@ const T = {
         ],
         notify: "Notify 30 min before",
         notifyOn: "Notification on ✓",
-        mentorTitle: "Mentor",
+        mentorTitle: "Helping Hand",
         mentorPlaceholder: "Write what's on your mind...",
         mentorSend: "Send",
         mentorWelcome: "🕊️ Before we start.\n\nMy goal isn't to become indispensable to you.\n\nA good mentor helps a person cope without them more and more often. So I won't try to solve every problem for you. I'll help you understand yourself better, notice your triggers, pick up tools that work, and gradually learn to carry this on your own.\n\nOne more thing: being self-reliant doesn't mean handling everything alone. Knowing when to ask for help is part of it too.\n\nI'm here whenever you need support. But my aim is that over time you'll need me less and less.",
@@ -2108,7 +2108,7 @@ const T = {
         ],
         notify: "Avisar 30 min antes",
         notifyOn: "Notificação ativada ✓",
-        mentorTitle: "Mentor",
+        mentorTitle: "Mão amiga",
         mentorPlaceholder: "Escreva o que está te preocupando...",
         mentorSend: "Enviar",
         mentorWelcome: "🕊️ Antes de começarmos.\n\nMeu objetivo não é me tornar indispensável para você.\n\nUm bom mentor ajuda a pessoa a dar conta sem ele cada vez mais. Por isso não vou tentar resolver cada problema no seu lugar. Vou te ajudar a se entender melhor, a perceber seus gatilhos, a dominar ferramentas úteis e, aos poucos, a aprender a se sustentar sozinho.\n\nE mais uma coisa: ser autônomo não significa carregar tudo sozinho. Saber pedir ajuda na hora certa também é autonomia.\n\nEstou aqui sempre que você precisar de apoio. Mas minha meta é que, com o tempo, você consiga cada vez mais por conta própria.",
@@ -2562,7 +2562,7 @@ const T = {
         ],
         notify: "30 минут бұрын хабарлау",
         notifyOn: "Хабарландыру қосылды ✓",
-        mentorTitle: "Тәлімгер",
+        mentorTitle: "Көмек қолы",
         mentorPlaceholder: "Не мазалап тұрғанын жаз...",
         mentorSend: "Жіберу",
         mentorWelcome: "🕊️ Бастамас бұрын.\n\nМенің мақсатым — саған алмастырғысыз болу емес.\n\nЖақсы тәлімгер адамға өзінсіз де барған сайын жиі бас алуға көмектеседі. Сондықтан мен сенің орныңа әр мәселені шешуге тырыспаймын. Мен саған өзіңді жақсырақ түсінуге, триггерлеріңді байқауға, пайдалы құралдарды меңгеруге және бірте-бірте өз бетіңше бас алуды үйренуге көмектесемін.\n\nТағы бір нәрсе: дербестік — бәрін жалғыз көтеру деген сөз емес. Дер кезінде көмек сұрай білу де — дербестік.\n\nҚолдау керек болғанда мен әрқашан осындамын. Бірақ менің мақсатым — уақыт өте сенің өз бетіңше бас алуың жиілей түссін.",
@@ -3016,7 +3016,7 @@ const T = {
         ],
         notify: "提前30分钟提醒",
         notifyOn: "提醒已开启 ✓",
-        mentorTitle: "引导者",
+        mentorTitle: "援助之手",
         mentorPlaceholder: "写下让你不安的事……",
         mentorSend: "发送",
         mentorWelcome: "🕊️ 在我们开始之前。\n\n我的目标，不是让你离不开我。\n\n好的引导者，是帮助一个人越来越多地不靠他也能应对。所以我不会替你解决每一个问题。我会帮你更了解自己、看清自己的触发点、掌握真正有用的工具，并一点点学会自己扛住。\n\n还有一点：独立不等于所有事都一个人硬撑。在该开口的时候懂得求助，同样是独立。\n\n你需要支持的时候，我随时都在。但我的目标是：随着时间过去，你能靠自己应对的时候越来越多。",
@@ -9361,7 +9361,7 @@ function App() {
                         width: 36, height: 36, flexShrink: 0, borderRadius: "50%", fontSize: 18,
                         background: `linear-gradient(135deg, ${C.amber}33, ${C.amber}11)`,
                         border: `1.5px solid ${C.amber}66`, display: "flex", alignItems: "center", justifyContent: "center",
-                    } }, "\uD83D\uDD4A\uFE0F"),
+                    } }, "\uD83E\uDD1D"),
                 React.createElement("div", { style: { minWidth: 0 } },
                     React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.text, whiteSpace: "nowrap" } }, t.mentorTitle),
                     React.createElement("div", { style: { fontSize: 11, color: C.success, fontWeight: 600, whiteSpace: "nowrap" } }, t.mentorOnline)))),
