@@ -111,8 +111,11 @@ window.OT_ADS = (function () {
    поэтому остальной код приложения не меняется. В браузере и в старой
    сборке Natively этот блок ничего не делает.                               */
 (function () {
+ /* Capacitor на Android с server.url появляется позже этого скрипта: ждём его */
+ function otCapInit() {
+  if (window.__OT_CAP) return true;
   var Cap = window.Capacitor;
-  if (!Cap || typeof Cap.isNativePlatform !== "function" || !Cap.isNativePlatform()) return;
+  if (!Cap || typeof Cap.isNativePlatform !== "function" || !Cap.isNativePlatform()) return false;
   window.__OT_CAP = true;
   var Browser = Cap.registerPlugin("Browser");
   window.__OT_OPEN = function (url) { Browser.open({ url: url }).catch(function () { try { window.open(url, "_blank"); } catch (e) {} }); };
@@ -186,6 +189,11 @@ window.OT_ADS = (function () {
   // Natively здесь не нужен: рекламу запускаем сами, его загрузчик отключаем
   window.nativelyOnLoad = function () {};
   try { window.OT_ADS && window.OT_ADS.init(); } catch (e) {}
+  return true;
+ }
+ if (otCapInit()) return;
+ var n = 0, iv = setInterval(function () { if (otCapInit() || ++n > 100) clearInterval(iv); }, 100);
+ document.addEventListener("DOMContentLoaded", otCapInit);
 })();
 </script>
 <style>
