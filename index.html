@@ -116,6 +116,17 @@ window.OT_ADS = (function () {
   var Cap = window.Capacitor;
   if (!Cap || typeof Cap.isNativePlatform !== "function" || !Cap.isNativePlatform()) return false;
   window.__OT_CAP = true;
+  // registerPlugin есть только в пакете @capacitor/core (его тут нет).
+  // Мост Capacitor даёт nativePromise/addListener: строим плагины на них.
+  if (typeof Cap.registerPlugin !== "function") {
+    Cap.registerPlugin = function (name) {
+      return new Proxy({}, { get: function (_, m) {
+        if (m === "then" || typeof m !== "string") return undefined;
+        if (m === "addListener") return function (ev, fn) { return Promise.resolve(Cap.addListener(name, ev, fn)); };
+        return function (opts) { return Cap.nativePromise(name, m, opts || {}); };
+      } });
+    };
+  }
   var Browser = Cap.registerPlugin("Browser");
   window.__OT_OPEN = function (url) { Browser.open({ url: url }).catch(function () { try { window.open(url, "_blank"); } catch (e) {} }); };
   try { document.documentElement.classList.add("ot-cap"); } catch (e) {}
