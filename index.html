@@ -754,6 +754,47 @@ const S = {
         padding: "10px 0 8px", background: "none", border: "none", cursor: "pointer",
     },
 };
+
+// ── УВЕДОМЛЕНИЯ И ОЦЕНКА (нативные плагины LocalNotifications и InAppReview) ──
+const NOTIF_TX = {"ru": {"t": "Only Today", "mt": "Наставник", "ms": "🏆 День {n} без употребления! Ты справляешься — загляни, тебя ждёт поздравление.", "am": ["☀️ Доброе утро. Запланируй свой день — пять строк, и день под контролем.", "☀️ Новый день — только сегодня. Набросай план, чтобы не сорваться.", "☀️ Утро — лучшее время решить, как пройдёт день. Открой «План дня»."], "pm": ["🤝 Как ты сегодня? Я рядом, если хочется выговориться.", "🤝 Если день был тяжёлым — это нормально. Напиши мне, разберём вместе.", "🤝 Ты держишься, и это много. Что сегодня было самым трудным?", "🤝 Тяга — это волна, она проходит. Я здесь, если накрывает.", "🤝 Ещё один вечер без употребления. Горжусь тобой. Как ты?"], "sub": "Утром — план дня, вечером — слово наставника, и поздравления с рубежами 7, 30, 90 дней"}, "en": {"t": "Only Today", "mt": "Mentor", "ms": "🏆 Day {n} sober! You're doing it — open the app, there's something for you.", "am": ["☀️ Good morning. Plan your day — five lines and the day is in your hands.", "☀️ A new day — just for today. Sketch a plan so you don't slip.", "☀️ Morning is the best time to decide how today goes. Open your Day plan."], "pm": ["🤝 How are you today? I'm here if you want to talk.", "🤝 If today was hard, that's okay. Write to me and we'll work through it.", "🤝 You're holding on, and that's a lot. What was hardest today?", "🤝 A craving is a wave — it passes. I'm here if it hits.", "🤝 One more evening sober. I'm proud of you. How are you?"], "sub": "Morning day plan, an evening word from your mentor, and congrats on 7, 30, 90 days"}, "es": {"t": "Only Today", "mt": "Mentor", "ms": "🏆 ¡Día {n} sin consumir! Lo estás logrando — entra, tenemos algo para ti.", "am": ["☀️ Buenos días. Planifica tu día: cinco líneas y el día bajo control.", "☀️ Un nuevo día, solo por hoy. Haz un plan para no recaer.", "☀️ La mañana es el mejor momento para decidir cómo será el día. Abre tu Plan del día."], "pm": ["🤝 ¿Cómo estás hoy? Estoy aquí si quieres hablar.", "🤝 Si el día fue duro, está bien. Escríbeme y lo vemos juntos.", "🤝 Estás aguantando, y eso es mucho. ¿Qué fue lo más difícil hoy?", "🤝 El deseo es una ola: pasa. Estoy aquí si te alcanza.", "🤝 Otra noche sin consumir. Estoy orgulloso de ti. ¿Cómo estás?"], "sub": "Por la mañana, plan del día; por la noche, una palabra del mentor; y felicitaciones a los 7, 30 y 90 días"}, "pt": {"t": "Only Today", "mt": "Mentor", "ms": "🏆 Dia {n} sem usar! Você está conseguindo — abra o app, tem algo para você.", "am": ["☀️ Bom dia. Planeje seu dia: cinco linhas e o dia sob controle.", "☀️ Um novo dia, só por hoje. Faça um plano para não recair.", "☀️ A manhã é a melhor hora para decidir como será o dia. Abra seu Plano do dia."], "pm": ["🤝 Como você está hoje? Estou aqui se quiser conversar.", "🤝 Se o dia foi pesado, tudo bem. Me escreva e vemos juntos.", "🤝 Você está firme, e isso é muito. O que foi mais difícil hoje?", "🤝 A fissura é uma onda: ela passa. Estou aqui se bater.", "🤝 Mais uma noite sem usar. Tenho orgulho de você. Como está?"], "sub": "De manhã, plano do dia; à noite, uma palavra do mentor; e parabéns aos 7, 30 e 90 dias"}, "kk": {"t": "Only Today", "mt": "Тәлімгер", "ms": "🏆 Тазалықтың {n}-күні! Сен үлгеріп жатырсың — кіріп көр, саған құттықтау бар.", "am": ["☀️ Қайырлы таң. Күніңді жоспарла — бес жол, және күн бақылауда.", "☀️ Жаңа күн — тек бүгін. Үзіліп кетпеу үшін жоспар құр.", "☀️ Таң — күннің қалай өтетінін шешудің ең жақсы уақыты. «Күн жоспарын» аш."], "pm": ["🤝 Бүгін қалайсың? Сөйлескің келсе, мен осындамын.", "🤝 Күн ауыр болса — бұл қалыпты. Жаз маған, бірге талдаймыз.", "🤝 Сен төзіп жүрсің, бұл көп нәрсе. Бүгін не ең қиын болды?", "🤝 Құштарлық — толқын, ол өтеді. Басып кетсе, мен осындамын.", "🤝 Тағы бір сергек кеш. Мен сені мақтан тұтамын. Қалайсың?"], "sub": "Таңертең — күн жоспары, кешке — тәлімгердің сөзі, және 7, 30, 90 күнге құттықтау"}, "zh": {"t": "Only Today", "mt": "引导者", "ms": "🏆 清醒第 {n} 天！你做到了——打开应用，看看给你的祝贺。", "am": ["☀️ 早上好。规划你的一天——写五行，一天尽在掌握。", "☀️ 新的一天，只为今天。写个计划，避免复发。", "☀️ 早晨是决定今天如何度过的最好时机。打开「今日计划」。"], "pm": ["🤝 今天过得怎么样？想聊聊的话，我在。", "🤝 如果今天很难熬，没关系。写给我，我们一起面对。", "🤝 你在坚持，这很了不起。今天最难的是什么？", "🤝 渴求就像海浪，会过去的。被淹没时，我在这里。", "🤝 又一个清醒的夜晚。我为你骄傲。你好吗？"], "sub": "早上做今日计划，晚上听引导者说句话，还有 7、30、90 天的祝贺"}};
+const NOTIF_MILESTONES = [1, 3, 7, 14, 30, 60, 90, 180, 270, 365, 500, 730, 1000];
+function otNative() { const Cap = window.Capacitor; return Cap && Cap.isNativePlatform && Cap.isNativePlatform() && Cap.nativePromise ? Cap : null; }
+async function otScheduleNotifs({ lang, startMs, trackerOnly, on }) {
+    const Cap = otNative();
+    if (!Cap) return;
+    try {
+        // снимаем всё, что запланировали раньше, и ставим заново по текущим данным
+        const pend = await Cap.nativePromise("LocalNotifications", "getPending", {});
+        const old = ((pend && pend.notifications) || []).map(n => ({ id: n.id }));
+        if (old.length) await Cap.nativePromise("LocalNotifications", "cancel", { notifications: old });
+        if (!on) return;
+        let perm = await Cap.nativePromise("LocalNotifications", "checkPermissions", {});
+        if (perm && perm.display !== "granted") perm = await Cap.nativePromise("LocalNotifications", "requestPermissions", {});
+        if (!perm || perm.display !== "granted") return;
+        const tx = NOTIF_TX[UI_LANG(lang)] || NOTIF_TX.en;
+        const now = Date.now(), list = [];
+        const at = (dayOffset, h, m) => { const d = new Date(); d.setDate(d.getDate() + dayOffset); d.setHours(h, m, 0, 0); return d; };
+        // рубежи: в 10:00 того дня, когда исполняется N дней
+        NOTIF_MILESTONES.forEach(n => {
+            const due = startMs + n * 86400000, d = new Date(due); d.setHours(10, 0, 0, 0);
+            if (d.getTime() < due) d.setDate(d.getDate() + 1);
+            if (d.getTime() > now && d.getTime() - now < 400 * 86400000)
+                list.push({ id: 100000 + n, title: tx.t, body: tx.ms.replace("{n}", n), schedule: { at: d, allowWhileIdle: true }, isExactNotification: false });
+        });
+        // в режиме «только трекер» ежедневные напоминания выключены
+        if (!trackerOnly) for (let i = 0; i < 14; i++) {
+            const a = at(i, 9, 0), p = at(i, 20, 30);
+            if (a.getTime() > now) list.push({ id: 200000 + i, title: tx.t, body: tx.am[i % tx.am.length], schedule: { at: a, allowWhileIdle: true }, isExactNotification: false });
+            if (p.getTime() > now) list.push({ id: 300000 + i, title: tx.mt, body: tx.pm[i % tx.pm.length], schedule: { at: p, allowWhileIdle: true }, isExactNotification: false });
+        }
+        if (list.length) await Cap.nativePromise("LocalNotifications", "schedule", { notifications: list.slice(0, 60) });
+    } catch (e) { try { console.log("[notif]", e && (e.message || e)); } catch (_) { } }
+}
+function otAskReview() {
+    const Cap = otNative();
+    if (!Cap) return;
+    try { Cap.nativePromise("InAppReview", "requestReview", {}).catch(function () { }); } catch (e) { }
+}
 // ── ТЕМЫ (скины) ──────────────────────────────────────────────────────────────
 // paper — «Дневник» (основная), poster — «Плакат», dawn — «Рассвет»,
 // dark — прежний тёмно-зелёный («Классика»), light — прежний светлый.
@@ -9378,6 +9419,21 @@ function App() {
     const [adsPersonalized, setAdsPersonalized] = useSaved("adsPersonalized", false);
     const [showPrivacy, setShowPrivacy] = useState(false);
     const [trackerOnly, setTrackerOnly] = useSaved("trackerOnly", false);
+    const [notifOn, setNotifOn] = useSaved("notifOn", true);
+    const [reviewAsked, setReviewAsked] = useSaved("reviewAsked", false);
+    // уведомления: перепланируем при каждом входе и при смене даты, языка, режима
+    useEffect(() => {
+        if (screen !== "main") return;
+        const id = setTimeout(() => otScheduleNotifs({ lang, startMs, trackerOnly, on: notifOn }), 2000);
+        return () => clearTimeout(id);
+    }, [screen, startMs, lang, trackerOnly, notifOn]);
+    // просьба оценить: через неделю пользования, один раз, системным окном магазина
+    useEffect(() => {
+        if (screen !== "main" || reviewAsked) return;
+        if (Date.now() - firstSeenMs < 7 * 86400000) return;
+        const id = setTimeout(() => { setReviewAsked(true); otAskReview(); }, 6000);
+        return () => clearTimeout(id);
+    }, [screen, reviewAsked]);
     const [fontScale, setFontScale] = useSaved("fontScale", 1); // 0.9 | 1 | 1.15 | 1.3
     const [design, setDesign] = useSaved("design", "green"); // green | night | warm | ocean | own
     const [ownBg, setOwnBg] = useSaved("ownBg", null);
@@ -9712,10 +9768,17 @@ function App() {
                     React.createElement("span", { style: { flex: 1, fontSize: 15, fontWeight: 600, color: C.textSoft } }, t.stCommunity),
                     React.createElement("span", { style: stSoonBadge }, t.badgeSoon)),
 
-                !document.documentElement.classList.contains("ot-ios") && React.createElement("div", { style: stSoon },
-                    React.createElement("span", { style: { fontSize: 19 } }, "\u23F0"),
-                    React.createElement("span", { style: { flex: 1, fontSize: 15, fontWeight: 600, color: C.textSoft } }, t.stReminders),
-                    React.createElement("span", { style: stSoonBadge }, t.badgeSoon)),
+                React.createElement("div", { style: { ...stRow, cursor: "default", alignItems: "flex-start" } },
+                    React.createElement("span", { style: { fontSize: 19, marginTop: 1 } }, "\u23F0"),
+                    React.createElement("div", { style: { flex: 1 } },
+                        React.createElement("div", { style: { fontSize: 15, fontWeight: 600, color: C.text } }, t.stReminders),
+                        React.createElement("div", { style: { fontSize: 11.5, color: C.muted, marginTop: 3, lineHeight: 1.4 } }, (NOTIF_TX[UI_LANG(lang)] || NOTIF_TX.en).sub)),
+                    React.createElement("button", { onClick: () => setNotifOn(v => !v), style: {
+                            flexShrink: 0, width: 48, height: 28, borderRadius: 999, cursor: "pointer", padding: 3,
+                            background: notifOn ? C.amber : C.card2, border: `1px solid ${notifOn ? C.amber : C.border}`,
+                            display: "flex", justifyContent: notifOn ? "flex-end" : "flex-start", alignItems: "center",
+                        } },
+                        React.createElement("span", { style: { width: 20, height: 20, borderRadius: "50%", background: notifOn ? C.onAccent : C.muted, display: "block" } }))),
 
                 !document.documentElement.classList.contains("ot-ios") && React.createElement("button", { onClick: () => alert(t.stRelapseAlert), style: { ...stSoon, marginBottom: 0, cursor: "pointer", width: "100%", textAlign: "left" } },
                     React.createElement("span", { style: { fontSize: 19 } }, "\uD83C\uDD98"),
