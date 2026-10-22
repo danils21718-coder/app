@@ -3990,6 +3990,9 @@ function BirthDateScreen({ lang, onConfirm, onSkip }) {
                     border: `1px solid ${C.border}`, color: C.muted, fontWeight: 600, fontSize: 14.5, cursor: "pointer",
                 } }, skip))));
 }
+// для этих четырёх есть полная методика центра (FULL_ADDICTIONS)
+const ADD_TOP = ["alcohol", "drugs", "gambling", "codependency"];
+const ADD_TOP_TX = {"ru": ["Полная программа выздоровления", "Задания по шагам, дневник чувств, тест и наставник — всё как в реабилитационном центре", "Другие зависимости — с наставником"], "en": ["Full recovery program", "Step-by-step tasks, feelings diary, test and mentor — like a rehab center", "Other addictions — with the mentor"], "es": ["Programa completo de recuperación", "Tareas paso a paso, diario de emociones, test y mentor — como en un centro de rehabilitación", "Otras adicciones — con el mentor"], "pt": ["Programa completo de recuperação", "Tarefas passo a passo, diário de emoções, teste e mentor — como numa clínica de reabilitação", "Outras dependências — com o mentor"], "kk": ["Толық сауығу бағдарламасы", "Қадамдық тапсырмалар, сезім күнделігі, тест және тәлімгер — оңалту орталығындағыдай", "Басқа тәуелділіктер — тәлімгермен"], "zh": ["完整康复计划", "分步任务、情绪日记、测试和引导者——就像在康复中心", "其他成瘾——由引导者陪伴"]};
 function AddictionScreen({ lang, onSelect }) {
     const t = tr(lang);
     const [chosen, setChosen] = useState([]);
@@ -4003,18 +4006,13 @@ function AddictionScreen({ lang, onSelect }) {
             return [...prev, id];
         });
     };
-    return (React.createElement("div", { style: S.screen },
-        React.createElement("div", { style: { padding: "20px 16px 8px" } },
-            React.createElement("div", { style: { fontSize: 19, fontWeight: 800, color: C.text } }, t.chooseAddiction),
-            React.createElement("div", { style: { fontSize: 12, color: C.muted, marginTop: 4 } }, lang === "zh" ? `最多可选${MAX}项（已选${chosen.length}）` : lang === "kk" ? `${MAX} дейін таңдауға болады (таңдалғаны ${chosen.length})` : lang === "ru" ? `Можно выбрать до ${MAX} (выбрано ${chosen.length})` : lang === "es" ? `Puedes elegir hasta ${MAX} (seleccionados ${chosen.length})` : lang === "pt" ? `Pode escolher até ${MAX} (selecionados ${chosen.length})` : `Choose up to ${MAX} (selected ${chosen.length})`)),
-        React.createElement("div", { style: { padding: "0 14px 20px", overflowY: "auto", WebkitOverflowScrolling: "touch", flex: "1 1 auto", minHeight: 0 } },
-            React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 } }, t.addictions.map(a => {
+    const renderAdd = (a, big) => {
                 const isOn = chosen.includes(a.id);
                 const disabled = !isOn && chosen.length >= MAX;
                 return (React.createElement("button", { key: a.id, onClick: () => toggle(a.id), disabled: disabled, style: {
                         background: isOn ? C.amberSoft : C.card,
                         border: `1.5px solid ${isOn ? C.amber : C.border}`,
-                        borderRadius: 16, padding: "14px 6px", minHeight: 100,
+                        borderRadius: 16, padding: "14px 6px", minHeight: big ? 108 : 100, background: isOn ? C.amberSoft : (big ? C.bg2 : C.card),
                         cursor: disabled ? "not-allowed" : "pointer",
                         opacity: disabled ? 0.4 : 1,
                         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 7,
@@ -4027,7 +4025,18 @@ function AddictionScreen({ lang, onSelect }) {
                             fontSize: 26, lineHeight: 1,
                         } }, a.emoji),
                     React.createElement("span", { style: { fontSize: 10, color: isOn ? C.amber : C.muted, fontWeight: 700, textAlign: "center", lineHeight: 1.3 } }, a.label)));
-            })),
+};
+    return (React.createElement("div", { style: S.screen },
+        React.createElement("div", { style: { padding: "20px 16px 8px" } },
+            React.createElement("div", { style: { fontSize: 19, fontWeight: 800, color: C.text } }, t.chooseAddiction),
+            React.createElement("div", { style: { fontSize: 12, color: C.muted, marginTop: 4 } }, lang === "zh" ? `最多可选${MAX}项（已选${chosen.length}）` : lang === "kk" ? `${MAX} дейін таңдауға болады (таңдалғаны ${chosen.length})` : lang === "ru" ? `Можно выбрать до ${MAX} (выбрано ${chosen.length})` : lang === "es" ? `Puedes elegir hasta ${MAX} (seleccionados ${chosen.length})` : lang === "pt" ? `Pode escolher até ${MAX} (selecionados ${chosen.length})` : `Choose up to ${MAX} (selected ${chosen.length})`)),
+        React.createElement("div", { style: { padding: "0 14px 20px", overflowY: "auto", WebkitOverflowScrolling: "touch", flex: "1 1 auto", minHeight: 0 } },
+            React.createElement("div", { style: { margin: "4px 0 12px", padding: "14px 14px 12px", borderRadius: 18, background: C.amberSoft, border: `1.5px solid ${C.amber}55` } },
+                React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.text } }, "\u2B50 " + (ADD_TOP_TX[UI_LANG(lang)] || ADD_TOP_TX.en)[0]),
+                React.createElement("div", { style: { fontSize: 12, color: C.textSoft, marginTop: 4, lineHeight: 1.4 } }, (ADD_TOP_TX[UI_LANG(lang)] || ADD_TOP_TX.en)[1]),
+                React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 } }, t.addictions.filter(a => ADD_TOP.indexOf(a.id) !== -1).map(a => renderAdd(a, true)))),
+            React.createElement("div", { style: { fontSize: 13, fontWeight: 800, color: C.muted, margin: "6px 2px 10px", textTransform: "uppercase", letterSpacing: 0.5 } }, (ADD_TOP_TX[UI_LANG(lang)] || ADD_TOP_TX.en)[2]),
+            React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 } }, t.addictions.filter(a => ADD_TOP.indexOf(a.id) === -1).map(a => renderAdd(a, false))),
             chosen.length > 0 && (React.createElement("button", { onClick: () => onSelect(chosen), style: { ...S.btn, width: "100%", marginTop: 18 } },
                 t.next,
                 " \u2192")))));
