@@ -9758,36 +9758,6 @@ function App() {
                 ? { backgroundImage: `linear-gradient(rgba(4,16,12,0.78), rgba(4,16,12,0.92)), url(${ownBg})`, backgroundSize: "cover", backgroundPosition: "center" }
                 : { background: BGS[design] || BGS.green }),
     };
-    if (screen === "lang")
-        return React.createElement("div", { style: shellStyle },
-            React.createElement(LangScreen, { onSelect: l => { setLang(l); setScreen("welcome"); } }));
-    if (screen === "welcome")
-        return React.createElement("div", { style: shellStyle },
-            React.createElement(WelcomeScreen, { lang: lang, onNext: () => setScreen("name") }));
-    if (screen === "name")
-        return React.createElement("div", { style: shellStyle },
-            React.createElement(NameScreen, { lang: lang, onConfirm: n => { setName(n); setScreen("gender"); } }));
-    if (screen === "gender")
-        return React.createElement("div", { style: shellStyle },
-            React.createElement(GenderScreen, { lang: lang, onConfirm: g => { setGender(g); setScreen("birth"); } }));
-    if (screen === "birth")
-        return React.createElement("div", { style: shellStyle },
-            React.createElement(BirthDateScreen, { lang: lang, onConfirm: b => { setBirthDate(b); setScreen("addiction"); }, onSkip: () => setScreen("addiction") }));
-    if (screen === "addiction")
-        return React.createElement("div", { style: shellStyle },
-            React.createElement(AddictionScreen, { lang: lang, onSelect: a => { setAddiction(a); setScreen("startDate"); } }));
-    if (screen === "startDate")
-        return React.createElement("div", { style: shellStyle },
-            React.createElement(StartDateScreen, { lang: lang, onConfirm: ms => { setStartMs(ms); setScreen("surveyPrompt"); } }));
-    if (screen === "surveyPrompt")
-        return React.createElement("div", { style: shellStyle },
-            React.createElement(SurveyPrompt, { lang: lang, addiction: addiction, name: name, onSurvey: () => setScreen("survey"), onSkip: () => setScreen("consent") }));
-    if (screen === "survey")
-        return React.createElement("div", { style: shellStyle },
-            React.createElement(SurveyScreen, { lang: lang, addiction: addiction, onCancel: surveyFromMentor ? (() => { setSurveyFromMentor(false); setScreen("main"); }) : null, onDone: d => { setSurveyData(d); if (surveyFromMentor) { setSurveyFromMentor(false); setScreen("main"); } else setScreen("consent"); } }));
-    if (screen === "consent")
-        return React.createElement("div", { style: shellStyle },
-            React.createElement(ConsentScreen, { lang: lang, onAgree: () => setScreen("adWarning"), onDetails: () => setShowPrivacy(true) }));
     const [premiumSrc, setPremiumSrc] = useSaved("premiumSrc", null);
     const grantPlan = (planKey) => {
         const days = PLAN_DAYS[planKey] || 31;
@@ -9820,6 +9790,36 @@ function App() {
         }, 3000);
         return () => clearTimeout(id);
     }, [screen]);
+    if (screen === "lang")
+        return React.createElement("div", { style: shellStyle },
+            React.createElement(LangScreen, { onSelect: l => { setLang(l); setScreen("welcome"); } }));
+    if (screen === "welcome")
+        return React.createElement("div", { style: shellStyle },
+            React.createElement(WelcomeScreen, { lang: lang, onNext: () => setScreen("name") }));
+    if (screen === "name")
+        return React.createElement("div", { style: shellStyle },
+            React.createElement(NameScreen, { lang: lang, onConfirm: n => { setName(n); setScreen("gender"); } }));
+    if (screen === "gender")
+        return React.createElement("div", { style: shellStyle },
+            React.createElement(GenderScreen, { lang: lang, onConfirm: g => { setGender(g); setScreen("birth"); } }));
+    if (screen === "birth")
+        return React.createElement("div", { style: shellStyle },
+            React.createElement(BirthDateScreen, { lang: lang, onConfirm: b => { setBirthDate(b); setScreen("addiction"); }, onSkip: () => setScreen("addiction") }));
+    if (screen === "addiction")
+        return React.createElement("div", { style: shellStyle },
+            React.createElement(AddictionScreen, { lang: lang, onSelect: a => { setAddiction(a); setScreen("startDate"); } }));
+    if (screen === "startDate")
+        return React.createElement("div", { style: shellStyle },
+            React.createElement(StartDateScreen, { lang: lang, onConfirm: ms => { setStartMs(ms); setScreen("surveyPrompt"); } }));
+    if (screen === "surveyPrompt")
+        return React.createElement("div", { style: shellStyle },
+            React.createElement(SurveyPrompt, { lang: lang, addiction: addiction, name: name, onSurvey: () => setScreen("survey"), onSkip: () => setScreen("consent") }));
+    if (screen === "survey")
+        return React.createElement("div", { style: shellStyle },
+            React.createElement(SurveyScreen, { lang: lang, addiction: addiction, onCancel: surveyFromMentor ? (() => { setSurveyFromMentor(false); setScreen("main"); }) : null, onDone: d => { setSurveyData(d); if (surveyFromMentor) { setSurveyFromMentor(false); setScreen("main"); } else setScreen("consent"); } }));
+    if (screen === "consent")
+        return React.createElement("div", { style: shellStyle },
+            React.createElement(ConsentScreen, { lang: lang, onAgree: () => setScreen("adWarning"), onDetails: () => setShowPrivacy(true) }));
     const handleRestore = () => {
         restorePlan((ok) => {
             if (ok) {
