@@ -3996,7 +3996,6 @@ function LangScreen({ onSelect }) {
     });
     return (React.createElement("div", { style: { ...S.screen, justifyContent: "space-between", alignItems: "center", padding: "0 26px" } },
         React.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", width: "100%" } },
-            React.createElement("div", { style: { fontSize: 40, marginBottom: 20, opacity: 0.95 } }, "\uD83D\uDD4A\uFE0F"),
             React.createElement("div", { style: { fontSize: 33, fontWeight: 900, color: C.text, textAlign: "center", lineHeight: 1.15, letterSpacing: -0.5, marginBottom: 28 } }, pickLabel),
             React.createElement("div", { style: {
                     position: "relative", width: 232, height: 232, borderRadius: "50%", overflow: "hidden",
@@ -4184,40 +4183,42 @@ function AddictionScreen({ lang, onSelect }) {
             return [...prev, id];
         });
     };
-    const renderAdd = (a, big) => {
-                const isOn = chosen.includes(a.id);
-                const disabled = !isOn && chosen.length >= MAX;
-                return (React.createElement("button", { key: a.id, onClick: () => toggle(a.id), disabled: disabled, style: {
-                        background: isOn ? C.amberSoft : C.card,
-                        border: `1.5px solid ${isOn ? C.amber : C.border}`,
-                        borderRadius: 16, padding: "14px 6px", minHeight: big ? 108 : 100, background: isOn ? C.amberSoft : (big ? C.bg2 : C.card),
-                        cursor: disabled ? "not-allowed" : "pointer",
-                        opacity: disabled ? 0.4 : 1,
-                        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "flex-start", gap: 7,
-                        transition: "all 0.15s", position: "relative",
-                    } },
-                    isOn && React.createElement("span", { style: { position: "absolute", top: 6, right: 6, fontSize: 11, color: C.amber, fontWeight: 900 } }, "\u2713"),
-                    React.createElement("span", { style: {
-                            width: 34, height: 34, flexShrink: 0,
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            fontSize: 26, lineHeight: 1,
-                        } }, a.emoji),
-                    React.createElement("span", { style: { fontSize: 10, color: isOn ? C.amber : C.muted, fontWeight: 700, textAlign: "center", lineHeight: 1.3 } }, a.label)));
-};
+    const TOP3 = ["alcohol", "drugs", "gambling", "codependency"];
+    const OTHER_TX = { ru: "Другие зависимости", en: "Other addictions", es: "Otras adicciones", pt: "Outras dependências", kk: "Басқа тәуелділіктер", zh: "其他成瘾" };
+    const renderBig = (a) => {
+        const isOn = chosen.includes(a.id);
+        const disabled = !isOn && chosen.length >= MAX;
+        return React.createElement("button", { key: a.id, onClick: () => toggle(a.id), disabled: disabled, style: {
+                flex: 1, minWidth: 0, minHeight: 104, borderRadius: 22, padding: "12px 4px",
+                background: isOn ? C.amberSoft : C.card, border: `1.5px solid ${isOn ? C.amber : C.border}`,
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8,
+                cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.4 : 1, transition: "all 0.15s",
+            } },
+            React.createElement("span", { style: { fontSize: 32, lineHeight: 1 } }, a.emoji),
+            React.createElement("span", { style: { fontSize: 13, fontWeight: 800, color: isOn ? C.amber : C.text, textAlign: "center", lineHeight: 1.25 } }, a.label));
+    };
+    const renderChip = (a) => {
+        const isOn = chosen.includes(a.id);
+        const disabled = !isOn && chosen.length >= MAX;
+        return React.createElement("button", { key: a.id, onClick: () => toggle(a.id), disabled: disabled, style: {
+                padding: "10px 14px", borderRadius: 999, fontSize: 14, fontWeight: 600,
+                background: isOn ? C.amberSoft : C.card, border: `1.5px solid ${isOn ? C.amber : C.border}`,
+                color: isOn ? C.amber : C.text, cursor: disabled ? "not-allowed" : "pointer", opacity: disabled ? 0.4 : 1,
+                display: "inline-flex", alignItems: "center", gap: 6, transition: "all 0.15s",
+            } }, React.createElement("span", null, a.emoji), a.label);
+    };
+    const L = UI_LANG(lang);
     return (React.createElement("div", { style: S.screen },
-        React.createElement("div", { style: { padding: "20px 16px 8px" } },
-            React.createElement("div", { style: { fontSize: 19, fontWeight: 800, color: C.text } }, t.chooseAddiction),
-            React.createElement("div", { style: { fontSize: 12, color: C.muted, marginTop: 4 } }, lang === "zh" ? `最多可选${MAX}项（已选${chosen.length}）` : lang === "kk" ? `${MAX} дейін таңдауға болады (таңдалғаны ${chosen.length})` : lang === "ru" ? `Можно выбрать до ${MAX} (выбрано ${chosen.length})` : lang === "es" ? `Puedes elegir hasta ${MAX} (seleccionados ${chosen.length})` : lang === "pt" ? `Pode escolher até ${MAX} (selecionados ${chosen.length})` : `Choose up to ${MAX} (selected ${chosen.length})`)),
-        React.createElement("div", { style: { padding: "0 14px 20px", overflowY: "auto", WebkitOverflowScrolling: "touch", flex: "1 1 auto", minHeight: 0 } },
-            React.createElement("div", { style: { margin: "4px 0 12px", padding: "14px 14px 12px", borderRadius: 18, background: C.amberSoft, border: `1.5px solid ${C.amber}55` } },
-                React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: C.text } }, "\u2B50 " + (ADD_TOP_TX[UI_LANG(lang)] || ADD_TOP_TX.en)[0]),
-                React.createElement("div", { style: { fontSize: 12, color: C.textSoft, marginTop: 4, lineHeight: 1.4 } }, (ADD_TOP_TX[UI_LANG(lang)] || ADD_TOP_TX.en)[1]),
-                React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 } }, t.addictions.filter(a => ADD_TOP.indexOf(a.id) !== -1).map(a => renderAdd(a, true)))),
-            React.createElement("div", { style: { fontSize: 13, fontWeight: 800, color: C.muted, margin: "6px 2px 10px", textTransform: "uppercase", letterSpacing: 0.5 } }, (ADD_TOP_TX[UI_LANG(lang)] || ADD_TOP_TX.en)[2]),
-            React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 } }, t.addictions.filter(a => ADD_TOP.indexOf(a.id) === -1).map(a => renderAdd(a, false))),
-            chosen.length > 0 && (React.createElement("button", { onClick: () => onSelect(chosen), style: { ...S.btn, width: "100%", marginTop: 18 } },
-                t.next,
-                " \u2192")))));
+        React.createElement("div", { style: { padding: "28px 16px 6px", textAlign: "center" } },
+            React.createElement("div", { style: { fontSize: 23, fontWeight: 800, color: C.text } }, t.chooseAddiction),
+            React.createElement("div", { style: { fontSize: 13, color: C.muted, marginTop: 6 } }, lang === "zh" ? `最多可选${MAX}项（已选${chosen.length}）` : lang === "kk" ? `${MAX} дейін таңдауға болады (таңдалғаны ${chosen.length})` : lang === "ru" ? `Можно выбрать до ${MAX} (выбрано ${chosen.length})` : lang === "es" ? `Puedes elegir hasta ${MAX} (seleccionados ${chosen.length})` : lang === "pt" ? `Pode escolher até ${MAX} (selecionados ${chosen.length})` : `Choose up to ${MAX} (selected ${chosen.length})`)),
+        React.createElement("div", { style: { padding: "12px 16px 16px", overflowY: "auto", WebkitOverflowScrolling: "touch", flex: "1 1 auto", minHeight: 0 } },
+            React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } }, TOP3.map(id => t.addictions.find(a => a.id === id)).filter(Boolean).map(renderBig)),
+            React.createElement("div", { style: { fontSize: 12, fontWeight: 800, color: C.muted, margin: "22px 2px 10px", textTransform: "uppercase", letterSpacing: 0.5 } }, OTHER_TX[L] || OTHER_TX.en),
+            React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 8 } }, t.addictions.filter(a => TOP3.indexOf(a.id) === -1).map(renderChip))),
+        React.createElement("div", { style: { padding: "10px 16px 28px" } },
+            React.createElement("button", { onClick: () => chosen.length > 0 && onSelect(chosen), disabled: chosen.length === 0, style: { ...S.btn, width: "100%", opacity: chosen.length ? 1 : 0.45 } },
+                t.next, " \u2192"))));
 }
 // ── SCREEN: START DATE ───────────────────────────────────────────────────────
 function StartDateScreen({ lang, onConfirm }) {
