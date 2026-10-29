@@ -360,36 +360,14 @@ window.OT_ADS = (function () {
     AdMob.showInterstitial().catch(function () {});
   };
 
-  // БАННЕР внизу экрана (только Android). Прячется на наставнике, в «Помощи»,
-  // у подписчиков и до конца онбординга. Высоту баннера отдаём в --ot-banner-h,
-  // чтобы приложение поднялось над ним и баннер ничего не перекрывал.
-  // BANNER_ANDROID: сейчас тестовый ID Google — заменить на свой из AdMob.
-  var BANNER_ANDROID = "ca-app-pub-3940256099942544/6300978111";
-  window.OT_BANNER = (function () {
-    var hideWhy = { boot: true }, shown = false, created = false, busy = false;
-    function setH(h) { try { document.documentElement.style.setProperty("--ot-banner-h", (h || 0) + "px"); } catch (e) {} }
-    if (platform === "android") {
-      AdMob.addListener("bannerAdSizeChanged", function (sz) { if (shown) setH(sz && sz.height); });
-      AdMob.addListener("bannerAdFailedToLoad", function () { setH(0); });
-    }
-    function apply() {
-      if (platform !== "android" || busy) return;
-      var want = !Object.keys(hideWhy).some(function (k) { return hideWhy[k]; });
-      if (want === shown) return;
-      busy = true; shown = want;
-      var p;
-      if (want) {
-        var npa = true; try { var st = JSON.parse(localStorage.getItem("onlytoday.v1") || "{}") || {}; npa = !st.adsPersonalized; } catch (e) {}
-        p = created ? AdMob.resumeBanner() : adReady.then(function () { return AdMob.showBanner({ adId: BANNER_ANDROID, adSize: "ADAPTIVE_BANNER", position: "BOTTOM_CENTER", margin: 0, npa: npa }); });
-        created = true;
-      } else {
-        setH(0);
-        p = created ? AdMob.hideBanner() : Promise.resolve();
-      }
-      p.catch(function () {}).then(function () { busy = false; apply(); });
-    }
-    return { hide: function (why, on) { hideWhy[why] = !!on; apply(); } };
-  })();
+  // БАННЕРЫ ВНУТРИ ЭКРАНОВ (только Android). Нативный модуль OtAds (scripts/patch-android-ads.js)
+  // рисует баннер поверх пустого места на странице и двигается за ним при прокрутке.
+  window.OT_ADS_UNIT = "ca-app-pub-1286571991466831/8828247168";
+  window.OT_BANNER = { hide: function () {} }; // нижний баннер убран
+  if (platform === "android") {
+    window.__OT_INLINE = Cap.registerPlugin("OtAds");
+    try { Cap.addListener("OtAds", "otad", function (e) { try { window.dispatchEvent(new CustomEvent("otad", { detail: e })); } catch (x) {} }); } catch (x) {}
+  }
   try { Object.defineProperty(window, "NativelyPurchases", { value: Shim, writable: false, configurable: false }); } catch (e) {}
   // реклама пока только на Android: в iOS-сборке AdMob нет
   if (platform === "android") {
@@ -410,7 +388,7 @@ window.OT_ADS = (function () {
   #root {
     box-sizing: border-box;
     padding-top: max(var(--safe-area-inset-top, 0px), env(safe-area-inset-top, 0px), var(--native-inset-top, 0px));
-    padding-bottom: calc(max(var(--safe-area-inset-bottom, 0px), env(safe-area-inset-bottom, 0px), var(--native-inset-bottom, 0px)) + var(--ot-banner-h, 0px));
+    padding-bottom: max(var(--safe-area-inset-bottom, 0px), env(safe-area-inset-bottom, 0px), var(--native-inset-bottom, 0px));
   }
 </style>
 <script>/* React 18.3.1 UMD — встроен локально, сеть не требуется */
@@ -5225,6 +5203,7 @@ function HomeTab({ planInfo, lang, aiDiaryLocked, addiction, name, birthDate, st
                         boxShadow: C.btnShadow, letterSpacing: 0.2,
                     } }, t.markSuccess)),
             !trackerOnly && React.createElement(HomeCarousel, { lang: lang, days: daysElapsed, onDiary: () => onGo && onGo("diary"), onTasks: () => onGo && onGo("groups"), onSavings: () => setShowSavings(true), onMentor: () => onGo && onGo("mentor"), onCheckin: onSuccess }),
+            !trackerOnly && React.createElement(OtAdSlot, { id: "home" }),
             false && React.createElement("div", { style: {
                     display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 18,
                     background: C.card, border: `1px solid ${trackerOnly ? C.amber + "55" : C.border}`,
@@ -5542,6 +5521,52 @@ const DT = {
         lSituation: "情境：", lThought: "念头：", lFeelings: "感受：", lBody: "身体：", lCorrection: "调整：",
     },
 };
+// ── РЕКЛАМНОЕ МЕСТО ВНУТРИ ЭКРАНА ─────────────────────────────────────────────
+// Держит место 50px под баннер, сообщает нативному модулю, где оно на экране.
+// Баннер прячется, если место ушло за экран или его что-то накрыло (окно, меню).
+// Не пришла реклама — место схлопывается. Нет на iOS, в браузере и у подписчиков.
+const OT_SLOTS = {};
+let otSlotLoop = 0;
+function otSlotTick() {
+    const P = window.__OT_INLINE;
+    const ids = Object.keys(OT_SLOTS);
+    if (!ids.length || !P) { otSlotLoop = 0; return; }
+    const vh = window.innerHeight;
+    ids.forEach(id => {
+        const s = OT_SLOTS[id]; const el = s.el;
+        if (!el || s.failed) return;
+        const r = el.getBoundingClientRect();
+        let show = r.height > 10 && r.top >= 0 && r.bottom <= vh && !document.hidden;
+        if (show) {
+            const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+            const top2 = document.elementFromPoint(r.left + 4, r.top + 4);
+            show = !!top && el.contains(top) && !!top2 && el.contains(top2);
+        }
+        const key = show ? [Math.round(r.left), Math.round(r.top), Math.round(r.width)].join(",") : "h";
+        if (key === s.last) return;
+        s.last = key;
+        try {
+            if (show) P.place({ id, unit: window.OT_ADS_UNIT, x: r.left, y: r.top, w: r.width, h: r.height, npa: (() => { try { return !(JSON.parse(localStorage.getItem("onlytoday.v1") || "{}") || {}).adsPersonalized; } catch (e) { return true; } })() });
+            else P.hide({ id });
+        } catch (e) { }
+    });
+    otSlotLoop = requestAnimationFrame(otSlotTick);
+}
+function OtAdSlot({ id }) {
+    const ref = useRef(null);
+    const [failed, setFailed] = useState(false);
+    const on = !!window.__OT_INLINE && !window.__OT_PREMIUM;
+    useEffect(() => {
+        if (!on) return;
+        OT_SLOTS[id] = { el: ref.current, last: null, failed: false };
+        const onEv = e => { const d = e.detail || {}; if (d.id === id && d.ev === "fail") { if (OT_SLOTS[id]) OT_SLOTS[id].failed = true; setFailed(true); } };
+        window.addEventListener("otad", onEv);
+        if (!otSlotLoop) otSlotLoop = requestAnimationFrame(otSlotTick);
+        return () => { window.removeEventListener("otad", onEv); delete OT_SLOTS[id]; try { window.__OT_INLINE.hide({ id }); } catch (e) { } };
+    }, [on, id]);
+    if (!on || failed) return null;
+    return React.createElement("div", { ref, style: { height: 50, margin: "4px 0 14px", borderRadius: 8, background: "transparent" } });
+}
 // iOS сейчас на проверке в App Store: всё новое включаем только на Android и в браузере
 function otIsIOS() { try { const Cap = window.Capacitor; return !!(Cap && Cap.getPlatform && Cap.getPlatform() === "ios"); } catch (e) { return false; } }
 // ── ДНЕВНИК-ЧАТ: человек пишет своими словами, ИИ раскладывает по полям ─────────
@@ -5743,7 +5768,8 @@ function DiaryTab({ lang, onAskMentor, entries, setEntries, openNew, clearOpenNe
                         React.createElement("div", { style: { fontSize: 17, fontWeight: 800, color: C.text } }, dt.selfName),
                         React.createElement("div", { style: { fontSize: 12, color: C.muted, fontWeight: 600 } }, dt.selfSub)),
                     React.createElement("span", { style: { fontSize: 11, color: C.muted, background: C.card2, padding: "3px 8px", borderRadius: 999 } }, dt.soon)),
-                React.createElement("div", { style: { fontSize: 12.5, color: C.muted, lineHeight: 1.5 } }, dt.selfDesc))));
+                React.createElement("div", { style: { fontSize: 12.5, color: C.muted, lineHeight: 1.5 } }, dt.selfDesc)),
+            React.createElement(OtAdSlot, { id: "diaryChoose" })));
     // ИНСТРУКТАЖ
     if (step === "intro")
         return (React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "16px 16px 20px" } },
@@ -5892,7 +5918,8 @@ function DiaryTab({ lang, onAskMentor, entries, setEntries, openNew, clearOpenNe
             row(dt.lThought, e.thought),
             row(dt.lFeelings, (e.feelings || []).join(", "), C.amber),
             row(dt.lBody, (e.body || []).join(", ")),
-            row(dt.lCorrection, e.correction))))));
+            row(dt.lCorrection, e.correction)))),
+        React.createElement(OtAdSlot, { id: "diaryList" })));
 }
 // ── TAB: GROUPS ──────────────────────────────────────────────────────────────
 // ── TAB: ЗАДАНИЯ (4 модуля) ───────────────────────────────────────────────────
@@ -7108,7 +7135,7 @@ function GroupsTab({ lang, isPremium, onNeedSub, addiction, onFirstTestDone, don
     return (React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "8px 14px 16px" } },
         React.createElement("div", { style: { fontSize: 20, fontWeight: 800, color: C.text, marginTop: 8 } }, rct.tabTitle),
         React.createElement("div", { style: { fontSize: 13, color: C.muted, marginTop: 4, marginBottom: 14, lineHeight: 1.5 } }, rct.tabSub),
-        MODULES.map(m => (React.createElement("button", { key: m.id, onClick: () => setView(m.id), style: {
+        MODULES.map(m => [m.id === "prevent" ? React.createElement(OtAdSlot, { key: "ad", id: "tasks" }) : null, (React.createElement("button", { key: m.id, onClick: () => setView(m.id), style: {
                 width: "100%", textAlign: "left", marginBottom: 13, padding: 16, borderRadius: 20, cursor: "pointer",
                 background: m.id === "sos" ? "linear-gradient(135deg, rgba(255,90,110,0.18), rgba(255,90,110,0.06))" : C.card,
                 border: `1.5px solid ${m.accent}${m.id === "sos" ? "88" : "44"}`,
@@ -7120,7 +7147,7 @@ function GroupsTab({ lang, isPremium, onNeedSub, addiction, onFirstTestDone, don
                     React.createElement("div", { style: { fontSize: 16, fontWeight: 800, color: C.text } }, m.title),
                     React.createElement("div", { style: { fontSize: 12, color: m.accent, fontWeight: 600, marginTop: 1 } }, m.sub)),
                 m.id === "plp" && React.createElement("span", { style: { fontSize: 10, color: C.muted, background: C.card2 || C.card2, padding: "3px 8px", borderRadius: 999 } }, rct.soon)),
-            React.createElement("div", { style: { fontSize: 12, color: C.textSoft || C.muted, lineHeight: 1.45 } }, m.desc))))));
+            React.createElement("div", { style: { fontSize: 12, color: C.textSoft || C.muted, lineHeight: 1.45 } }, m.desc)))])));
 }
 function PLPList({ lang, onBack }) {
     const rct = pickI18N(RCT, lang);
@@ -9842,6 +9869,7 @@ function App() {
         catch (e) { }
     }, []);
     const isPremium = !!(premiumUntil && premiumUntil > Date.now());
+    window.__OT_PREMIUM = isPremium; // для рекламных мест: у подписчиков рекламы нет
     const FREE_REVIEW_DAYS = 14;
     const aiDiaryLocked = !isPremium && (Date.now() - (firstSeenMs || Date.now())) >= FREE_REVIEW_DAYS * 86400000;
     const openSub = () => { setSubFromMenu(true); setScreen("adWarning"); };
@@ -10070,7 +10098,7 @@ function App() {
     // баннер: только на главных экранах, не у подписчиков и не на наставнике
     useEffect(() => { try {
         window.OT_BANNER && window.OT_BANNER.hide("boot", screen !== "main");
-        window.OT_BANNER && window.OT_BANNER.hide("prem", isPremium);
+        window.__OT_PREMIUM = isPremium;
         window.OT_BANNER && window.OT_BANNER.hide("mentor", tab === "mentor");
     } catch (e) { } }, [screen, isPremium, tab]);
     if (screen === "lang")
