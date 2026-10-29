@@ -360,6 +360,36 @@ window.OT_ADS = (function () {
     AdMob.showInterstitial().catch(function () {});
   };
 
+  // БАННЕР внизу экрана (только Android). Прячется на наставнике, в «Помощи»,
+  // у подписчиков и до конца онбординга. Высоту баннера отдаём в --ot-banner-h,
+  // чтобы приложение поднялось над ним и баннер ничего не перекрывал.
+  // BANNER_ANDROID: сейчас тестовый ID Google — заменить на свой из AdMob.
+  var BANNER_ANDROID = "ca-app-pub-3940256099942544/6300978111";
+  window.OT_BANNER = (function () {
+    var hideWhy = { boot: true }, shown = false, created = false, busy = false;
+    function setH(h) { try { document.documentElement.style.setProperty("--ot-banner-h", (h || 0) + "px"); } catch (e) {} }
+    if (platform === "android") {
+      AdMob.addListener("bannerAdSizeChanged", function (sz) { if (shown) setH(sz && sz.height); });
+      AdMob.addListener("bannerAdFailedToLoad", function () { setH(0); });
+    }
+    function apply() {
+      if (platform !== "android" || busy) return;
+      var want = !Object.keys(hideWhy).some(function (k) { return hideWhy[k]; });
+      if (want === shown) return;
+      busy = true; shown = want;
+      var p;
+      if (want) {
+        var npa = true; try { var st = JSON.parse(localStorage.getItem("onlytoday.v1") || "{}") || {}; npa = !st.adsPersonalized; } catch (e) {}
+        p = created ? AdMob.resumeBanner() : adReady.then(function () { return AdMob.showBanner({ adId: BANNER_ANDROID, adSize: "ADAPTIVE_BANNER", position: "BOTTOM_CENTER", margin: 0, npa: npa }); });
+        created = true;
+      } else {
+        setH(0);
+        p = created ? AdMob.hideBanner() : Promise.resolve();
+      }
+      p.catch(function () {}).then(function () { busy = false; apply(); });
+    }
+    return { hide: function (why, on) { hideWhy[why] = !!on; apply(); } };
+  })();
   try { Object.defineProperty(window, "NativelyPurchases", { value: Shim, writable: false, configurable: false }); } catch (e) {}
   // реклама пока только на Android: в iOS-сборке AdMob нет
   if (platform === "android") {
@@ -380,7 +410,7 @@ window.OT_ADS = (function () {
   #root {
     box-sizing: border-box;
     padding-top: max(var(--safe-area-inset-top, 0px), env(safe-area-inset-top, 0px), var(--native-inset-top, 0px));
-    padding-bottom: max(var(--safe-area-inset-bottom, 0px), env(safe-area-inset-bottom, 0px), var(--native-inset-bottom, 0px));
+    padding-bottom: calc(max(var(--safe-area-inset-bottom, 0px), env(safe-area-inset-bottom, 0px), var(--native-inset-bottom, 0px)) + var(--ot-banner-h, 0px));
   }
 </style>
 <script>/* React 18.3.1 UMD — встроен локально, сеть не требуется */
@@ -812,7 +842,7 @@ const S = {
 const NOTIF_TX = {"ru": {"t": "Only Today", "mt": "Наставник", "ms": "🏆 День {n} без употребления! Ты справляешься — загляни, тебя ждёт поздравление.", "am": ["☀️ Доброе утро. Запланируй свой день — пять строк, и день под контролем.", "☀️ Новый день — только сегодня. Набросай план, чтобы не сорваться.", "☀️ Утро — лучшее время решить, как пройдёт день. Открой «План дня»."], "pm": ["🤝 Как ты сегодня? Я рядом, если хочется выговориться.", "🤝 Если день был тяжёлым — это нормально. Напиши мне, разберём вместе.", "🤝 Ты держишься, и это много. Что сегодня было самым трудным?", "🤝 Тяга — это волна, она проходит. Я здесь, если накрывает.", "🤝 Ещё один вечер без употребления. Горжусь тобой. Как ты?"], "sub": "Утром — план дня, вечером — слово наставника, и поздравления с рубежами 7, 30, 90 дней"}, "en": {"t": "Only Today", "mt": "Mentor", "ms": "🏆 Day {n} sober! You're doing it — open the app, there's something for you.", "am": ["☀️ Good morning. Plan your day — five lines and the day is in your hands.", "☀️ A new day — just for today. Sketch a plan so you don't slip.", "☀️ Morning is the best time to decide how today goes. Open your Day plan."], "pm": ["🤝 How are you today? I'm here if you want to talk.", "🤝 If today was hard, that's okay. Write to me and we'll work through it.", "🤝 You're holding on, and that's a lot. What was hardest today?", "🤝 A craving is a wave — it passes. I'm here if it hits.", "🤝 One more evening sober. I'm proud of you. How are you?"], "sub": "Morning day plan, an evening word from your mentor, and congrats on 7, 30, 90 days"}, "es": {"t": "Only Today", "mt": "Mentor", "ms": "🏆 ¡Día {n} sin consumir! Lo estás logrando — entra, tenemos algo para ti.", "am": ["☀️ Buenos días. Planifica tu día: cinco líneas y el día bajo control.", "☀️ Un nuevo día, solo por hoy. Haz un plan para no recaer.", "☀️ La mañana es el mejor momento para decidir cómo será el día. Abre tu Plan del día."], "pm": ["🤝 ¿Cómo estás hoy? Estoy aquí si quieres hablar.", "🤝 Si el día fue duro, está bien. Escríbeme y lo vemos juntos.", "🤝 Estás aguantando, y eso es mucho. ¿Qué fue lo más difícil hoy?", "🤝 El deseo es una ola: pasa. Estoy aquí si te alcanza.", "🤝 Otra noche sin consumir. Estoy orgulloso de ti. ¿Cómo estás?"], "sub": "Por la mañana, plan del día; por la noche, una palabra del mentor; y felicitaciones a los 7, 30 y 90 días"}, "pt": {"t": "Only Today", "mt": "Mentor", "ms": "🏆 Dia {n} sem usar! Você está conseguindo — abra o app, tem algo para você.", "am": ["☀️ Bom dia. Planeje seu dia: cinco linhas e o dia sob controle.", "☀️ Um novo dia, só por hoje. Faça um plano para não recair.", "☀️ A manhã é a melhor hora para decidir como será o dia. Abra seu Plano do dia."], "pm": ["🤝 Como você está hoje? Estou aqui se quiser conversar.", "🤝 Se o dia foi pesado, tudo bem. Me escreva e vemos juntos.", "🤝 Você está firme, e isso é muito. O que foi mais difícil hoje?", "🤝 A fissura é uma onda: ela passa. Estou aqui se bater.", "🤝 Mais uma noite sem usar. Tenho orgulho de você. Como está?"], "sub": "De manhã, plano do dia; à noite, uma palavra do mentor; e parabéns aos 7, 30 e 90 dias"}, "kk": {"t": "Only Today", "mt": "Тәлімгер", "ms": "🏆 Тазалықтың {n}-күні! Сен үлгеріп жатырсың — кіріп көр, саған құттықтау бар.", "am": ["☀️ Қайырлы таң. Күніңді жоспарла — бес жол, және күн бақылауда.", "☀️ Жаңа күн — тек бүгін. Үзіліп кетпеу үшін жоспар құр.", "☀️ Таң — күннің қалай өтетінін шешудің ең жақсы уақыты. «Күн жоспарын» аш."], "pm": ["🤝 Бүгін қалайсың? Сөйлескің келсе, мен осындамын.", "🤝 Күн ауыр болса — бұл қалыпты. Жаз маған, бірге талдаймыз.", "🤝 Сен төзіп жүрсің, бұл көп нәрсе. Бүгін не ең қиын болды?", "🤝 Құштарлық — толқын, ол өтеді. Басып кетсе, мен осындамын.", "🤝 Тағы бір сергек кеш. Мен сені мақтан тұтамын. Қалайсың?"], "sub": "Таңертең — күн жоспары, кешке — тәлімгердің сөзі, және 7, 30, 90 күнге құттықтау"}, "zh": {"t": "Only Today", "mt": "引导者", "ms": "🏆 清醒第 {n} 天！你做到了——打开应用，看看给你的祝贺。", "am": ["☀️ 早上好。规划你的一天——写五行，一天尽在掌握。", "☀️ 新的一天，只为今天。写个计划，避免复发。", "☀️ 早晨是决定今天如何度过的最好时机。打开「今日计划」。"], "pm": ["🤝 今天过得怎么样？想聊聊的话，我在。", "🤝 如果今天很难熬，没关系。写给我，我们一起面对。", "🤝 你在坚持，这很了不起。今天最难的是什么？", "🤝 渴求就像海浪，会过去的。被淹没时，我在这里。", "🤝 又一个清醒的夜晚。我为你骄傲。你好吗？"], "sub": "早上做今日计划，晚上听引导者说句话，还有 7、30、90 天的祝贺"}};
 const NOTIF_MILESTONES = [1, 3, 7, 14, 30, 60, 90, 180, 270, 365, 500, 730, 1000];
 function otNative() { const Cap = window.Capacitor; return Cap && Cap.isNativePlatform && Cap.isNativePlatform() && Cap.nativePromise ? Cap : null; }
-async function otScheduleNotifs({ lang, startMs, trackerOnly, on }) {
+async function otScheduleNotifs({ lang, startMs, trackerOnly, on, weeklyOn }) {
     const Cap = otNative();
     if (!Cap) return;
     try {
@@ -840,6 +870,11 @@ async function otScheduleNotifs({ lang, startMs, trackerOnly, on }) {
             if (a.getTime() > now) list.push({ id: 200000 + i, title: tx.t, body: tx.am[i % tx.am.length], schedule: { at: a, allowWhileIdle: true }, isExactNotification: false });
             if (p.getTime() > now) list.push({ id: 300000 + i, title: tx.mt, body: tx.pm[i % tx.pm.length], schedule: { at: p, allowWhileIdle: true }, isExactNotification: false });
         }
+        // недельная динамика: каждую пятницу в 19:00 на 8 недель вперёд
+        if (!trackerOnly && weeklyOn) { const wt = pickI18N(WK, lang); for (let i = 0; i < 8; i++) {
+            const f = new Date(); f.setHours(19, 0, 0, 0); f.setDate(f.getDate() + ((5 - f.getDay() + 7) % 7) + i * 7);
+            if (f.getTime() > now) list.unshift({ id: 400000 + i, title: tx.mt, body: wt.notif, schedule: { at: f, allowWhileIdle: true }, isExactNotification: false });
+        } }
         if (list.length) await Cap.nativePromise("LocalNotifications", "schedule", { notifications: list.slice(0, 60) });
     } catch (e) { try { console.log("[notif]", e && (e.message || e)); } catch (_) { } }
 }
@@ -5507,12 +5542,169 @@ const DT = {
         lSituation: "情境：", lThought: "念头：", lFeelings: "感受：", lBody: "身体：", lCorrection: "调整：",
     },
 };
-function DiaryTab({ lang, onAskMentor, entries, setEntries }) {
+// iOS сейчас на проверке в App Store: всё новое включаем только на Android и в браузере
+function otIsIOS() { try { const Cap = window.Capacitor; return !!(Cap && Cap.getPlatform && Cap.getPlatform() === "ios"); } catch (e) { return false; } }
+// ── ДНЕВНИК-ЧАТ: человек пишет своими словами, ИИ раскладывает по полям ─────────
+const DCH = {
+    ru: { title: "Новая запись", sub: "Дневник чувств", hello: "Что случилось? Пиши как есть, своими словами. Я сам разложу по полям.", ph: "Напиши, что случилось…", ph2: "Добавить или поправить…", thinking: "Раскладываю…", err: "Не получилось разобрать. Проверь интернет и отправь ещё раз.", feelQ: "Отметь, что ты чувствовал. Нужно минимум 4:", more: "все чувства ›", need: "Отметь ещё {n}, нужно минимум 4", save: "Сохранить в дневник", manual: "Заполнить вручную", craving: "Тяга", yes: "да", saved: "Запись сохранена", lCraving: "Тяга:" },
+    en: { title: "New entry", sub: "Feelings diary", hello: "What happened? Write it the way it is, in your own words. I'll sort it into the fields.", ph: "Write what happened…", ph2: "Add or correct…", thinking: "Sorting it out…", err: "Couldn't process that. Check your connection and send again.", feelQ: "Mark what you felt. At least 4:", more: "all feelings ›", need: "Mark {n} more, at least 4 needed", save: "Save to diary", manual: "Fill in manually", craving: "Craving", yes: "yes", saved: "Entry saved", lCraving: "Craving:" },
+    es: { title: "Nueva entrada", sub: "Diario de sentimientos", hello: "¿Qué pasó? Escríbelo tal cual, con tus palabras. Yo lo ordeno en los campos.", ph: "Escribe qué pasó…", ph2: "Añadir o corregir…", thinking: "Ordenando…", err: "No se pudo procesar. Revisa la conexión y envía de nuevo.", feelQ: "Marca lo que sentiste. Mínimo 4:", more: "todos los sentimientos ›", need: "Marca {n} más, mínimo 4", save: "Guardar en el diario", manual: "Rellenar a mano", craving: "Ansia", yes: "sí", saved: "Entrada guardada", lCraving: "Ansia:" },
+    pt: { title: "Nova entrada", sub: "Diário de sentimentos", hello: "O que aconteceu? Escreva do jeito que foi, com suas palavras. Eu organizo nos campos.", ph: "Escreva o que aconteceu…", ph2: "Adicionar ou corrigir…", thinking: "Organizando…", err: "Não deu para processar. Verifique a conexão e envie de novo.", feelQ: "Marque o que você sentiu. No mínimo 4:", more: "todos os sentimentos ›", need: "Marque mais {n}, no mínimo 4", save: "Salvar no diário", manual: "Preencher à mão", craving: "Fissura", yes: "sim", saved: "Entrada salva", lCraving: "Fissura:" },
+    kk: { title: "Жаңа жазба", sub: "Сезімдер күнделігі", hello: "Не болды? Өз сөзіңмен, қалай болса солай жаз. Мен өрістерге бөліп беремін.", ph: "Не болғанын жаз…", ph2: "Қосу немесе түзету…", thinking: "Бөліп жатырмын…", err: "Өңдеу мүмкін болмады. Интернетті тексеріп, қайта жібер.", feelQ: "Не сезгеніңді белгіле. Кемінде 4:", more: "барлық сезімдер ›", need: "Тағы {n} белгіле, кемінде 4", save: "Күнделікке сақтау", manual: "Қолмен толтыру", craving: "Құмарлық", yes: "иә", saved: "Жазба сақталды", lCraving: "Құмарлық:" },
+    zh: { title: "新记录", sub: "情绪日记", hello: "发生了什么？用你自己的话照实写，我来帮你整理到各栏。", ph: "写下发生了什么…", ph2: "补充或修改…", thinking: "正在整理…", err: "没能处理。请检查网络后再发送。", feelQ: "标出你的感受，至少 4 个：", more: "全部感受 ›", need: "再标 {n} 个，至少 4 个", save: "保存到日记", manual: "手动填写", craving: "渴求", yes: "有", saved: "已保存", lCraving: "渴求：" },
+};
+function DiaryChat({ lang, onSave, onBack, onManual }) {
+    const dt = pickI18N(DT, lang);
+    const ch = pickI18N(DCH, lang);
+    const FEELINGS = pickI18N(FEELINGS_I18N, lang);
+    const FEEL_COLORS = pickI18N(FEEL_COLORS_I18N, lang);
+    const BODY_REACTIONS = pickI18N(BODY_REACTIONS_I18N, lang);
+    const allFeel = React.useMemo(() => [].concat(...Object.values(FEELINGS)), [FEELINGS]);
+    const allBody = React.useMemo(() => [].concat(...Object.values(BODY_REACTIONS)), [BODY_REACTIONS]);
+    const feelColor = f => { const cat = Object.keys(FEELINGS).find(k => FEELINGS[k].includes(f)); return (cat && FEEL_COLORS[cat]) || C.amber; };
+    const [msgs, setMsgs] = useState([{ from: "ai", text: ch.hello }]);
+    const [d, setD] = useState({ situation: "", thought: "", feelings: [], body: [], correction: "", craving: false });
+    const [sugg, setSugg] = useState([]);
+    const [input, setInput] = useState("");
+    const [busy, setBusy] = useState(false);
+    const [showFeel, setShowFeel] = useState(false);
+    const scrollRef = useRef(null);
+    useEffect(() => { const el = scrollRef.current; if (el) el.scrollTop = el.scrollHeight; }, [msgs, busy, d, sugg]);
+    const toggleFeel = f => setD(s => ({ ...s, feelings: s.feelings.includes(f) ? s.feelings.filter(x => x !== f) : [...s.feelings, f] }));
+    const send = async () => {
+        const text = input.trim();
+        if (!text || busy) return;
+        setInput("");
+        const next = [...msgs, { from: "user", text }];
+        setMsgs(next);
+        setBusy(true);
+        const history = next.filter(m => !m.err).slice(1).slice(-10).map(m => ({ role: m.from === "user" ? "user" : "assistant", content: m.text }));
+        while (history.length && history[0].role !== "user") history.shift();
+        const profile = "FEELINGS: " + allFeel.join(", ") + "\nBODY: " + allBody.join(", ") +
+            "\nЧЕРНОВИК: " + JSON.stringify(d);
+        try {
+            const res = await fetch(MENTOR_API, { method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ device: otMyRef(), flags: { lang, topic: "diary_parse" }, profile, messages: history }) });
+            const data = await res.json().catch(() => null);
+            const raw = data && data.content && data.content[0] && data.content[0].text;
+            const m = raw && raw.match(/\{[\s\S]*\}/);
+            const j = m ? JSON.parse(m[0]) : null;
+            if (!j) throw new Error("parse");
+            const str = v => (typeof v === "string" ? v.trim() : "");
+            const fe = (Array.isArray(j.feelings) ? j.feelings : []).map(str).filter(f => allFeel.includes(f));
+            const bo = (Array.isArray(j.body) ? j.body : []).map(str).filter(b => allBody.includes(b));
+            setD(s => ({
+                situation: str(j.situation) || s.situation, thought: str(j.thought) || s.thought,
+                correction: str(j.correction) || s.correction, craving: !!j.craving || s.craving,
+                body: Array.from(new Set([...s.body, ...bo])),
+                // чувства, которые предложил ИИ, сразу отмечены — человек снимает лишние
+                feelings: Array.from(new Set([...s.feelings, ...fe.filter(f => !sugg.includes(f))])),
+            }));
+            setSugg(prev => Array.from(new Set([...prev, ...fe])));
+            setMsgs(x => [...x, { from: "ai", text: str(j.reply) || ch.feelQ }]);
+        } catch (e) {
+            setMsgs(x => [...x, { from: "ai", text: ch.err, err: true }]);
+        }
+        setBusy(false);
+    };
+    const need = Math.max(0, 4 - d.feelings.length);
+    const canSave = d.situation.trim() && need === 0;
+    const save = () => { if (!canSave) return; onSave({ situation: d.situation, thought: d.thought, feelings: d.feelings, body: d.body, correction: d.correction, craving: d.craving }); };
+    const chips = Array.from(new Set([...sugg, ...d.feelings]));
+    const bubble = { fontSize: 14, lineHeight: 1.5, padding: "10px 13px", marginBottom: 8, whiteSpace: "pre-wrap", wordBreak: "break-word" };
+    const row = (k, v) => v ? React.createElement("div", { style: { display: "flex", gap: 10, fontSize: 13, lineHeight: 1.45, padding: "3px 0" } },
+        React.createElement("div", { style: { color: C.muted, width: 84, flexShrink: 0 } }, k),
+        React.createElement("div", { style: { color: C.text, flex: 1 } }, v)) : null;
+    return (React.createElement("div", { style: { flex: 1, display: "flex", flexDirection: "column", minHeight: 0, position: "relative" } },
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, padding: "12px 16px 10px" } },
+            React.createElement("button", { onClick: onBack, "aria-label": "back", style: { background: "none", border: "none", color: C.amber, fontSize: 22, fontWeight: 700, cursor: "pointer", padding: "0 4px" } }, "←"),
+            React.createElement("div", null,
+                React.createElement("div", { style: { fontSize: 17, fontWeight: 800, color: C.text } }, ch.title),
+                React.createElement("div", { style: { fontSize: 12, color: C.amber, fontWeight: 700 } }, ch.sub))),
+        React.createElement("div", { ref: scrollRef, style: { flex: 1, overflowY: "auto", padding: "4px 16px 10px" } },
+            msgs.map((m, i) => React.createElement("div", { key: i, style: m.from === "user"
+                    ? { ...bubble, marginLeft: "auto", maxWidth: "82%", borderRadius: "16px 16px 4px 16px", background: `linear-gradient(135deg, ${C.amber}, ${C.amber2})`, color: C.onAccent, fontWeight: 600 }
+                    : { ...bubble, maxWidth: "88%", borderRadius: "16px 16px 16px 4px", background: C.card, border: `1px solid ${C.border}`, color: m.err ? C.danger : C.text } }, m.text)),
+            busy && React.createElement("div", { style: { ...bubble, maxWidth: "60%", borderRadius: "16px 16px 16px 4px", background: C.card, border: `1px solid ${C.border}`, color: C.muted } }, ch.thinking),
+            d.situation && React.createElement("div", { style: { border: `1px dashed ${C.amber}88`, borderRadius: 14, padding: "10px 12px", margin: "6px 0 10px", background: C.card } },
+                row(dt.lSituation.replace(/[:：]\s*$/, ""), d.situation),
+                row(dt.lThought.replace(/[:：]\s*$/, ""), d.thought),
+                row(dt.lFeelings.replace(/[:：]\s*$/, ""), d.feelings.join(", ")),
+                row(dt.lBody.replace(/[:：]\s*$/, ""), d.body.join(", ")),
+                row(dt.lCorrection.replace(/[:：]\s*$/, ""), d.correction),
+                d.craving ? row(ch.craving, ch.yes) : null),
+            d.situation && React.createElement("div", { style: { marginBottom: 8 } },
+                React.createElement("div", { style: { fontSize: 13, color: need ? C.amber : C.success, fontWeight: 700, marginBottom: 7 } }, need ? ch.need.replace("{n}", need) : `✓ ${d.feelings.length}`),
+                React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } },
+                    chips.map(f => { const on = d.feelings.includes(f); const col = feelColor(f);
+                        return React.createElement("span", { key: f, onClick: () => toggleFeel(f), style: { fontSize: 13, padding: "6px 11px", borderRadius: 999, cursor: "pointer", background: on ? `${col}2A` : "transparent", color: on ? col : C.textSoft, fontWeight: on ? 700 : 400, border: `1px solid ${on ? col : C.border}` } }, f); }),
+                    React.createElement("span", { onClick: () => setShowFeel(true), style: { fontSize: 13, padding: "6px 11px", borderRadius: 999, cursor: "pointer", color: C.amber, border: `1px solid ${C.amber}66`, fontWeight: 700 } }, ch.more))),
+            d.situation && React.createElement("button", { onClick: save, style: { width: "100%", padding: 14, borderRadius: 999, border: "none", margin: "6px 0 4px", background: canSave ? `linear-gradient(135deg, ${C.amber}, ${C.amber2})` : C.card, color: canSave ? C.onAccent : C.muted, fontWeight: 800, fontSize: 15, cursor: canSave ? "pointer" : "default" } }, ch.save),
+            !d.situation && msgs.length < 3 && React.createElement("button", { onClick: onManual, style: { background: "none", border: "none", color: C.muted, fontSize: 12.5, textDecoration: "underline", cursor: "pointer", padding: "6px 0" } }, ch.manual)),
+        React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "flex-end", padding: "8px 12px 12px" } },
+            React.createElement("textarea", { value: input, rows: 1, placeholder: d.situation ? ch.ph2 : ch.ph, onChange: e => setInput(e.target.value),
+                onKeyDown: e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } },
+                style: { flex: 1, resize: "none", maxHeight: 110, background: C.card, border: `1px solid ${C.border}`, borderRadius: 22, padding: "12px 16px", color: C.text, fontSize: 15, fontFamily: "inherit", outline: "none" } }),
+            React.createElement("button", { onClick: send, disabled: busy || !input.trim(), "aria-label": "send", style: { width: 46, height: 46, flexShrink: 0, borderRadius: "50%", border: "none", background: `linear-gradient(135deg, ${C.amber}, ${C.amber2})`, color: C.onAccent, fontSize: 20, fontWeight: 900, cursor: "pointer", opacity: busy || !input.trim() ? 0.5 : 1 } }, "↑")),
+        showFeel && (React.createElement("div", { style: { position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 50, display: "flex", flexDirection: "column", justifyContent: "flex-end" }, onClick: () => setShowFeel(false) },
+            React.createElement("div", { onClick: e => e.stopPropagation(), style: { background: C.bg2, borderRadius: "24px 24px 0 0", padding: 16, maxHeight: "82%", overflowY: "auto" } },
+                React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 } },
+                    React.createElement("div", { style: { fontSize: 17, fontWeight: 800, color: C.text } }, dt.iFeel),
+                    React.createElement("button", { onClick: () => setShowFeel(false), style: { ...S.btn, padding: "8px 16px", fontSize: 13 } }, dt.done, " (", d.feelings.length, ")")),
+                Object.entries(FEELINGS).map(([cat, list]) => (React.createElement("div", { key: cat, style: { marginBottom: 14 } },
+                    React.createElement("div", { style: { fontSize: 13, fontWeight: 800, color: FEEL_COLORS[cat], marginBottom: 7 } }, cat),
+                    React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } }, list.map(f => {
+                        const on = d.feelings.includes(f);
+                        return React.createElement("span", { key: f, onClick: () => toggleFeel(f), style: { fontSize: 12.5, padding: "6px 11px", borderRadius: 999, cursor: "pointer", background: on ? FEEL_COLORS[cat] : C.card, color: on ? C.onAccent : C.textSoft, fontWeight: on ? 700 : 400, border: `1px solid ${on ? FEEL_COLORS[cat] : C.border}` } }, f);
+                    }))))))))));
+}
+// ── НЕДЕЛЬНАЯ ДИНАМИКА, ОЦЕНКА, «ЧТО НОВОГО» ─────────────────────────────────
+const WK = {
+    ru: { title: "Твоя недельная динамика", loading: "Готовлю разбор недели…", err: "Не получилось подготовить разбор. Попробуем при следующем входе.", upsell: "Это последний бесплатный разбор. Чтобы и дальше каждую пятницу получать недельную динамику, оформи подписку.", lockT: "Недельная динамика готова к разбору", lockX: "Бесплатные разборы закончились. Оформи подписку, и каждую пятницу наставник будет разбирать твою неделю.", sub: "Оформить подписку", close: "Закрыть", ask: "Сделай анализ моей недельной динамики по записям за последние 7 дней.", notif: "Я провела анализ твоей недельной динамики. Ознакомься с результатом, как будет время", newT: "Дневник стал проще", newX: "Теперь не нужно заполнять поля. Просто напиши, что случилось, своими словами, а я сам разложу всё по полям: ситуация, мысль, чувства, тело.", newBtn: "Попробовать", later: "Позже", none: "За эту неделю записей в дневнике нет." },
+    en: { title: "Your weekly progress", loading: "Preparing your week review…", err: "Couldn't prepare the review. We'll try again next time you open the app.", upsell: "This is your last free review. To keep getting your weekly progress every Friday, get a subscription.", lockT: "Your weekly progress is ready", lockX: "Your free reviews are used up. Subscribe, and every Friday your mentor will review your week.", sub: "Subscribe", close: "Close", ask: "Analyze my weekly progress based on my entries from the last 7 days.", notif: "I've analyzed your weekly progress. Take a look at the results when you have a moment", newT: "The diary got simpler", newX: "No more filling in fields. Just write what happened in your own words, and I'll sort it out: situation, thought, feelings, body.", newBtn: "Try it", later: "Later", none: "No diary entries this week." },
+    es: { title: "Tu dinámica semanal", loading: "Preparando el análisis de tu semana…", err: "No se pudo preparar el análisis. Lo intentaremos la próxima vez.", upsell: "Este es tu último análisis gratis. Para seguir recibiendo tu dinámica semanal cada viernes, suscríbete.", lockT: "Tu dinámica semanal está lista", lockX: "Se acabaron los análisis gratis. Suscríbete y cada viernes tu mentor analizará tu semana.", sub: "Suscribirme", close: "Cerrar", ask: "Analiza mi dinámica semanal según mis entradas de los últimos 7 días.", notif: "He analizado tu dinámica semanal. Mira el resultado cuando tengas un momento", newT: "El diario ahora es más fácil", newX: "Ya no hay que rellenar campos. Escribe qué pasó con tus palabras y yo lo ordeno: situación, pensamiento, sentimientos, cuerpo.", newBtn: "Probar", later: "Después", none: "Esta semana no hay entradas en el diario." },
+    pt: { title: "Sua dinâmica semanal", loading: "Preparando a análise da sua semana…", err: "Não deu para preparar a análise. Tentaremos na próxima vez.", upsell: "Esta é sua última análise grátis. Para continuar recebendo sua dinâmica semanal toda sexta, assine.", lockT: "Sua dinâmica semanal está pronta", lockX: "As análises grátis acabaram. Assine e toda sexta seu mentor vai analisar sua semana.", sub: "Assinar", close: "Fechar", ask: "Analise minha dinâmica semanal pelas entradas dos últimos 7 dias.", notif: "Analisei sua dinâmica semanal. Veja o resultado quando tiver um tempo", newT: "O diário ficou mais simples", newX: "Não precisa mais preencher campos. Escreva o que aconteceu com suas palavras e eu organizo: situação, pensamento, sentimentos, corpo.", newBtn: "Experimentar", later: "Depois", none: "Nenhuma entrada no diário esta semana." },
+    kk: { title: "Апталық динамикаң", loading: "Аптаңды талдап жатырмын…", err: "Талдау дайындалмады. Келесі кіргенде қайталаймыз.", upsell: "Бұл соңғы тегін талдау. Әр жұма сайын апталық динамиканы алу үшін жазылым рәсімде.", lockT: "Апталық динамикаң дайын", lockX: "Тегін талдаулар бітті. Жазылым рәсімде — әр жұма тәлімгер аптаңды талдайды.", sub: "Жазылым рәсімдеу", close: "Жабу", ask: "Соңғы 7 күндегі жазбаларым бойынша апталық динамикамды талда.", notif: "Апталық динамикаңды талдадым. Уақытың болғанда нәтижесімен таныс", newT: "Күнделік оңайлады", newX: "Енді өрістерді толтырудың қажеті жоқ. Не болғанын өз сөзіңмен жаз — мен бәрін өзім бөлемін: жағдай, ой, сезім, дене.", newBtn: "Байқап көру", later: "Кейін", none: "Бұл аптада күнделікте жазба жоқ." },
+    zh: { title: "你的每周动态", loading: "正在准备本周分析…", err: "暂时无法生成分析，下次打开时再试。", upsell: "这是最后一次免费分析。想每周五继续收到每周动态，请开通订阅。", lockT: "你的每周动态已准备好", lockX: "免费分析已用完。开通订阅后，导师每周五都会分析你的一周。", sub: "开通订阅", close: "关闭", ask: "请根据我最近 7 天的日记分析我的每周动态。", notif: "我分析了你这一周的动态，有空时看看结果吧", newT: "日记变简单了", newX: "不用再逐栏填写了。用你自己的话写下发生了什么，我来整理：情境、念头、感受、身体。", newBtn: "试试看", later: "稍后", none: "本周日记中没有记录。" },
+};
+const WEEKLY_FREE = 2;
+// неделя считается от пятницы: ключ — дата последней наступившей пятницы
+function otWeekKey(now) {
+    const d = new Date(now || Date.now());
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - ((d.getDay() + 2) % 7));
+    return d.toDateString();
+}
+async function otMakeWeekly({ lang, entries, name }) {
+    const w = pickI18N(WK, lang);
+    const from = Date.now() - 7 * 86400000;
+    const week = (entries || []).filter(e => (e.ts || e.id || 0) >= from);
+    const lines = week.slice(0, 60).map((e, i) => {
+        const f = Array.isArray(e.feelings) ? e.feelings.join(", ") : (e.feelings || "");
+        const b = Array.isArray(e.body) ? e.body.join(", ") : (e.body || "");
+        return `${i + 1}) ${e.date || ""} — ситуация: ${e.situation || "—"}; мысль: ${e.thought || "—"}; чувства: ${f || "—"}; тело: ${b || "—"}; коррекция: ${e.correction || "—"}${e.craving ? "; тяга: да" : ""}`;
+    }).join("\n");
+    const profile = (name ? `- Имя: ${name}.\n` : "") + "ДНЕВНИК ЗА ПОСЛЕДНИЕ 7 ДНЕЙ:\n" + (lines || w.none);
+    const res = await fetch(MENTOR_API, { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ device: otMyRef(), flags: { lang, topic: "ai_diary", tone: 2 }, profile, messages: [{ role: "user", content: w.ask }] }) });
+    const data = await res.json().catch(() => null);
+    const text = extractReply(data);
+    if (!text) throw new Error("weekly");
+    return text;
+}
+function OtSheet({ title, children, onClose }) {
+    return React.createElement("div", { onClick: onClose, style: { position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 140, display: "flex", flexDirection: "column", justifyContent: "flex-end" } },
+        React.createElement("div", { onClick: e => e.stopPropagation(), style: { background: C.bg2, borderRadius: "24px 24px 0 0", padding: "20px 18px 24px", maxHeight: "86%", overflowY: "auto", border: `1px solid ${C.border}` } },
+            React.createElement("div", { style: { fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 12 } }, title),
+            children));
+}
+function DiaryTab({ lang, onAskMentor, entries, setEntries, openNew, clearOpenNew }) {
     const dt = pickI18N(DT, lang);
     const FEELINGS = pickI18N(FEELINGS_I18N, lang);
     const FEEL_COLORS = pickI18N(FEEL_COLORS_I18N, lang);
     const BODY_REACTIONS = pickI18N(BODY_REACTIONS_I18N, lang);
-    const [step, setStep] = useState("choose"); // choose | list | intro | entry
+    const [step, setStep] = useState(openNew ? "chat" : "choose"); // choose | list | intro | entry | chat
+    useEffect(() => { if (openNew) { setStep("chat"); clearOpenNew && clearOpenNew(); } }, [openNew]);
     const [d, setD] = useState({ situation: "", thought: "", feelings: [], body: [], correction: "" });
     const [showFeel, setShowFeel] = useState(false);
     const [showBody, setShowBody] = useState(false);
@@ -5527,6 +5719,10 @@ function DiaryTab({ lang, onAskMentor, entries, setEntries }) {
         setD({ situation: "", thought: "", feelings: [], body: [], correction: "" });
         setStep("list");
     };
+    // НОВАЯ ЗАПИСЬ ЧЕРЕЗ ЧАТ
+    if (step === "chat")
+        return React.createElement(DiaryChat, { lang, onBack: () => setStep("list"), onManual: () => setStep("entry"),
+            onSave: (e) => { setEntries([{ ...e, date: new Date().toLocaleString(), id: Date.now(), ts: Date.now() }, ...entries]); setStep("list"); } });
     // ЭКРАН ВЫБОРА: дневник чувств или самоанализ
     if (step === "choose")
         return (React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "16px 16px 20px" } },
@@ -5642,7 +5838,8 @@ function DiaryTab({ lang, onAskMentor, entries, setEntries }) {
                             const on = d.body.includes(b);
                             return React.createElement("span", { key: b, onClick: () => toggleBody(b), style: { fontSize: 12.5, padding: "6px 11px", borderRadius: 999, cursor: "pointer", background: on ? "#5B8DEF" : C.card, color: on ? "#fff" : C.textSoft, fontWeight: on ? 700 : 400, border: `1px solid ${on ? "#5B8DEF" : C.border}` } }, b);
                         }))))))))));
-    // СПИСОК
+    // СПИСОК (старый вид — для iOS)
+    if (otIsIOS())
     return (React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 16 } },
         React.createElement("div", { style: { fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 4 } }, dt.listTitle),
         React.createElement("div", { style: { fontSize: 12.5, color: C.amber, marginBottom: 14, lineHeight: 1.5, background: C.amberSoft, borderRadius: 12, padding: "10px 14px" } }, dt.listHint),
@@ -5674,6 +5871,28 @@ function DiaryTab({ lang, onAskMentor, entries, setEntries }) {
                     " ",
                     e.correction)));
         })));
+    // СПИСОК: кнопка новой записи сверху, ниже лента записей таблицей
+    const ch = pickI18N(DCH, lang);
+    const lab = x => (x || "").replace(/[:：]\s*$/, "");
+    const row = (k, v, col) => v ? React.createElement("div", { style: { display: "flex", gap: 10, fontSize: 13, lineHeight: 1.45, padding: "3px 0" } },
+        React.createElement("div", { style: { color: C.muted, width: 84, flexShrink: 0 } }, lab(k)),
+        React.createElement("div", { style: { color: col || C.text, flex: 1 } }, v)) : null;
+    return (React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: 16 } },
+        React.createElement("button", { onClick: () => setStep("choose"), style: { background: "none", border: "none", color: C.amber, fontSize: 14, fontWeight: 700, cursor: "pointer", padding: "4px 0", marginBottom: 6 } }, dt.back),
+        React.createElement("div", { style: { fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 4 } }, dt.listTitle),
+        React.createElement("div", { style: { fontSize: 13, color: C.muted, marginBottom: 14, lineHeight: 1.5 } }, dt.listHint),
+        React.createElement("button", { onClick: () => setStep("chat"), style: { ...S.btn, width: "100%", marginBottom: 8 } }, dt.addEntry),
+        React.createElement("button", { onClick: () => setStep("intro"), style: { width: "100%", padding: "10px", borderRadius: 12, background: "transparent", border: "none", color: C.muted, fontSize: 12.5, cursor: "pointer", marginBottom: 12, textDecoration: "underline" } }, dt.howToShort),
+        entries.length === 0 && React.createElement("div", { style: { textAlign: "center", color: C.muted, fontSize: 13, marginTop: 30 } }, dt.noEntries),
+        entries.map(e => (React.createElement("div", { key: e.id, style: { background: C.card, borderRadius: 18, padding: 14, marginBottom: 10, border: `1px solid ${C.border}` } },
+            React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 11.5, color: C.muted, marginBottom: 6 } },
+                React.createElement("span", null, e.date),
+                e.craving ? React.createElement("span", { style: { color: C.amber, fontWeight: 700 } }, ch.craving) : null),
+            row(dt.lSituation, e.situation),
+            row(dt.lThought, e.thought),
+            row(dt.lFeelings, (e.feelings || []).join(", "), C.amber),
+            row(dt.lBody, (e.body || []).join(", ")),
+            row(dt.lCorrection, e.correction))))));
 }
 // ── TAB: GROUPS ──────────────────────────────────────────────────────────────
 // ── TAB: ЗАДАНИЯ (4 модуля) ───────────────────────────────────────────────────
@@ -6835,6 +7054,8 @@ function GroupsTab({ lang, isPremium, onNeedSub, addiction, onFirstTestDone, don
     const rct = pickI18N(RCT, lang);
     const MODULES = pickI18N(MODULES_I18N, lang);
     const [view, setView] = useState("home"); // home | rc | boundaries | test
+    // в «Помощи» баннера нет
+    useEffect(() => { try { window.OT_BANNER && window.OT_BANNER.hide("help", view === "sos"); } catch (e) { } return () => { try { window.OT_BANNER && window.OT_BANNER.hide("help", false); } catch (e) { } }; }, [view]);
     useEffect(() => { if (sosOpen) {
         setView("sos");
         clearSosOpen && clearSosOpen();
@@ -9673,15 +9894,18 @@ function App() {
     const [showPrivacy, setShowPrivacy] = useState(false);
     const [trackerOnly, setTrackerOnly] = useSaved("trackerOnly", false);
     const [notifOn, setNotifOn] = useSaved("notifOn", true);
+    const [weeklyFree, setWeeklyFree] = useSaved("weeklyFreeUsed", 0);
+    const weeklyPushOn = !otIsIOS() && (isPremium || (weeklyFree || 0) < WEEKLY_FREE);
     const [reviewAsked, setReviewAsked] = useSaved("reviewAsked", false);
     // уведомления: перепланируем при каждом входе и при смене даты, языка, режима
     useEffect(() => {
         if (screen !== "main") return;
-        const id = setTimeout(() => otScheduleNotifs({ lang, startMs, trackerOnly, on: notifOn }), 2000);
+        const id = setTimeout(() => otScheduleNotifs({ lang, startMs, trackerOnly, on: notifOn, weeklyOn: weeklyPushOn }), 2000);
         return () => clearTimeout(id);
-    }, [screen, startMs, lang, trackerOnly, notifOn]);
+    }, [screen, startMs, lang, trackerOnly, notifOn, weeklyPushOn]);
     // просьба оценить: через неделю пользования, один раз, системным окном магазина
     useEffect(() => {
+        if (!otIsIOS()) return; // на Android — новая логика оценки ниже (по действиям)
         if (screen !== "main" || reviewAsked) return;
         if (Date.now() - firstSeenMs < 7 * 86400000) return;
         const id = setTimeout(() => { setReviewAsked(true); otAskReview(); }, 6000);
@@ -9791,6 +10015,64 @@ function App() {
         }, 3000);
         return () => clearTimeout(id);
     }, [screen]);
+    // ── ОЦЕНКА: после 4 записей в дневнике, 5 сообщений наставнику или 4 ответов в задании.
+    // До трёх попыток с перерывом 30 дней: магазин сам решает, показать ли окно.
+    const [mentorTotal, setMentorTotal] = useSaved("mentorTotal", 0);
+    const [reviewTries, setReviewTries] = useSaved("reviewTries", 0);
+    const [reviewLast, setReviewLast] = useSaved("reviewLast", 0);
+    const taskMax = (() => { let m = 0; try { Object.values(taskAnswers || {}).forEach(v => {
+        let n = 0; const walk = x => { if (typeof x === "string") { if (x.trim()) n++; } else if (x && typeof x === "object") Object.values(x).forEach(walk); };
+        walk(v); if (n > m) m = n; }); } catch (e) { } return m; })();
+    const reviewReady = (diaryEntries || []).length >= 4 || (mentorTotal || 0) >= 5 || taskMax >= 4;
+    useEffect(() => {
+        if (otIsIOS() || screen !== "main" || !reviewReady || reviewTries >= 3) return;
+        if (reviewLast && Date.now() - reviewLast < 30 * 86400000) return;
+        const id = setTimeout(() => { setReviewTries(n => (n || 0) + 1); setReviewLast(Date.now()); otAskReview(); }, 2500);
+        return () => clearTimeout(id);
+    }, [screen, reviewReady, reviewTries, reviewLast]);
+    // ── «ЧТО НОВОГО»: один раз рассказываем, что дневник стал проще (только тем, кто пришёл раньше)
+    const [seenDiaryV2, setSeenDiaryV2] = useSaved("seenDiaryV2", false);
+    const [diaryOpenNew, setDiaryOpenNew] = useState(false);
+    const showDiaryNews = screen === "main" && !seenDiaryV2 && Date.now() - firstSeenMs > 86400000 && !trackerOnly && !otIsIOS();
+    // ── НЕДЕЛЬНАЯ ДИНАМИКА: по пятницам. Без подписки — 2 бесплатных разбора.
+    const [weekly, setWeekly] = useSaved("weeklyReports", []);
+    const [weeklyOpen, setWeeklyOpen] = useState(null); // {text, upsell} | {locked:true} | {loading:true}
+    const [weeklyLockedSeen, setWeeklyLockedSeen] = useSaved("weeklyLockedSeen", "");
+    useEffect(() => {
+        if (otIsIOS() || screen !== "main" || trackerOnly || showDiaryNews) return;
+        const key = otWeekKey();
+        if (Date.now() - firstSeenMs < 3 * 86400000) return; // первая неделя ещё не набралась
+        const have = (weekly || []).find(r => r.week === key);
+        if (have) { if (!have.seen) setWeeklyOpen({ text: have.text, upsell: have.upsell, key }); return; }
+        if (!isPremium && (weeklyFree || 0) >= WEEKLY_FREE) {
+            if (weeklyLockedSeen !== key) setWeeklyOpen({ locked: true, key });
+            return;
+        }
+        let dead = false;
+        const id = setTimeout(() => {
+            setWeeklyOpen({ loading: true, key });
+            otMakeWeekly({ lang, entries: diaryEntries, name }).then(text => {
+                if (dead) return;
+                const upsell = !isPremium && (weeklyFree || 0) + 1 >= WEEKLY_FREE;
+                if (!isPremium) setWeeklyFree(n => (n || 0) + 1);
+                setWeekly(w => [{ week: key, text, upsell, ts: Date.now(), seen: false }, ...(w || [])].slice(0, 12));
+                setWeeklyOpen({ text, upsell, key });
+            }).catch(() => { if (!dead) setWeeklyOpen({ error: true, key }); });
+        }, 3000);
+        return () => { dead = true; clearTimeout(id); };
+    }, [screen, isPremium, trackerOnly, showDiaryNews]);
+    const closeWeekly = () => {
+        const o = weeklyOpen;
+        if (o && o.locked) setWeeklyLockedSeen(o.key);
+        if (o && o.text) setWeekly(w => (w || []).map(r => r.week === o.key ? { ...r, seen: true } : r));
+        setWeeklyOpen(null);
+    };
+    // баннер: только на главных экранах, не у подписчиков и не на наставнике
+    useEffect(() => { try {
+        window.OT_BANNER && window.OT_BANNER.hide("boot", screen !== "main");
+        window.OT_BANNER && window.OT_BANNER.hide("prem", isPremium);
+        window.OT_BANNER && window.OT_BANNER.hide("mentor", tab === "mentor");
+    } catch (e) { } }, [screen, isPremium, tab]);
     if (screen === "lang")
         return React.createElement("div", { style: shellStyle },
             React.createElement(LangScreen, { onSelect: l => { setLang(l); setScreen("welcome"); } }));
@@ -10004,14 +10286,14 @@ function App() {
                 setShowDayPlan(true);
                 return;
             } setMentorTopic(id); setTab("mentor"); }, trackerOnly: trackerOnly, setTrackerOnly: setTrackerOnly, showRisk: showRisk, setShowRisk: setShowRisk, onAskLecture: (q) => { setMentorPrefill(q); setMentorTopic(null); setTab("mentor"); }, riskData: { lastCheckin, diaryEntries, mentorMsgs, dailyData: (taskAnswers || {}).daily, preventData: (taskAnswers || {}).prevent, taskAnswers } }),
-        tab === "diary" && React.createElement(DiaryTab, { lang: lang, entries: diaryEntries, setEntries: setDiaryEntries, onAskMentor: (topic) => { setMentorTopic(topic); setTab("mentor"); } }),
+        tab === "diary" && React.createElement(DiaryTab, { lang: lang, entries: diaryEntries, setEntries: setDiaryEntries, openNew: diaryOpenNew, clearOpenNew: () => setDiaryOpenNew(false), onAskMentor: (topic) => { setMentorTopic(topic); setTab("mentor"); } }),
         tab === "groups" && React.createElement(GroupsTab, { lang: lang, isPremium: isPremium, onNeedSub: openSub, addiction: addiction, done: tasksDone, setDone: setTasksDone, answers: taskAnswers, setAnswers: setTaskAnswers, daysUsed: Math.floor((Date.now() - startMs) / 86400000), onMentorMsg: (txt) => { setMentorSOS(true); setMentorPrefill({ text: txt, auto: true }); setTab("mentor"); }, onMentor: (topic) => { if (topic) {
                 setMentorTopic(topic);
             }
             else {
                 setMentorSOS(true);
             } setTab("mentor"); }, myWhy: myWhy, emergency: emergency, sosOpen: sosOpen, clearSosOpen: () => setSosOpen(false), onFirstTestDone: () => { setMentorTopic("after_first_test"); setTab("mentor"); } }),
-        tab === "mentor" && React.createElement(MentorTab, { lang: lang, isPremium: isPremium, onFillSurvey: () => { setSurveyFromMentor(true); setScreen("survey"); }, msgsLeft: Math.max(0, (isPremium ? 25 : 4) + adBonusToday - (isToday ? msgsToday : 0)), onSpendMsg: () => {
+        tab === "mentor" && React.createElement(MentorTab, { lang: lang, isPremium: isPremium, onFillSurvey: () => { setSurveyFromMentor(true); setScreen("survey"); }, msgsLeft: Math.max(0, (isPremium ? 25 : 4) + adBonusToday - (isToday ? msgsToday : 0)), onSpendMsg: () => { setMentorTotal(n => (n || 0) + 1);
                 const today = new Date().toDateString();
                 if (msgsDate !== today) {
                     setMsgsDate(today);
@@ -10021,6 +10303,16 @@ function App() {
                 else
                     setMsgsToday(n => n + 1);
             }, onNeedPremium: () => setShowPaywall(true), prefill: mentorPrefill, clearPrefill: () => setMentorPrefill(null), name: name, gender: gender, surveyData: surveyData, sos: mentorSOS, clearSos: () => setMentorSOS(false), topic: mentorTopic, clearTopic: () => setMentorTopic(null), addiction: addiction, msgs: mentorMsgs, setMsgs: setMentorMsgs, startMs: startMs, myWhy: myWhy, diaryEntries: diaryEntries, tasksDone: tasksDone, toneOverride: mentorTone, birthDate: birthDate, setToneOverride: setMentorTone, taskAnswers: taskAnswers, hide12: hide12 }),
+        showDiaryNews && React.createElement(OtSheet, { title: pickI18N(WK, lang).newT, onClose: () => setSeenDiaryV2(true) },
+            React.createElement("div", { style: { fontSize: 15, color: C.textSoft, lineHeight: 1.6, marginBottom: 18 } }, pickI18N(WK, lang).newX),
+            React.createElement("button", { onClick: () => { setSeenDiaryV2(true); setDiaryOpenNew(true); setTab("diary"); }, style: { ...S.btn, width: "100%", padding: 15 } }, pickI18N(WK, lang).newBtn),
+            React.createElement("button", { onClick: () => setSeenDiaryV2(true), style: { width: "100%", marginTop: 10, padding: 12, background: "none", border: "none", color: C.muted, fontSize: 14, cursor: "pointer" } }, pickI18N(WK, lang).later)),
+        weeklyOpen && !weeklyOpen.loading && !showDiaryNews && React.createElement(OtSheet, { title: weeklyOpen.locked ? pickI18N(WK, lang).lockT : pickI18N(WK, lang).title, onClose: closeWeekly },
+            weeklyOpen.text && React.createElement("div", { style: { fontSize: 14.5, color: C.text, lineHeight: 1.65, whiteSpace: "pre-wrap", marginBottom: 16 } }, weeklyOpen.text),
+            weeklyOpen.error && React.createElement("div", { style: { fontSize: 14.5, color: C.textSoft, lineHeight: 1.6, marginBottom: 16 } }, pickI18N(WK, lang).err),
+            (weeklyOpen.locked || weeklyOpen.upsell) && React.createElement("div", { style: { fontSize: 14, color: C.amber, lineHeight: 1.55, marginBottom: 14, background: C.amberSoft, borderRadius: 12, padding: "12px 14px" } }, weeklyOpen.locked ? pickI18N(WK, lang).lockX : pickI18N(WK, lang).upsell),
+            (weeklyOpen.locked || weeklyOpen.upsell) && React.createElement("button", { onClick: () => { closeWeekly(); openSub(); }, style: { ...S.btn, width: "100%", padding: 15, marginBottom: 8 } }, pickI18N(WK, lang).sub),
+            React.createElement("button", { onClick: closeWeekly, style: { width: "100%", padding: 12, background: "none", border: "none", color: C.muted, fontSize: 14, cursor: "pointer" } }, pickI18N(WK, lang).close)),
         showSettings && (React.createElement("div", { onClick: () => setShowSettings(false), style: { position: "absolute", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 100, display: "flex", flexDirection: "column", justifyContent: "flex-end" } },
             React.createElement("div", { onClick: e => e.stopPropagation(), style: { background: C.bg2, borderRadius: "22px 22px 0 0", padding: "18px 16px 22px", maxHeight: "85%", overflowY: "auto", border: `1px solid ${C.border}` } },
                 React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 } },
