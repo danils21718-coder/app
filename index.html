@@ -346,7 +346,15 @@ window.OT_ADS = (function () {
     }).catch(function () { cb({ status: "FAILED" }); });
   };
 
-  var adReady = platform === "android" ? AdMob.initialize({}).catch(function () {}) : Promise.resolve();
+var adReady = platform === "android"
+    ? AdMob.initialize({}).then(function () {
+        window.__OT_AD_INIT_ERROR = "";
+    }).catch(function (err) {
+        window.__OT_AD_INIT_ERROR = (err && (err.message || err.errorMessage)) || String(err);
+    })
+    : Promise.resolve();
+
+window.__OT_AD_READY = adReady;
   function AdShim(iosId, androidId, cb) {
     var self = this;
     self.adId = platform === "ios" ? iosId : androidId;
@@ -366,8 +374,25 @@ window.OT_ADS = (function () {
   window.OT_ADS_UNIT = "ca-app-pub-1286571991466831/8828247168";
   window.OT_BANNER = { hide: function () {} }; // нижний баннер убран
   if (platform === "android") {
-    window.__OT_INLINE = Cap.registerPlugin("OtAds");
-    try { Cap.addListener("OtAds", "otad", function (e) { try { window.dispatchEvent(new CustomEvent("otad", { detail: e })); } catch (x) {} }); } catch (x) {}
+
+try {
+    var otAdsListener = Cap.addListener("OtAds", "otad", function (e) {
+        try {
+            window.dispatchEvent(new CustomEvent("otad", { detail: e || {} }));
+        } catch (x) {}
+    });
+    if (otAdsListener && typeof otAdsListener.catch === "function") {
+        otAdsListener.catch(function (err) {
+            window.dispatchEvent(new CustomEvent("otad", {
+                detail: { id: "*", ev: "error", message: "Не удалось подключить события OtAds: " + (err && err.message || err) }
+            }));
+        });
+    }
+} catch (e) {
+    window.dispatchEvent(new CustomEvent("otad", {
+        detail: { id: "*", ev: "error", message: "Ошибка подключения событий OtAds: " + (e && e.message || e) }
+    }));
+}
   }
   try { Object.defineProperty(window, "NativelyPurchases", { value: Shim, writable: false, configurable: false }); } catch (e) {}
   // реклама пока только на Android: в iOS-сборке AdMob нет
@@ -7868,45 +7893,169 @@ const DT = {
 // Не пришла реклама — место схлопывается. Нет на iOS, в браузере и у подписчиков.
 const OT_SLOTS = {};
 let otSlotLoop = 0;
+
+function otAdsReport(id, ev, message) {
+    window.dispatchEvent(new CustomEvent("otad", {
+        detail: { id: id, ev: ev, message: String(message || ev) }
+    }));
+}
+
 function otSlotTick() {
     const P = window.__OT_INLINE;
     const ids = Object.keys(OT_SLOTS);
-    if (!ids.length || !P) { otSlotLoop = 0; return; }
+
+    if (!ids.length || !P) {
+        otSlotLoop = 0;
+        return;
+    }
+
     const vh = window.innerHeight;
+
     ids.forEach(id => {
-        const s = OT_SLOTS[id]; const el = s.el;
-        if (!el || s.failed) return;
-        const r = el.getBoundingClientRect();
-        let show = r.height > 10 && r.top >= 0 && r.bottom <= vh && !document.hidden;
+        const slot = OT_SLOTS[id];
+        const el = slot && slot.el;
+
+        if (!el || slot.failed) return;
+
+        const rect = el.getBoundingClientRect();
+        let show = rect.height > 10 &&
+            rect.top >= 0 &&
+            rect.bottom <= vh &&
+            !document.hidden;
+
         if (show) {
-            const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-            const top2 = document.elementFromPoint(r.left + 4, r.top + 4);
-            show = !!top && el.contains(top) && !!top2 && el.contains(top2);
+            const middle = document.elementFromPoint(
+                rect.left + rect.width / 2,
+                rect.top + rect.height / 2
+            );
+            const corner = document.elementFromPoint(rect.left + 4, rect.top + 4);
+            show = !!middle && el.contains(middle) &&
+                !!corner && el.contains(corner);
         }
-        const key = show ? [Math.round(r.left), Math.round(r.top), Math.round(r.width)].join(",") : "h";
-        if (key === s.last) return;
-        s.last = key;
-        try {
-            if (show) P.place({ id, unit: window.OT_ADS_UNIT, x: r.left, y: r.top, w: r.width, h: r.height, npa: (() => { try { return !(JSON.parse(localStorage.getItem("onlytoday.v1") || "{}") || {}).adsPersonalized; } catch (e) { return true; } })() });
-            else P.hide({ id });
-        } catch (e) { }
+
+        const key = show
+            ? [Math.round(rect.left), Math.round(rect.top), Math.round(rect.width)].join(",")
+            : "hidden";
+
+        if (key === slot.last) return;
+        slot.last = key;
+
+        if (show) {
+            let npa = true;
+            try {
+                const state = JSON.parse(localStorage.getItem("onlytoday.v1") || "{}") || {};
+                npa = !state.adsPersonalized;
+            } catch (e) {
+                npa = true;
+            }
+
+            try {
+                // Баннер нельзя запрашивать раньше завершения AdMob.initialize().
+                Promise.resolve(window.__OT_AD_READY).then(function () {
+                    if (window.__OT_AD_INIT_ERROR) {
+                        throw new Error("AdMob.initialize(): " + window.__OT_AD_INIT_ERROR);
+                    }
+
+                    return P.place({
+                        id: id,
+                        unit: window.OT_ADS_UNIT,
+                        x: rect.left,
+                        y: rect.top,
+                        w: rect.width,
+                        h: rect.height,
+                        npa: npa
+                    });
+                }).catch(function (err) {
+                    const message = err && (err.message || err.errorMessage) || String(err);
+                    otAdsReport(id, "error", "Не удалось запустить баннер: " + message);
+                });
+            } catch (err) {
+                otAdsReport(id, "error", "Ошибка вызова OtAds.place: " + (err && err.message || err));
+            }
+        } else {
+            try {
+                const result = P.hide({ id: id });
+                if (result && typeof result.catch === "function") {
+                    result.catch(function (err) {
+                        otAdsReport(id, "error", "Вызов OtAds.hide отклонён: " + (err && err.message || err));
+                    });
+                }
+            } catch (err) {
+                otAdsReport(id, "error", "Ошибка вызова OtAds.hide: " + (err && err.message || err));
+            }
+        }
     });
+
     otSlotLoop = requestAnimationFrame(otSlotTick);
 }
+
 function OtAdSlot({ id }) {
     const ref = useRef(null);
-    const [failed, setFailed] = useState(false);
+    const [diagnostic, setDiagnostic] = useState("");
     const on = !!window.__OT_INLINE && !window.__OT_PREMIUM;
+
     useEffect(() => {
         if (!on) return;
-        OT_SLOTS[id] = { el: ref.current, last: null, failed: false };
-        const onEv = e => { const d = e.detail || {}; if (d.id === id && d.ev === "fail") { if (OT_SLOTS[id]) OT_SLOTS[id].failed = true; setFailed(true); } };
-        window.addEventListener("otad", onEv);
-        if (!otSlotLoop) otSlotLoop = requestAnimationFrame(otSlotTick);
-        return () => { window.removeEventListener("otad", onEv); delete OT_SLOTS[id]; try { window.__OT_INLINE.hide({ id }); } catch (e) { } };
+
+        OT_SLOTS[id] = {
+            el: ref.current,
+            last: null,
+            failed: false
+        };
+
+        const onEvent = event => {
+            const data = event.detail || {};
+            if (data.id !== id && data.id !== "*") return;
+
+            if (data.ev === "load") {
+                setDiagnostic("");
+                if (OT_SLOTS[id]) OT_SLOTS[id].failed = false;
+            } else if (data.ev === "fail" || data.ev === "error") {
+                if (OT_SLOTS[id]) OT_SLOTS[id].failed = true;
+                setDiagnostic(data.message || (
+                    data.ev === "fail" ? "AdMob не загрузил рекламу" : "Ошибка нативного модуля"
+                ));
+            }
+        };
+
+        window.addEventListener("otad", onEvent);
+
+        if (!otSlotLoop) {
+            otSlotLoop = requestAnimationFrame(otSlotTick);
+        }
+
+        return () => {
+            window.removeEventListener("otad", onEvent);
+            delete OT_SLOTS[id];
+
+            try {
+                const result = window.__OT_INLINE && window.__OT_INLINE.hide({ id: id });
+                if (result && typeof result.catch === "function") result.catch(function () {});
+            } catch (e) {}
+        };
     }, [on, id]);
-    if (!on || failed) return null;
-    return React.createElement("div", { ref, style: { height: 50, margin: "4px 0 14px", borderRadius: 8, background: "transparent" } });
+
+    if (!on) return null;
+
+    return React.createElement(
+        "div",
+        {
+            ref: ref,
+            style: {
+                height: 50,
+                margin: "4px 0 14px",
+                borderRadius: 8,
+                background: diagnostic ? "rgba(180, 45, 45, 0.16)" : "transparent",
+                color: "#ffb4ab",
+                fontSize: 11,
+                lineHeight: "14px",
+                padding: diagnostic ? "5px 8px" : 0,
+                overflow: "hidden",
+                overflowWrap: "anywhere"
+            }
+        },
+        diagnostic ? "ОШИБКА БАННЕРА: " + diagnostic : null
+    );
 }
 // iOS сейчас на проверке в App Store: всё новое включаем только на Android и в браузере
 function otIsIOS() { try { const Cap = window.Capacitor; return !!(Cap && Cap.getPlatform && Cap.getPlatform() === "ios"); } catch (e) { return false; } }
