@@ -7623,8 +7623,9 @@ function computeRisk({ lastCheckin, diaryEntries, mentorMsgs, dailyData, prevent
     // 5. Границы безопасности — основа
     const b = (taskAnswers && taskAnswers.boundaries) || null;
     const bFilled = b ? Object.keys(b).filter(k => {
-        const m = b[k];
-        return m && typeof m === "object" && Object.keys(m).some(f => (m[f] || "").trim());
+        // ответы бывают списком моделей (чат) или одной моделью (старая форма)
+        const list = Array.isArray(b[k]) ? b[k] : [b[k]];
+        return list.some(m => m && typeof m === "object" && Object.keys(m).some(f => typeof m[f] === "string" && m[f].trim()));
     }).length : 0;
     add("riskF5", bFilled >= 4 ? 0 : 1 - bFilled / 4, 16);
     // 6. План дня: есть ли он вообще
@@ -7837,12 +7838,12 @@ function HomeTab({ planInfo, lang, aiDiaryLocked, addiction, name, birthDate, st
 // ── TAB: DIARY ───────────────────────────────────────────────────────────────
 // Чувственник: 5 категорий
 const FEELINGS_I18N = {
+    // русский список — как в таблице чувств: четыре столбика
     ru: {
-        "ГНЕВ": ["холодность", "злость", "бешенство", "сарказм", "раздражение", "ярость", "унижение", "обида", "ненависть", "нетерпение", "отвращение", "надменность", "злорадство", "недовольство", "цинизм", "протест", "враждебность", "равнодушие", "неприязнь", "пренебрежение", "зависть", "мстительность", "высокомерие"],
-        "СТЫД": ["вина", "раскаяние", "унижение", "нечестность", "угрызение совести", "стеснение", "неловкость", "похоть", "ущербность", "растерянность", "обман", "потеря лица", "смущение", "позор", "сожаление", "озабоченность", "брошенность", "замкнутость", "угрюмость", "угнетённость", "пассивность", "отвержение"],
-        "ГРУСТЬ": ["огорчение", "горе", "боль", "угнетённость", "одиночество", "отчуждение", "разочарование", "поражение", "жалость к себе", "тоска", "подавленность", "предательство", "скука", "печаль", "апатия", "равнодушие", "принижение", "обида", "скорбь", "отверженность", "отчаяние", "ущемлённость"],
-        "СТРАХ": ["волнение", "испуг", "паника", "беспокойство", "неуверенность", "боязливость", "подозрительность", "трусость", "нерешительность", "настороженность", "смятение", "тревога", "ужас", "опасение", "робость", "застенчивость", "безнадёжность", "сдержанность", "скрытность", "скованность", "замешательство", "ошарашенность", "озадаченность"],
-        "РАДОСТЬ": ["благодарность", "доверие", "воодушевление", "озарение", "сопричастность", "умиротворение", "радушие", "единство", "торжественность", "наслаждение", "общность", "восторг", "благодать", "поддержка", "веселье", "надежда", "уверенность", "лёгкость", "любовь", "удовлетворение", "облегчение", "обожание", "преклонение", "подъём духа", "энтузиазм"],
+        "СТРАХ": ["ужас", "боязнь", "тревога", "оцепенение", "опасение", "настороженность", "неопределённость", "неуверенность", "нерешительность", "беспокойство", "удивление", "ошарашенность", "озадаченность", "взволнованность", "растерянность", "волнение", "паника", "стыд", "вина", "недоверие", "сомнение", "смятение", "недоумение", "напряжение", "испуг", "подозрительность", "смущение", "неловкость", "озабоченность", "замешательство"],
+        "ГНЕВ": ["ярость", "бешенство", "ненависть", "злость", "негодование", "недовольство", "раздражение", "обида", "досада", "ревность", "зависть", "нетерпение", "сарказм", "неудовлетворение", "злорадство", "отвращение", "омерзение", "неприязнь", "нетерпимость", "возмущение", "надменность", "ирония"],
+        "ГРУСТЬ": ["отчаяние", "скорбь", "горечь", "одиночество", "отверженность", "беспомощность", "безнадёжность", "безразличие", "равнодушие", "скука", "тоска", "печаль", "разочарование", "подавленность", "сожаление", "угнетённость", "ожидание", "безвыходность", "безысходность", "сопереживание", "лень", "апатия", "опустошённость", "сокрушённость", "потерянность", "ущербность", "жалость", "жалость к себе", "отрешённость", "раскаяние", "тяга", "жажда", "уныние"],
+        "РАДОСТЬ": ["восторг", "ликование", "вдохновение", "блаженство", "нежность", "благодарность", "доверие", "дружелюбие", "симпатия", "поддержка", "расположение", "гордость", "восхищение", "уважение", "удовлетворение", "увлечение", "оживление", "приподнятость", "облегчение", "покой", "умиротворение", "удовольствие", "наслаждение", "весёлость", "бодрость", "воодушевление", "беззаботность", "просветлённость", "вера", "надежда", "любовь", "настрой", "готовность", "интерес", "любопытство", "предвкушение"],
     },
     en: {
         "ANGER": ["coldness", "anger", "rage", "sarcasm", "irritation", "fury", "humiliation", "resentment", "hatred", "impatience", "disgust", "arrogance", "gloating", "displeasure", "cynicism", "defiance", "hostility", "indifference", "aversion", "contempt", "envy", "vengefulness", "superiority"],
@@ -7905,7 +7906,7 @@ const FEELINGS_I18N = {
     },
 };
 const FEEL_COLORS_I18N = {
-    ru: { "ГНЕВ": "#E0497B", "СТЫД": "#E08A5B", "ГРУСТЬ": "#5B8DEF", "СТРАХ": "#E0A040", "РАДОСТЬ": "#C9C931" },
+    ru: { "СТРАХ": "#E0A040", "ГНЕВ": "#E0497B", "ГРУСТЬ": "#5B8DEF", "РАДОСТЬ": "#C9C931", "СТЫД": "#E08A5B" },
     en: { "ANGER": "#E0497B", "SHAME": "#E08A5B", "SADNESS": "#5B8DEF", "FEAR": "#E0A040", "JOY": "#C9C931" }, hi: { "गुस्सा": "#E0497B", "शर्म": "#E08A5B", "उदासी": "#5B8DEF", "डर": "#E0A040", "खुशी": "#C9C931" }, de: { "WUT": "#E0497B", "SCHAM": "#E08A5B", "TRAURIGKEIT": "#5B8DEF", "ANGST": "#E0A040", "FREUDE": "#C9C931" }, fr: { "COLÈRE": "#E0497B", "HONTE": "#E08A5B", "TRISTESSE": "#5B8DEF", "PEUR": "#E0A040", "JOIE": "#C9C931" }, ar: { "الغضب": "#E0497B", "الخجل": "#E08A5B", "الحزن": "#5B8DEF", "الخوف": "#E0A040", "الفرح": "#C9C931" },
     es: { "IRA": "#E0497B", "VERGÜENZA": "#E08A5B", "TRISTEZA": "#5B8DEF", "MIEDO": "#E0A040", "ALEGRÍA": "#C9C931" },
     pt: { "RAIVA": "#E0497B", "VERGONHA": "#E08A5B", "TRISTEZA": "#5B8DEF", "MEDO": "#E0A040", "ALEGRIA": "#C9C931" },
@@ -7956,7 +7957,7 @@ const DT = {
         diaryName: "Дневник чувств", startHere: "Начни отсюда",
         diaryDesc: "Зависимость — болезнь чувств. Учишься различать десятки эмоций вместо 2-3, ловить их по реакциям тела и не давать им управлять тобой.",
         diaryRec: "💡 Рекомендуем вести минимум месяц, прежде чем переходить к самоанализу",
-        selfName: "Ежедневный самоанализ", selfSub: "10 шаг · скоро", soon: "скоро",
+        selfName: "Ежедневный самоанализ", selfSub: "10 шаг", soon: "скоро",
         selfDesc: "Глубокая ежедневная практика после того, как научишься чувствовать. Утро и вечер: честность, HALT, благодарность.",
         selfAlert: "Ежедневный самоанализ (10 шаг) — скоро. Сначала минимум месяц веди дневник чувств.",
         back: "← Назад", howTo: "Как вести дневник чувств",
@@ -7981,7 +7982,7 @@ const DT = {
         diaryName: "Feelings diary", startHere: "Start here",
         diaryDesc: "Addiction is a disease of feelings. You learn to tell dozens of emotions apart instead of 2-3, catch them through body reactions, and stop letting them run you.",
         diaryRec: "💡 We recommend keeping it for at least a month before moving on to self-analysis",
-        selfName: "Daily self-analysis", selfSub: "Step 10 · soon", soon: "soon",
+        selfName: "Daily self-analysis", selfSub: "Step 10", soon: "soon",
         selfDesc: "A deeper daily practice for after you've learned to feel. Morning and evening: honesty, HALT, gratitude.",
         selfAlert: "Daily self-analysis (Step 10) — coming soon. First keep the feelings diary for at least a month.",
         back: "← Back", howTo: "How to keep the feelings diary",
@@ -8005,7 +8006,7 @@ const DT = {
         diaryName: "भावनाओं की डायरी", startHere: "यहाँ से शुरू करो",
         diaryDesc: "लत भावनाओं की बीमारी है। तुम 2-3 की जगह दर्जनों भावनाएँ पहचानना सीखते हो, उन्हें शरीर की प्रतिक्रियाओं से पकड़ते हो, और उन्हें खुद पर हावी नहीं होने देते।",
         diaryRec: "💡 आत्म-विश्लेषण पर जाने से पहले इसे कम से कम एक महीना लिखने की सलाह है",
-        selfName: "रोज़ का आत्म-विश्लेषण", selfSub: "कदम 10 · जल्द", soon: "जल्द",
+        selfName: "रोज़ का आत्म-विश्लेषण", selfSub: "कदम 10", soon: "जल्द",
         selfDesc: "भावनाएँ महसूस करना सीखने के बाद एक गहरा रोज़ का अभ्यास। सुबह और शाम: ईमानदारी, HALT, आभार।",
         selfAlert: "रोज़ का आत्म-विश्लेषण (कदम 10) — जल्द। पहले कम से कम एक महीना भावनाओं की डायरी लिखो।",
         back: "← वापस", howTo: "भावनाओं की डायरी कैसे लिखें",
@@ -8029,7 +8030,7 @@ const DT = {
         diaryName: "Gefühlstagebuch", startHere: "Fang hier an",
         diaryDesc: "Sucht ist eine Krankheit der Gefühle. Du lernst, Dutzende Emotionen statt 2-3 zu unterscheiden, sie über Körperreaktionen zu erkennen und dich nicht mehr von ihnen steuern zu lassen.",
         diaryRec: "💡 Wir empfehlen, es mindestens einen Monat zu führen, bevor du zur Selbstanalyse übergehst",
-        selfName: "Tägliche Selbstanalyse", selfSub: "Schritt 10 · bald", soon: "bald",
+        selfName: "Tägliche Selbstanalyse", selfSub: "Schritt 10", soon: "bald",
         selfDesc: "Eine tiefere tägliche Praxis, wenn du gelernt hast zu fühlen. Morgens und abends: Ehrlichkeit, HALT, Dankbarkeit.",
         selfAlert: "Tägliche Selbstanalyse (Schritt 10) — bald. Führe zuerst mindestens einen Monat das Gefühlstagebuch.",
         back: "← Zurück", howTo: "So führst du das Gefühlstagebuch",
@@ -8053,7 +8054,7 @@ const DT = {
         diaryName: "Journal des émotions", startHere: "Commence ici",
         diaryDesc: "L'addiction est une maladie des émotions. Tu apprends à distinguer des dizaines d'émotions au lieu de 2-3, à les repérer par les réactions du corps, et à ne plus les laisser te diriger.",
         diaryRec: "💡 Nous conseillons de le tenir au moins un mois avant de passer à l'introspection",
-        selfName: "Introspection quotidienne", selfSub: "Étape 10 · bientôt", soon: "bientôt",
+        selfName: "Introspection quotidienne", selfSub: "Étape 10", soon: "bientôt",
         selfDesc: "Une pratique quotidienne plus profonde, une fois que tu as appris à ressentir. Matin et soir : honnêteté, HALT, gratitude.",
         selfAlert: "Introspection quotidienne (Étape 10) — bientôt. Tiens d'abord le journal des émotions pendant au moins un mois.",
         back: "← Retour", howTo: "Comment tenir le journal des émotions",
@@ -8077,7 +8078,7 @@ const DT = {
         diaryName: "يوميات المشاعر", startHere: "ابدأ من هنا",
         diaryDesc: "الإدمان مرض المشاعر. تتعلّم التمييز بين عشرات المشاعر بدل اثنين أو ثلاثة، وتلتقطها من خلال ردود فعل الجسم، وتتوقّف عن تركها تتحكّم بك.",
         diaryRec: "💡 ننصح بالمواظبة عليها شهرًا على الأقل قبل الانتقال إلى تحليل الذات",
-        selfName: "تحليل الذات اليومي", selfSub: "الخطوة 10 · قريبًا", soon: "قريبًا",
+        selfName: "تحليل الذات اليومي", selfSub: "الخطوة 10", soon: "قريبًا",
         selfDesc: "ممارسة يومية أعمق بعد أن تتعلّم أن تشعر. صباحًا ومساءً: الصدق، HALT، الامتنان.",
         selfAlert: "تحليل الذات اليومي (الخطوة 10) — قريبًا. أولًا دوّن يوميات المشاعر لمدة شهر على الأقل.",
         back: "← رجوع", howTo: "كيف تكتب يوميات المشاعر",
@@ -8102,7 +8103,7 @@ const DT = {
         diaryName: "Diario de emociones", startHere: "Empieza aquí",
         diaryDesc: "La adicción es una enfermedad de las emociones. Aprendes a distinguir decenas de emociones en vez de 2-3, a detectarlas por las reacciones del cuerpo y a no dejar que te controlen.",
         diaryRec: "💡 Recomendamos llevarlo al menos un mes antes de pasar al autoanálisis",
-        selfName: "Autoanálisis diario", selfSub: "Paso 10 · pronto", soon: "pronto",
+        selfName: "Autoanálisis diario", selfSub: "Paso 10", soon: "pronto",
         selfDesc: "Una práctica diaria más profunda para cuando ya hayas aprendido a sentir. Mañana y noche: honestidad, HALT, gratitud.",
         selfAlert: "El autoanálisis diario (Paso 10) llegará pronto. Primero lleva el diario de emociones al menos un mes.",
         back: "← Atrás", howTo: "Cómo llevar el diario de emociones",
@@ -8127,7 +8128,7 @@ const DT = {
         diaryName: "Diário de emoções", startHere: "Comece por aqui",
         diaryDesc: "A dependência é uma doença dos sentimentos. Você aprende a distinguir dezenas de emoções em vez de 2 ou 3, a percebê-las pelas reações do corpo e a não deixar que elas te comandem.",
         diaryRec: "💡 Recomendamos manter por pelo menos um mês antes de passar para a autoanálise",
-        selfName: "Autoanálise diária", selfSub: "Passo 10 · em breve", soon: "em breve",
+        selfName: "Autoanálise diária", selfSub: "Passo 10", soon: "em breve",
         selfDesc: "Uma prática diária mais profunda, para depois que você aprender a sentir. Manhã e noite: honestidade, HALT, gratidão.",
         selfAlert: "A autoanálise diária (Passo 10) chega em breve. Primeiro mantenha o diário de emoções por pelo menos um mês.",
         back: "← Voltar", howTo: "Como manter o diário de emoções",
@@ -8152,7 +8153,7 @@ const DT = {
         diaryName: "Сезім күнделігі", startHere: "Осыдан баста",
         diaryDesc: "Тәуелділік — сезімдер ауруы. Сен 2-3 эмоцияның орнына ондаған сезімді ажыратуды, оларды дене реакциясы арқылы тануды және оларға билетпеуді үйренесің.",
         diaryRec: "💡 Өзін талдауға көшер алдында кемінде бір ай жүргізуді ұсынамыз",
-        selfName: "Күнделікті өзін талдау", selfSub: "10-қадам · жақында", soon: "жақында",
+        selfName: "Күнделікті өзін талдау", selfSub: "10-қадам", soon: "жақында",
         selfDesc: "Сезінуді үйренгеннен кейінгі тереңірек күнделікті тәжірибе. Таң мен кеш: адалдық, HALT, ризашылық.",
         selfAlert: "Күнделікті өзін талдау (10-қадам) жақында қосылады. Алдымен сезім күнделігін кемінде бір ай жүргіз.",
         back: "← Артқа", howTo: "Сезім күнделігін қалай жүргізу керек",
@@ -8177,7 +8178,7 @@ const DT = {
         diaryName: "情绪日记", startHere: "从这里开始",
         diaryDesc: "成瘾是一种感受的疾病。你将学会分辨几十种情绪，而不只是两三种；学会通过身体反应察觉它们，不再被它们牵着走。",
         diaryRec: "💡 建议先坚持记录至少一个月，再进入每日自省",
-        selfName: "每日自省", selfSub: "第十步 · 即将上线", soon: "即将上线",
+        selfName: "每日自省", selfSub: "第十步", soon: "即将上线",
         selfDesc: "在你学会感受之后，更深入的每日练习。早晨与夜晚：诚实、HALT、感恩。",
         selfAlert: "每日自省（第十步）即将上线。请先把情绪日记记满一个月。",
         back: "← 返回", howTo: "情绪日记怎么记",
@@ -8374,11 +8375,11 @@ function OtAdSlot({ id }) {
 function otIsIOS() { try { const Cap = window.Capacitor; return !!(Cap && Cap.getPlatform && Cap.getPlatform() === "ios"); } catch (e) { return false; } }
 // ── ДНЕВНИК-ЧАТ: человек пишет своими словами, ИИ раскладывает по полям ─────────
 const DCH = {
-    ru: { title: "Новая запись", sub: "Дневник чувств", hello: "Что случилось? Пиши как есть, своими словами. Я сам разложу по полям.", ph: "Напиши, что случилось…", ph2: "Добавить или поправить…", thinking: "Раскладываю…", err: "Не получилось разобрать. Проверь интернет и отправь ещё раз.", feelQ: "Отметь, что ты чувствовал. Нужно минимум 4:", more: "все чувства ›", need: "Отметь ещё {n}, нужно минимум 4", save: "Сохранить в дневник", manual: "Заполнить вручную", craving: "Тяга", yes: "да", saved: "Запись сохранена", lCraving: "Тяга:" },
-    en: { title: "New entry", sub: "Feelings diary", hello: "What happened? Write it the way it is, in your own words. I'll sort it into the fields.", ph: "Write what happened…", ph2: "Add or correct…", thinking: "Sorting it out…", err: "Couldn't process that. Check your connection and send again.", feelQ: "Mark what you felt. At least 4:", more: "all feelings ›", need: "Mark {n} more, at least 4 needed", save: "Save to diary", manual: "Fill in manually", craving: "Craving", yes: "yes", saved: "Entry saved", lCraving: "Craving:" }, hi: { title: "नई एंट्री", sub: "भावनाओं की डायरी", hello: "क्या हुआ? जैसा है वैसा, अपने शब्दों में लिखो। मैं इसे खानों में बाँट दूँगा।", ph: "लिखो क्या हुआ…", ph2: "जोड़ो या सुधारो…", thinking: "बाँट रहा हूँ…", err: "प्रोसेस नहीं हो सका। कनेक्शन जाँचो और फिर भेजो।", feelQ: "जो महसूस किया उस पर निशान लगाओ। कम से कम 4:", more: "सारी भावनाएँ ›", need: "{n} और चुनो, कम से कम 4 चाहिए", save: "डायरी में सेव करो", manual: "खुद भरो", craving: "तलब", yes: "हाँ", saved: "एंट्री सेव हो गई", lCraving: "तलब:" }, de: { title: "Neuer Eintrag", sub: "Gefühlstagebuch", hello: "Was ist passiert? Schreib es, wie es ist, mit deinen Worten. Ich ordne es in die Felder ein.", ph: "Schreib, was passiert ist…", ph2: "Ergänzen oder korrigieren…", thinking: "Ich ordne das…", err: "Das konnte nicht verarbeitet werden. Prüf deine Verbindung und sende erneut.", feelQ: "Markiere, was du gefühlt hast. Mindestens 4:", more: "alle Gefühle ›", need: "Markiere noch {n}, mindestens 4 sind nötig", save: "Im Tagebuch speichern", manual: "Manuell ausfüllen", craving: "Suchtdruck", yes: "ja", saved: "Eintrag gespeichert", lCraving: "Suchtdruck:" }, fr: { title: "Nouvelle entrée", sub: "Journal des émotions", hello: "Que s'est-il passé ? Écris-le tel quel, avec tes mots. Je le range dans les champs.", ph: "Écris ce qui s'est passé…", ph2: "Ajouter ou corriger…", thinking: "Je range tout ça…", err: "Impossible de traiter ça. Vérifie ta connexion et renvoie.", feelQ: "Coche ce que tu as ressenti. Au moins 4 :", more: "toutes les émotions ›", need: "Coche-en encore {n}, il en faut au moins 4", save: "Enregistrer dans le journal", manual: "Remplir à la main", craving: "Envie", yes: "oui", saved: "Entrée enregistrée", lCraving: "Envie :" }, ar: { title: "تدوينة جديدة", sub: "يوميات المشاعر", hello: "ماذا حدث؟ اكتبه كما هو، بكلماتك. وأنا سأرتّبه في الحقول.", ph: "اكتب ما حدث…", ph2: "أضف أو صحّح…", thinking: "أرتّب الأمر…", err: "تعذّرت المعالجة. تحقّق من الاتصال وأرسل مرة أخرى.", feelQ: "حدّد ما شعرت به. 4 على الأقل:", more: "كل المشاعر ›", need: "حدّد {n} أخرى، المطلوب 4 على الأقل", save: "حفظ في اليوميات", manual: "املأ يدويًا", craving: "الرغبة الملحّة", yes: "نعم", saved: "تم حفظ التدوينة", lCraving: "الرغبة الملحّة:" },
+    ru: { title: "Новая запись", sub: "Дневник чувств", hello: "Дневник чувств помогает увидеть, что на самом деле происходит внутри, когда тянет сорваться. Формат простой: 1) ситуация — что случилось; 2) мысль — что промелькнуло в голове в тот момент; 3) чувства — выберешь из списка; 4) коррекция — как можно было поступить по-здоровому.\n\nНачни с ситуации: что случилось?", ph: "Напиши, что случилось…", ph2: "Добавить или поправить…", thinking: "Раскладываю…", err: "Не получилось разобрать. Проверь интернет и отправь ещё раз.", feelQ: "Отметь, что ты чувствовал. Нужно минимум 4:", more: "все чувства ›", need: "Отметь ещё {n}, нужно минимум 4", save: "Сохранить в дневник", manual: "Заполнить вручную", craving: "Тяга", yes: "да", saved: "Запись сохранена", lCraving: "Тяга:" },
+    en: { title: "New entry", sub: "Feelings diary", hello: "A feelings diary helps you see what's really going on inside when you're pulled toward a relapse. The format is simple: 1) situation — what happened; 2) thought — what flashed through your mind in that moment; 3) feelings — you'll pick them from a list; 4) correction — how you could have acted in a healthy way.\n\nStart with the situation: what happened?", ph: "Write what happened…", ph2: "Add or correct…", thinking: "Sorting it out…", err: "Couldn't process that. Check your connection and send again.", feelQ: "Mark what you felt. At least 4:", more: "all feelings ›", need: "Mark {n} more, at least 4 needed", save: "Save to diary", manual: "Fill in manually", craving: "Craving", yes: "yes", saved: "Entry saved", lCraving: "Craving:" }, hi: { title: "नई एंट्री", sub: "भावनाओं की डायरी", hello: "क्या हुआ? जैसा है वैसा, अपने शब्दों में लिखो। मैं इसे खानों में बाँट दूँगा।", ph: "लिखो क्या हुआ…", ph2: "जोड़ो या सुधारो…", thinking: "बाँट रहा हूँ…", err: "प्रोसेस नहीं हो सका। कनेक्शन जाँचो और फिर भेजो।", feelQ: "जो महसूस किया उस पर निशान लगाओ। कम से कम 4:", more: "सारी भावनाएँ ›", need: "{n} और चुनो, कम से कम 4 चाहिए", save: "डायरी में सेव करो", manual: "खुद भरो", craving: "तलब", yes: "हाँ", saved: "एंट्री सेव हो गई", lCraving: "तलब:" }, de: { title: "Neuer Eintrag", sub: "Gefühlstagebuch", hello: "Was ist passiert? Schreib es, wie es ist, mit deinen Worten. Ich ordne es in die Felder ein.", ph: "Schreib, was passiert ist…", ph2: "Ergänzen oder korrigieren…", thinking: "Ich ordne das…", err: "Das konnte nicht verarbeitet werden. Prüf deine Verbindung und sende erneut.", feelQ: "Markiere, was du gefühlt hast. Mindestens 4:", more: "alle Gefühle ›", need: "Markiere noch {n}, mindestens 4 sind nötig", save: "Im Tagebuch speichern", manual: "Manuell ausfüllen", craving: "Suchtdruck", yes: "ja", saved: "Eintrag gespeichert", lCraving: "Suchtdruck:" }, fr: { title: "Nouvelle entrée", sub: "Journal des émotions", hello: "Que s'est-il passé ? Écris-le tel quel, avec tes mots. Je le range dans les champs.", ph: "Écris ce qui s'est passé…", ph2: "Ajouter ou corriger…", thinking: "Je range tout ça…", err: "Impossible de traiter ça. Vérifie ta connexion et renvoie.", feelQ: "Coche ce que tu as ressenti. Au moins 4 :", more: "toutes les émotions ›", need: "Coche-en encore {n}, il en faut au moins 4", save: "Enregistrer dans le journal", manual: "Remplir à la main", craving: "Envie", yes: "oui", saved: "Entrée enregistrée", lCraving: "Envie :" }, ar: { title: "تدوينة جديدة", sub: "يوميات المشاعر", hello: "ماذا حدث؟ اكتبه كما هو، بكلماتك. وأنا سأرتّبه في الحقول.", ph: "اكتب ما حدث…", ph2: "أضف أو صحّح…", thinking: "أرتّب الأمر…", err: "تعذّرت المعالجة. تحقّق من الاتصال وأرسل مرة أخرى.", feelQ: "حدّد ما شعرت به. 4 على الأقل:", more: "كل المشاعر ›", need: "حدّد {n} أخرى، المطلوب 4 على الأقل", save: "حفظ في اليوميات", manual: "املأ يدويًا", craving: "الرغبة الملحّة", yes: "نعم", saved: "تم حفظ التدوينة", lCraving: "الرغبة الملحّة:" },
     es: { title: "Nueva entrada", sub: "Diario de sentimientos", hello: "¿Qué pasó? Escríbelo tal cual, con tus palabras. Yo lo ordeno en los campos.", ph: "Escribe qué pasó…", ph2: "Añadir o corregir…", thinking: "Ordenando…", err: "No se pudo procesar. Revisa la conexión y envía de nuevo.", feelQ: "Marca lo que sentiste. Mínimo 4:", more: "todos los sentimientos ›", need: "Marca {n} más, mínimo 4", save: "Guardar en el diario", manual: "Rellenar a mano", craving: "Ansia", yes: "sí", saved: "Entrada guardada", lCraving: "Ansia:" },
     pt: { title: "Nova entrada", sub: "Diário de sentimentos", hello: "O que aconteceu? Escreva do jeito que foi, com suas palavras. Eu organizo nos campos.", ph: "Escreva o que aconteceu…", ph2: "Adicionar ou corrigir…", thinking: "Organizando…", err: "Não deu para processar. Verifique a conexão e envie de novo.", feelQ: "Marque o que você sentiu. No mínimo 4:", more: "todos os sentimentos ›", need: "Marque mais {n}, no mínimo 4", save: "Salvar no diário", manual: "Preencher à mão", craving: "Fissura", yes: "sim", saved: "Entrada salva", lCraving: "Fissura:" },
-    kk: { title: "Жаңа жазба", sub: "Сезімдер күнделігі", hello: "Не болды? Өз сөзіңмен, қалай болса солай жаз. Мен өрістерге бөліп беремін.", ph: "Не болғанын жаз…", ph2: "Қосу немесе түзету…", thinking: "Бөліп жатырмын…", err: "Өңдеу мүмкін болмады. Интернетті тексеріп, қайта жібер.", feelQ: "Не сезгеніңді белгіле. Кемінде 4:", more: "барлық сезімдер ›", need: "Тағы {n} белгіле, кемінде 4", save: "Күнделікке сақтау", manual: "Қолмен толтыру", craving: "Құмарлық", yes: "иә", saved: "Жазба сақталды", lCraving: "Құмарлық:" },
+    kk: { title: "Жаңа жазба", sub: "Сезімдер күнделігі", hello: "Сезімдер күнделігі бұзылуға тартқан кезде ішіңде шын мәнінде не болып жатқанын көруге көмектеседі. Форматы қарапайым: 1) жағдай — не болды; 2) ой — сол сәтте басыңнан не өтті; 3) сезімдер — тізімнен таңдайсың; 4) түзету — қалай сау түрде әрекет етуге болар еді.\n\nЖағдайдан баста: не болды?", ph: "Не болғанын жаз…", ph2: "Қосу немесе түзету…", thinking: "Бөліп жатырмын…", err: "Өңдеу мүмкін болмады. Интернетті тексеріп, қайта жібер.", feelQ: "Не сезгеніңді белгіле. Кемінде 4:", more: "барлық сезімдер ›", need: "Тағы {n} белгіле, кемінде 4", save: "Күнделікке сақтау", manual: "Қолмен толтыру", craving: "Құмарлық", yes: "иә", saved: "Жазба сақталды", lCraving: "Құмарлық:" },
     zh: { title: "新记录", sub: "情绪日记", hello: "发生了什么？用你自己的话照实写，我来帮你整理到各栏。", ph: "写下发生了什么…", ph2: "补充或修改…", thinking: "正在整理…", err: "没能处理。请检查网络后再发送。", feelQ: "标出你的感受，至少 4 个：", more: "全部感受 ›", need: "再标 {n} 个，至少 4 个", save: "保存到日记", manual: "手动填写", craving: "渴求", yes: "有", saved: "已保存", lCraving: "渴求：" },
 };
 Object.assign(DCH, {
@@ -8400,6 +8401,12 @@ const DCH2 = {
     ar: { feelAsk: "ما المشاعر التي كانت في تلك اللحظة؟ اختر في الأسفل — 4 على الأقل.", done: "تم", bodyAsk: "وماذا كان يحدث في جسدك؟ حدّده إن لاحظت شيئًا. يمكنك التخطي.", skip: "تخطَّ", corrT: "التصحيح", agree: "موافق", own: "بكلماتي", corrPh: "اكتب تصحيحك…", corrWait: "أبحث عن تصحيح…", recT: "التدوينة", needCorr: "يمكن الحفظ بعد التصحيح" },
     hi: { feelAsk: "उस पल कौन-सी भावनाएँ थीं? नीचे चुनो — कम से कम 4।", done: "हो गया", bodyAsk: "और शरीर में क्या हो रहा था? कुछ महसूस किया हो तो चुनो। छोड़ भी सकते हो।", skip: "छोड़ो", corrT: "सुधार", agree: "सहमत हूँ", own: "अपने शब्दों में", corrPh: "अपना सुधार लिखो…", corrWait: "सुधार ढूँढ रहा हूँ…", recT: "एंट्री", needCorr: "सुधार के बाद सेव कर सकते हो" },
 };
+// подсказки чата дневника: мысль в тот момент
+const DGX = {
+    ru: { askThought: "Понял. Какая мысль была в тот момент? Напиши её и отметь ниже минимум 4 чувства.", needThought: "Напиши ещё мысль: что промелькнуло в голове в тот момент?" },
+    kk: { askThought: "Түсіндім. Сол сәтте қандай ой болды? Соны жаз және төменнен кемінде 4 сезімді белгіле.", needThought: "Ойыңды да жаз: сол сәтте басыңнан не өтті?" },
+    en: { askThought: "Got it. What thought was there in that moment? Write it and pick at least 4 feelings below.", needThought: "Also write the thought: what flashed through your mind in that moment?" },
+};
 function DiaryChat({ lang, onSave, onBack, onManual }) {
     const dt = pickI18N(DT, lang);
     const ch = pickI18N(DCH, lang);
@@ -8412,6 +8419,7 @@ function DiaryChat({ lang, onSave, onBack, onManual }) {
     const allBody = React.useMemo(() => [].concat(...Object.values(BODY_REACTIONS)), [BODY_REACTIONS]);
     const feelColor = f => { const cat = Object.keys(FEELINGS).find(k => FEELINGS[k].includes(f)); return (cat && FEEL_COLORS[cat]) || C.amber; };
     const [msgs, setMsgs] = useState([{ from: "ai", text: ch.hello }]);
+    useEffect(() => { try { window.dispatchEvent(new CustomEvent("ot-chat", { detail: true })); } catch (e) { } return () => { try { window.dispatchEvent(new CustomEvent("ot-chat", { detail: false })); } catch (e) { } }; }, []);
     const [d, setD] = useState({ situation: "", thought: "", feelings: [], body: [], correction: "", craving: false });
     // этапы: talk (ситуация и мысль) → feel (выбор чувств) → body (тело) → corr (коррекция) → done
     const [phase, setPhase] = useState("talk");
@@ -8471,6 +8479,8 @@ function DiaryChat({ lang, onSave, onBack, onManual }) {
         setBusy(true);
         try {
             const j = await ask(histOf(next), phase === "talk" ? "talk" : "edit", d);
+            // не по теме или вопрос вместо ответа — поля не трогаем, показываем пояснение
+            if (j.valid === false) { setMsgs(x => [...x, { from: "ai", text: str(j.reply) || ch.err }]); setBusy(false); return; }
             const fe = (Array.isArray(j.feelings) ? j.feelings : []).map(str).filter(f => allFeel.includes(f));
             const bo = (Array.isArray(j.body) ? j.body : []).map(str).filter(b => allBody.includes(b));
             const nd = { ...d, situation: str(j.situation) || d.situation, thought: str(j.thought) || d.thought, craving: !!j.craving || d.craving };
@@ -8479,9 +8489,9 @@ function DiaryChat({ lang, onSave, onBack, onManual }) {
             // чувства ИИ только предлагает — отмечает их сам человек
             setSugg(prev => Array.from(new Set([...prev, ...fe])));
             setBodySugg(prev => Array.from(new Set([...prev, ...bo])));
-            if (phase === "talk" && nd.situation && nd.thought) {
-                if (str(j.reply) && !/[?？؟]\s*$/.test(str(j.reply))) setMsgs(x => [...x, { from: "ai", text: str(j.reply) }]);
-                setMsgs(x => [...x, { from: "ai", text: c2.feelAsk }]);
+            // как только есть ситуация — сразу спрашиваем мысль и показываем чувства
+            if (phase === "talk" && nd.situation) {
+                setMsgs(x => [...x, { from: "ai", text: str(j.reply) || (nd.thought ? c2.feelAsk : (pickI18N(DGX, lang).askThought)) }]);
                 setPhase("feel");
             }
             else setMsgs(x => [...x, { from: "ai", text: str(j.reply) || ch.feelQ }]);
@@ -8491,10 +8501,16 @@ function DiaryChat({ lang, onSave, onBack, onManual }) {
         setBusy(false);
     };
     const need = Math.max(0, 4 - d.feelings.length);
-    const feelDone = () => {
+    const gx = pickI18N(DGX, lang);
+    const [fcheck, setFcheck] = useState(null);
+    // реакция тела убрана: после чувств сразу коррекция
+    const feelDone = (ok) => {
         if (need) return;
-        setMsgs(x => [...x, { from: "user", text: d.feelings.join(sep) }, { from: "ai", text: c2.bodyAsk }]);
-        setPhase("body");
+        if (!d.thought.trim()) { setMsgs(x => [...x, { from: "ai", text: gx.needThought }]); try { inputRef.current && inputRef.current.focus(); } catch (e) { } return; }
+        if (ok !== true) { const fc = otFeelCheck(FEELINGS, d.feelings); if (fc) { setFcheck(fc); return; } }
+        const list = [...msgs, { from: "user", text: d.feelings.join(sep) }];
+        setMsgs(list);
+        askCorrection(list, d);
     };
     const bodyDone = () => {
         const list = [...msgs];
@@ -8526,11 +8542,9 @@ function DiaryChat({ lang, onSave, onBack, onManual }) {
             busy && React.createElement("div", { style: { ...bubble, maxWidth: "60%", borderRadius: "18px 18px 18px 4px", background: "rgba(255,255,255,0.07)", color: C.muted } }, phase === "corr" ? c2.corrWait : ch.thinking),
             // выбор чувств
             phase === "feel" && React.createElement("div", { style: { margin: "4px 0 10px" } },
-                React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 7 } },
-                    feelChips.map(f => chip(f, d.feelings.includes(f), feelColor(f), () => toggleFeel(f))),
-                    moreChip(ch.more, () => setSheet("feel"))),
+                React.createElement(FeelColumns, { FEELINGS, FEEL_COLORS, selected: d.feelings, onToggle: toggleFeel, first: sugg, moreLabel: (pickI18N(TCH, lang).feelMore || ch.more) + " ▾", lessLabel: "▴" }),
                 React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, marginTop: 12 } },
-                    pill(c2.done + (d.feelings.length ? ` (${d.feelings.length})` : ""), !need, feelDone, true),
+                    pill(c2.done + (d.feelings.length ? ` (${d.feelings.length})` : ""), !need, () => feelDone(), true),
                     need ? React.createElement("div", { style: { fontSize: 12.5, color: C.muted } }, ch.need.replace("{n}", need)) : null)),
             // тело
             phase === "body" && React.createElement("div", { style: { margin: "4px 0 10px" } },
@@ -8561,6 +8575,7 @@ function DiaryChat({ lang, onSave, onBack, onManual }) {
                 onKeyDown: e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } },
                 style: { flex: 1, resize: "none", maxHeight: 110, background: "rgba(255,255,255,0.07)", border: "none", borderRadius: 22, padding: "12px 16px", color: C.text, fontSize: 15, fontFamily: "inherit", outline: "none" } }),
             React.createElement("button", { onClick: send, disabled: busy || !input.trim(), "aria-label": "send", style: { width: 46, height: 46, flexShrink: 0, borderRadius: "50%", border: "none", background: `linear-gradient(135deg, ${C.amber}, ${C.amber2})`, color: C.onAccent, fontSize: 20, fontWeight: 900, cursor: "pointer", opacity: busy || !input.trim() ? 0.5 : 1 } }, "↑")),
+        fcheck && React.createElement(OtConfirmSheet, { title: pickI18N(TGATE, lang).feelT, text: fcheck.many ? pickI18N(TGATE, lang).feelMany.replace("{n}", fcheck.many) : pickI18N(TGATE, lang).feelX.replace("{a}", fcheck.a).replace("{b}", fcheck.b), yes: pickI18N(TGATE, lang).feelYes, onYes: () => { setFcheck(null); feelDone(true); }, no: pickI18N(TGATE, lang).feelEdit, onNo: () => setFcheck(null) }),
         sheet && (React.createElement("div", { style: { position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 50, display: "flex", flexDirection: "column", justifyContent: "flex-end" }, onClick: () => setSheet(null) },
             React.createElement("div", { onClick: e => e.stopPropagation(), style: { background: C.bg2, borderRadius: "24px 24px 0 0", padding: 16, maxHeight: "82%", overflowY: "auto" } },
                 React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 } },
@@ -8618,6 +8633,120 @@ function OtSheet({ title, children, onClose }) {
             React.createElement("div", { style: { fontSize: 20, fontWeight: 800, color: C.text, marginBottom: 12 } }, title),
             children));
 }
+// ── САМОАНАЛИЗ АН (ежедневный, 10 шаг): открывается после месяца ведения дневника ──
+// Формат: [заголовок раздела, [вопросы]]
+const NA_INV = {
+    ru: { title: "Ежедневный самоанализ", sub: "10 шаг · ответь честно, своими словами", today: "Сегодня", history: "Прошлые дни", empty: "Пока нет записей", back: "← Назад", ph: "Твой ответ…", answered: "ответов", locked: "Откроется через {n} дн. ведения дневника чувств. Сначала минимум месяц веди дневник.",
+        s: [
+            ["СЕГОДНЯ мои мысли будут о моём выздоровлении, жить и радоваться жизни без наркотиков", ["Удалось ли мне сегодня обойтись без наркотиков?", "Что я сделал сегодня не так, как в прошлой жизни?", "Поддался ли я сегодня моей болезни? Если да, то как?", "Что я сделал сегодня такого, что не хотел сделать?", "Что я не сделал из того, что хотел сделать?", "Хорошо ли я относился к себе? Как это проявлялось?", "Хорошо ли прошёл сегодня день?", "Был ли я счастлив?", "Сохранял ли душевный покой?"]],
+            ["СЕГОДНЯ я поверю кому-то в АН, кто доверяет мне и хочет помочь мне в выздоровлении", ["Говорил ли я со своим спонсором сегодня?", "Был ли я на собрании сегодня? Где?", "Делился ли я своим опытом, силой и надеждой?", "Кто те люди в моей жизни, которым я доверяю сегодня?"]],
+            ["СЕГОДНЯ я буду с программой, я буду изо всех сил стараться следовать ей", ["Читал ли я программную литературу сегодня?", "Над каким шагом я сознательно работал?", "Признал ли я своё бессилие сегодня?", "Был ли я способен доверять своей Высшей Силе сегодня?", "Что я узнал о себе сегодня?", "Работал ли я над 9 шагом сегодня? (Ущерб)", "Признавал ли я перед кем-нибудь свои ошибки сегодня?", "Беспокоился ли я о вчерашнем и завтрашнем дне?", "Могу ли я принять себя сегодня таким, какой я есть?"]],
+            ["СЕГОДНЯ благодаря АН я постараюсь увидеть свою жизнь в лучшем свете", ["Чувствовал ли я себя сегодня как часть человечества?", "Допустил ли я сегодня, чтобы что-то завладевало мной?", "За что я благодарен Богу сегодня?", "Сделал ли я сегодня что-нибудь, что принесло вред мне или кому-нибудь ещё? Если «да», то что?", "Есть ли у меня сегодня желание измениться?", "Молился или размышлял ли я сегодня? Как это повлияло на мою жизнь?", "Какие духовные принципы я смог применить в моей жизни сегодня?", "Важным ли было для меня сегодня обойтись без наркотиков?"]],
+            ["СЕГОДНЯ я не буду бояться, мои мысли будут о моём новом знакомстве с людьми, которые не используют наркотики и выбрали новый жизненный путь. Пока я следую этим новым путём, мне нечего бояться", ["Отдал ли я что-то сегодня от себя, не ожидая ничего взамен?", "Был ли сегодня в моей жизни страх?", "Чувствовал ли я сильную радость или сильную боль?", "Звонил ли я или встречался с кем-нибудь из АН?", "Молился ли я о благополучии другого человека сегодня?", "Был ли я спокоен сегодня?", "Хорошо ли я помнил сегодня, что у меня есть выбор?"]],
+        ] },
+    en: { title: "Daily self-analysis", sub: "Step 10 · answer honestly, in your own words", today: "Today", history: "Previous days", empty: "No entries yet", back: "← Back", ph: "Your answer…", answered: "answers", locked: "Opens after {n} more days of keeping the feelings diary. Keep the diary for at least a month first.",
+        s: [
+            ["TODAY my thoughts will be on my recovery, living and enjoying life without drugs", ["Did I manage to stay clean today?", "What did I do today differently from my old life?", "Did I give in to my disease today? If so, how?", "What did I do today that I didn't want to do?", "What didn't I do that I wanted to do?", "Did I treat myself well? How did it show?", "Did the day go well?", "Was I happy?", "Did I keep my peace of mind?"]],
+            ["TODAY I will have faith in someone in NA who believes in me and wants to help me in my recovery", ["Did I talk to my sponsor today?", "Did I go to a meeting today? Where?", "Did I share my experience, strength and hope?", "Who are the people in my life I trust today?"]],
+            ["TODAY I will have a program. I will try to follow it to the best of my ability", ["Did I read program literature today?", "Which step did I consciously work on?", "Did I admit my powerlessness today?", "Was I able to trust my Higher Power today?", "What did I learn about myself today?", "Did I work on Step 9 today? (Amends)", "Did I admit my mistakes to anyone today?", "Did I worry about yesterday or tomorrow?", "Can I accept myself today as I am?"]],
+            ["TODAY through NA I will try to get a better perspective on my life", ["Did I feel like a part of humanity today?", "Did I let something take control of me today?", "What am I grateful to God for today?", "Did I do anything today that harmed me or someone else? If yes, what?", "Do I have a desire to change today?", "Did I pray or meditate today? How did it affect my life?", "Which spiritual principles was I able to apply in my life today?", "Was staying clean important to me today?"]],
+            ["TODAY I will not be afraid. My thoughts will be on my new associations, people who are not using and have found a new way of life. So long as I follow that way, I have nothing to fear", ["Did I give something of myself today without expecting anything in return?", "Was there fear in my life today?", "Did I feel strong joy or strong pain?", "Did I call or meet anyone from NA?", "Did I pray for someone else's well-being today?", "Was I calm today?", "Did I remember today that I have a choice?"]],
+        ] },
+    es: { title: "Autoanálisis diario", sub: "Paso 10 · responde con sinceridad, con tus palabras", today: "Hoy", history: "Días anteriores", empty: "Aún no hay registros", back: "← Atrás", ph: "Tu respuesta…", answered: "respuestas", locked: "Se abrirá tras {n} días más de llevar el diario de emociones. Primero lleva el diario al menos un mes.",
+        s: [
+            ["HOY mis pensamientos estarán en mi recuperación, en vivir y disfrutar la vida sin drogas", ["¿Logré mantenerme limpio hoy?", "¿Qué hice hoy de forma distinta a mi vida pasada?", "¿Cedí hoy ante mi enfermedad? Si fue así, ¿cómo?", "¿Qué hice hoy que no quería hacer?", "¿Qué no hice de lo que quería hacer?", "¿Me traté bien? ¿Cómo se notó?", "¿Fue bien el día de hoy?", "¿Fui feliz?", "¿Mantuve la paz interior?"]],
+            ["HOY tendré fe en alguien de NA que cree en mí y quiere ayudarme en mi recuperación", ["¿Hablé hoy con mi padrino?", "¿Fui hoy a una reunión? ¿Dónde?", "¿Compartí mi experiencia, fortaleza y esperanza?", "¿Quiénes son las personas de mi vida en las que confío hoy?"]],
+            ["HOY tendré un programa y me esforzaré al máximo por seguirlo", ["¿Leí literatura del programa hoy?", "¿En qué paso trabajé conscientemente?", "¿Admití hoy mi impotencia?", "¿Fui capaz de confiar hoy en mi Poder Superior?", "¿Qué aprendí hoy sobre mí?", "¿Trabajé hoy en el Paso 9? (Enmiendas)", "¿Admití hoy mis errores ante alguien?", "¿Me preocupé por el ayer o el mañana?", "¿Puedo aceptarme hoy tal como soy?"]],
+            ["HOY, gracias a NA, intentaré ver mi vida con una mejor perspectiva", ["¿Me sentí hoy parte de la humanidad?", "¿Permití hoy que algo se apoderara de mí?", "¿Por qué le estoy agradecido a Dios hoy?", "¿Hice hoy algo que me hizo daño a mí o a otra persona? Si fue así, ¿qué?", "¿Tengo hoy el deseo de cambiar?", "¿Recé o medité hoy? ¿Cómo influyó en mi vida?", "¿Qué principios espirituales pude aplicar hoy en mi vida?", "¿Fue importante para mí mantenerme limpio hoy?"]],
+            ["HOY no tendré miedo. Mis pensamientos estarán en mis nuevas amistades, personas que no consumen y han elegido un nuevo camino de vida. Mientras siga este camino, no tengo nada que temer", ["¿Di hoy algo de mí sin esperar nada a cambio?", "¿Hubo miedo en mi vida hoy?", "¿Sentí una gran alegría o un gran dolor?", "¿Llamé o me reuní con alguien de NA?", "¿Recé hoy por el bienestar de otra persona?", "¿Estuve tranquilo hoy?", "¿Recordé hoy que tengo elección?"]],
+        ] },
+    pt: { title: "Autoanálise diária", sub: "Passo 10 · responda com sinceridade, com suas palavras", today: "Hoje", history: "Dias anteriores", empty: "Ainda não há registros", back: "← Voltar", ph: "Sua resposta…", answered: "respostas", locked: "Abre depois de mais {n} dias de diário de emoções. Primeiro mantenha o diário por pelo menos um mês.",
+        s: [
+            ["HOJE meus pensamentos estarão na minha recuperação, em viver e aproveitar a vida sem drogas", ["Consegui ficar limpo hoje?", "O que fiz hoje de forma diferente da minha vida passada?", "Cedi hoje à minha doença? Se sim, como?", "O que fiz hoje que não queria fazer?", "O que deixei de fazer que queria fazer?", "Tratei bem a mim mesmo? Como isso apareceu?", "O dia foi bom?", "Fui feliz?", "Mantive a paz interior?"]],
+            ["HOJE vou confiar em alguém de NA que acredita em mim e quer me ajudar na recuperação", ["Falei com meu padrinho hoje?", "Fui a uma reunião hoje? Onde?", "Partilhei minha experiência, força e esperança?", "Quem são as pessoas da minha vida em quem confio hoje?"]],
+            ["HOJE terei um programa e vou me esforçar ao máximo para segui-lo", ["Li literatura do programa hoje?", "Em qual passo trabalhei conscientemente?", "Admiti minha impotência hoje?", "Consegui confiar no meu Poder Superior hoje?", "O que aprendi sobre mim hoje?", "Trabalhei no Passo 9 hoje? (Reparações)", "Admiti meus erros para alguém hoje?", "Me preocupei com o ontem ou o amanhã?", "Posso me aceitar hoje como sou?"]],
+            ["HOJE, graças a NA, vou tentar ver minha vida com uma perspectiva melhor", ["Senti-me hoje parte da humanidade?", "Deixei que algo tomasse conta de mim hoje?", "Pelo que sou grato a Deus hoje?", "Fiz hoje algo que prejudicou a mim ou a outra pessoa? Se sim, o quê?", "Tenho hoje o desejo de mudar?", "Rezei ou meditei hoje? Como isso afetou minha vida?", "Quais princípios espirituais consegui aplicar hoje na minha vida?", "Ficar limpo hoje foi importante para mim?"]],
+            ["HOJE não terei medo. Meus pensamentos estarão nas minhas novas amizades, pessoas que não usam drogas e escolheram um novo caminho de vida. Enquanto eu seguir esse caminho, não tenho nada a temer", ["Dei hoje algo de mim sem esperar nada em troca?", "Houve medo na minha vida hoje?", "Senti uma alegria forte ou uma dor forte?", "Liguei ou me encontrei com alguém de NA?", "Rezei hoje pelo bem-estar de outra pessoa?", "Estive calmo hoje?", "Lembrei hoje que tenho escolha?"]],
+        ] },
+    kk: { title: "Күнделікті өзін талдау", sub: "10-қадам · шынайы, өз сөзіңмен жауап бер", today: "Бүгін", history: "Өткен күндер", empty: "Әзірге жазба жоқ", back: "← Артқа", ph: "Жауабың…", answered: "жауап", locked: "Сезімдер күнделігін тағы {n} күн жүргізгеннен кейін ашылады. Алдымен күнделікті кемінде бір ай жүргіз.",
+        s: [
+            ["БҮГІН менің ойым — сауығуым туралы, есірткісіз өмір сүру және өмірге қуану туралы", ["Бүгін есірткісіз өткізе алдым ба?", "Бүгін бұрынғы өмірімдегідей емес, басқаша не істедім?", "Бүгін ауруыма бой алдырдым ба? Иә болса, қалай?", "Бүгін істегім келмеген не істедім?", "Істегім келген нәрселердің қайсысын істемедім?", "Өзіме жақсы қарадым ба? Бұл қалай байқалды?", "Бүгінгі күн жақсы өтті ме?", "Мен бақытты болдым ба?", "Жан тыныштығымды сақтадым ба?"]],
+            ["БҮГІН мен АН-дағы маған сенетін және сауығуыма көмектескісі келетін біреуге сенемін", ["Бүгін демеушіммен сөйлестім бе?", "Бүгін жиналысқа бардым ба? Қай жерде?", "Тәжірибеммен, күшіммен және үмітіммен бөлістім бе?", "Бүгін өмірімде кімдерге сенемін?"]],
+            ["БҮГІН мен бағдарламамен боламын, оны ұстануға бар күшімді саламын", ["Бүгін бағдарлама әдебиетін оқыдым ба?", "Қай қадаммен саналы түрде жұмыс істедім?", "Бүгін дәрменсіздігімді мойындадым ба?", "Бүгін Жоғары Күшіме сене алдым ба?", "Бүгін өзім туралы не білдім?", "Бүгін 9-қадаммен жұмыс істедім бе? (Келтірілген зиян)", "Бүгін біреудің алдында қателіктерімді мойындадым ба?", "Кешегі және ертеңгі күн үшін алаңдадым ба?", "Бүгін өзімді қандай болсам, солай қабылдай аламын ба?"]],
+            ["БҮГІН АН-ның арқасында өмірімді жақсы жағынан көруге тырысамын", ["Бүгін өзімді адамзаттың бір бөлігі ретінде сезіндім бе?", "Бүгін бір нәрсенің мені билеп алуына жол бердім бе?", "Бүгін Құдайға не үшін ризамын?", "Бүгін өзіме немесе басқа біреуге зиян келтірген бір нәрсе істедім бе? Иә болса, не?", "Бүгін менде өзгеруге ниет бар ма?", "Бүгін дұға еттім бе немесе ойға шомдым ба? Бұл өміріме қалай әсер етті?", "Бүгін өмірімде қандай рухани қағидаларды қолдана алдым?", "Бүгін есірткісіз өткізу мен үшін маңызды болды ма?"]],
+            ["БҮГІН мен қорықпаймын, менің ойым — есірткі қолданбайтын және жаңа өмір жолын таңдаған адамдармен жаңа танысуым туралы. Осы жаңа жолмен жүргенше, менің қорқатын ештеңем жоқ", ["Бүгін ештеңе күтпей, өзімнен бір нәрсе бердім бе?", "Бүгін өмірімде қорқыныш болды ма?", "Қатты қуаныш немесе қатты ауырсыну сезіндім бе?", "АН-дағы біреуге қоңырау шалдым ба немесе кездестім бе?", "Бүгін басқа адамның амандығы үшін дұға еттім бе?", "Бүгін сабырлы болдым ба?", "Бүгін менде таңдау бар екенін жақсы есте ұстадым ба?"]],
+        ] },
+    zh: { title: "每日自省", sub: "第十步 · 用自己的话诚实回答", today: "今天", history: "以往的日子", empty: "还没有记录", back: "← 返回", ph: "你的回答…", answered: "个回答", locked: "再坚持写 {n} 天情绪日记后开放。请先至少写满一个月的日记。",
+        s: [
+            ["今天，我的心思放在我的康复上，过不用毒品的生活并享受生活", ["今天我做到不用毒品了吗？", "今天我做了哪些和过去的生活不一样的事？", "今天我向我的疾病屈服了吗？如果是，是怎样的？", "今天我做了哪些自己并不想做的事？", "哪些我想做的事没有做？", "我善待自己了吗？体现在哪里？", "今天过得好吗？", "我快乐吗？", "我保持内心的平静了吗？"]],
+            ["今天，我会信任 NA 中一位相信我、愿意帮助我康复的人", ["今天我和我的助帮人谈过话吗？", "今天我参加聚会了吗？在哪里？", "我分享了我的经验、力量和希望吗？", "今天我生活中信任的人有哪些？"]],
+            ["今天，我会坚持程序，尽我所能去遵循它", ["今天我读程序文献了吗？", "我有意识地在做哪一步？", "今天我承认自己的无能为力了吗？", "今天我能信任我的更高力量吗？", "今天我对自己有了什么新的认识？", "今天我做第九步了吗？（弥补伤害）", "今天我向谁承认过自己的错误吗？", "我为昨天或明天担忧了吗？", "今天我能接纳本来的自己吗？"]],
+            ["今天，借助 NA，我会尝试用更好的眼光看待我的生活", ["今天我觉得自己是人类的一部分吗？", "今天我是否让某种东西控制了我？", "今天我为什么感谢上帝？", "今天我做了什么伤害自己或他人的事吗？如果有，是什么？", "今天我有改变的意愿吗？", "今天我祈祷或冥想了吗？这对我的生活有什么影响？", "今天我在生活中运用了哪些灵性原则？", "今天保持不用毒品对我重要吗？"]],
+            ["今天，我不会害怕。我的心思放在结识新朋友上，他们不用毒品，选择了新的生活道路。只要我走在这条新路上，我就没有什么可怕的", ["今天我是否不求回报地付出了自己的一部分？", "今天我的生活中有恐惧吗？", "我感受到强烈的喜悦或强烈的痛苦了吗？", "我给 NA 的人打过电话或见过面吗？", "今天我为别人的幸福祈祷了吗？", "今天我平静吗？", "今天我是否记得自己有选择？"]],
+        ] },
+    ar: { title: "تحليل الذات اليومي", sub: "الخطوة 10 · أجب بصدق وبكلماتك", today: "اليوم", history: "الأيام السابقة", empty: "لا توجد سجلات بعد", back: "→ رجوع", ph: "إجابتك…", answered: "إجابات", locked: "سيُفتح بعد {n} يومًا إضافيًا من كتابة يوميات المشاعر. اكتب اليوميات شهرًا على الأقل أولًا.",
+        s: [
+            ["اليوم ستكون أفكاري في تعافيّ، وفي أن أعيش وأستمتع بالحياة دون مخدرات", ["هل تمكنت اليوم من البقاء دون مخدرات؟", "ما الذي فعلته اليوم بشكل مختلف عن حياتي السابقة؟", "هل استسلمت اليوم لمرضي؟ إن كان نعم، فكيف؟", "ما الذي فعلته اليوم ولم أكن أريد فعله؟", "ما الذي لم أفعله مما كنت أريد فعله؟", "هل عاملت نفسي جيدًا؟ كيف ظهر ذلك؟", "هل مرّ اليوم بشكل جيد؟", "هل كنت سعيدًا؟", "هل حافظت على راحة البال؟"]],
+            ["اليوم سأثق بشخص في زمالة المدمنين المجهولين يثق بي ويريد مساعدتي في التعافي", ["هل تحدثت مع مرشدي اليوم؟", "هل حضرت اجتماعًا اليوم؟ أين؟", "هل شاركت تجربتي وقوتي وأملي؟", "من هم الأشخاص في حياتي الذين أثق بهم اليوم؟"]],
+            ["اليوم سأكون مع البرنامج، وسأبذل كل جهدي لاتباعه", ["هل قرأت أدبيات البرنامج اليوم؟", "على أي خطوة عملت بوعي؟", "هل اعترفت اليوم بعجزي؟", "هل استطعت اليوم أن أثق بقوتي العليا؟", "ماذا تعلمت عن نفسي اليوم؟", "هل عملت على الخطوة 9 اليوم؟ (إصلاح الضرر)", "هل اعترفت بأخطائي أمام أحد اليوم؟", "هل قلقت بشأن الأمس أو الغد؟", "هل أستطيع اليوم أن أتقبل نفسي كما أنا؟"]],
+            ["اليوم، بفضل الزمالة، سأحاول أن أرى حياتي في ضوء أفضل", ["هل شعرت اليوم بأنني جزء من البشرية؟", "هل سمحت اليوم لشيء ما أن يسيطر عليّ؟", "على ماذا أشكر الله اليوم؟", "هل فعلت اليوم شيئًا أضرّ بي أو بشخص آخر؟ إن كان نعم، فما هو؟", "هل لديّ اليوم رغبة في التغيير؟", "هل صليت أو تأملت اليوم؟ كيف أثّر ذلك في حياتي؟", "ما المبادئ الروحية التي استطعت تطبيقها في حياتي اليوم؟", "هل كان البقاء دون مخدرات مهمًا لي اليوم؟"]],
+            ["اليوم لن أخاف، ستكون أفكاري في معارفي الجدد، أناس لا يتعاطون واختاروا طريق حياة جديدًا. ما دمت أسير في هذا الطريق، فلا شيء أخافه", ["هل أعطيت اليوم شيئًا من نفسي دون انتظار مقابل؟", "هل كان في حياتي خوف اليوم؟", "هل شعرت بفرح شديد أو بألم شديد؟", "هل اتصلت بأحد من الزمالة أو التقيت به؟", "هل صليت اليوم من أجل خير شخص آخر؟", "هل كنت هادئًا اليوم؟", "هل تذكرت جيدًا اليوم أن لديّ خيارًا؟"]],
+        ] },
+    fr: { title: "Introspection quotidienne", sub: "Étape 10 · réponds honnêtement, avec tes mots", today: "Aujourd'hui", history: "Jours précédents", empty: "Pas encore d'entrées", back: "← Retour", ph: "Ta réponse…", answered: "réponses", locked: "S'ouvrira après encore {n} jours de journal des émotions. Tiens d'abord le journal au moins un mois.",
+        s: [
+            ["AUJOURD'HUI mes pensées iront vers mon rétablissement, vers le fait de vivre et de profiter de la vie sans drogue", ["Ai-je réussi à rester abstinent aujourd'hui ?", "Qu'ai-je fait aujourd'hui autrement que dans ma vie d'avant ?", "Ai-je cédé à ma maladie aujourd'hui ? Si oui, comment ?", "Qu'ai-je fait aujourd'hui que je ne voulais pas faire ?", "Qu'est-ce que je n'ai pas fait alors que je voulais le faire ?", "Me suis-je bien traité ? Comment cela s'est-il vu ?", "La journée s'est-elle bien passée ?", "Ai-je été heureux ?", "Ai-je gardé la paix intérieure ?"]],
+            ["AUJOURD'HUI je ferai confiance à quelqu'un de NA qui croit en moi et veut m'aider dans mon rétablissement", ["Ai-je parlé à mon parrain aujourd'hui ?", "Suis-je allé à une réunion aujourd'hui ? Où ?", "Ai-je partagé mon expérience, ma force et mon espoir ?", "Qui sont les personnes de ma vie en qui j'ai confiance aujourd'hui ?"]],
+            ["AUJOURD'HUI j'aurai un programme et je ferai de mon mieux pour le suivre", ["Ai-je lu de la littérature du programme aujourd'hui ?", "Sur quelle étape ai-je travaillé consciemment ?", "Ai-je admis mon impuissance aujourd'hui ?", "Ai-je pu faire confiance à ma Puissance supérieure aujourd'hui ?", "Qu'ai-je appris sur moi aujourd'hui ?", "Ai-je travaillé sur l'Étape 9 aujourd'hui ? (Réparations)", "Ai-je admis mes erreurs devant quelqu'un aujourd'hui ?", "Me suis-je inquiété d'hier ou de demain ?", "Puis-je m'accepter aujourd'hui tel que je suis ?"]],
+            ["AUJOURD'HUI, grâce à NA, j'essaierai de voir ma vie sous un meilleur jour", ["Me suis-je senti aujourd'hui comme une partie de l'humanité ?", "Ai-je laissé quelque chose prendre le contrôle de moi aujourd'hui ?", "De quoi suis-je reconnaissant envers Dieu aujourd'hui ?", "Ai-je fait aujourd'hui quelque chose qui m'a fait du tort, à moi ou à quelqu'un d'autre ? Si oui, quoi ?", "Ai-je aujourd'hui le désir de changer ?", "Ai-je prié ou médité aujourd'hui ? Comment cela a-t-il influencé ma vie ?", "Quels principes spirituels ai-je pu appliquer dans ma vie aujourd'hui ?", "Rester abstinent a-t-il été important pour moi aujourd'hui ?"]],
+            ["AUJOURD'HUI je n'aurai pas peur. Mes pensées iront vers mes nouvelles relations, des personnes qui ne consomment pas et ont choisi un nouveau chemin de vie. Tant que je suis ce chemin, je n'ai rien à craindre", ["Ai-je donné quelque chose de moi aujourd'hui sans rien attendre en retour ?", "Y a-t-il eu de la peur dans ma vie aujourd'hui ?", "Ai-je ressenti une forte joie ou une forte douleur ?", "Ai-je appelé ou rencontré quelqu'un de NA ?", "Ai-je prié pour le bien-être d'une autre personne aujourd'hui ?", "Ai-je été calme aujourd'hui ?", "Me suis-je bien souvenu aujourd'hui que j'ai le choix ?"]],
+        ] },
+    de: { title: "Tägliche Selbstanalyse", sub: "Schritt 10 · antworte ehrlich, mit deinen Worten", today: "Heute", history: "Frühere Tage", empty: "Noch keine Einträge", back: "← Zurück", ph: "Deine Antwort…", answered: "Antworten", locked: "Öffnet sich nach weiteren {n} Tagen Gefühlstagebuch. Führe das Tagebuch zuerst mindestens einen Monat.",
+        s: [
+            ["HEUTE gelten meine Gedanken meiner Genesung, dem Leben und der Freude am Leben ohne Drogen", ["Habe ich es heute geschafft, clean zu bleiben?", "Was habe ich heute anders gemacht als in meinem früheren Leben?", "Habe ich heute meiner Krankheit nachgegeben? Wenn ja, wie?", "Was habe ich heute getan, das ich nicht tun wollte?", "Was habe ich nicht getan, obwohl ich es tun wollte?", "Bin ich gut mit mir umgegangen? Woran hat man das gesehen?", "War der Tag heute gut?", "War ich glücklich?", "Habe ich meinen inneren Frieden bewahrt?"]],
+            ["HEUTE vertraue ich jemandem in NA, der an mich glaubt und mir in meiner Genesung helfen will", ["Habe ich heute mit meinem Sponsor gesprochen?", "War ich heute in einem Meeting? Wo?", "Habe ich meine Erfahrung, Kraft und Hoffnung geteilt?", "Wer sind die Menschen in meinem Leben, denen ich heute vertraue?"]],
+            ["HEUTE bleibe ich beim Programm und gebe mein Bestes, ihm zu folgen", ["Habe ich heute Programmliteratur gelesen?", "An welchem Schritt habe ich bewusst gearbeitet?", "Habe ich heute meine Machtlosigkeit zugegeben?", "Konnte ich heute meiner Höheren Macht vertrauen?", "Was habe ich heute über mich gelernt?", "Habe ich heute an Schritt 9 gearbeitet? (Wiedergutmachung)", "Habe ich heute vor jemandem meine Fehler zugegeben?", "Habe ich mir Sorgen um gestern oder morgen gemacht?", "Kann ich mich heute so annehmen, wie ich bin?"]],
+            ["HEUTE versuche ich dank NA, mein Leben in einem besseren Licht zu sehen", ["Habe ich mich heute als Teil der Menschheit gefühlt?", "Habe ich heute zugelassen, dass etwas Besitz von mir ergreift?", "Wofür bin ich Gott heute dankbar?", "Habe ich heute etwas getan, das mir oder jemand anderem geschadet hat? Wenn ja, was?", "Habe ich heute den Wunsch, mich zu ändern?", "Habe ich heute gebetet oder meditiert? Wie hat das mein Leben beeinflusst?", "Welche spirituellen Prinzipien konnte ich heute in meinem Leben anwenden?", "War es mir heute wichtig, clean zu bleiben?"]],
+            ["HEUTE habe ich keine Angst. Meine Gedanken gelten meinen neuen Bekanntschaften, Menschen, die keine Drogen nehmen und einen neuen Lebensweg gewählt haben. Solange ich diesem Weg folge, habe ich nichts zu fürchten", ["Habe ich heute etwas von mir gegeben, ohne etwas zurück zu erwarten?", "Gab es heute Angst in meinem Leben?", "Habe ich starke Freude oder starken Schmerz gefühlt?", "Habe ich jemanden aus NA angerufen oder getroffen?", "Habe ich heute für das Wohl eines anderen Menschen gebetet?", "War ich heute ruhig?", "Habe ich mich heute gut daran erinnert, dass ich eine Wahl habe?"]],
+        ] },
+    hi: { title: "रोज़ का आत्म-विश्लेषण", sub: "कदम 10 · ईमानदारी से, अपने शब्दों में जवाब दो", today: "आज", history: "पिछले दिन", empty: "अभी कोई एंट्री नहीं", back: "← वापस", ph: "तुम्हारा जवाब…", answered: "जवाब", locked: "भावनाओं की डायरी {n} दिन और लिखने के बाद खुलेगा। पहले कम से कम एक महीना डायरी लिखो।",
+        s: [
+            ["आज मेरे विचार मेरी रिकवरी पर होंगे, नशे के बिना जीने और ज़िंदगी का आनंद लेने पर", ["क्या आज मैं नशे के बिना रह पाया?", "आज मैंने अपनी पुरानी ज़िंदगी से अलग क्या किया?", "क्या आज मैं अपनी बीमारी के आगे झुक गया? अगर हाँ, तो कैसे?", "आज मैंने ऐसा क्या किया जो मैं करना नहीं चाहता था?", "मैं जो करना चाहता था, उसमें से क्या नहीं किया?", "क्या मैंने खुद के साथ अच्छा व्यवहार किया? यह कैसे दिखा?", "क्या आज का दिन अच्छा बीता?", "क्या मैं खुश था?", "क्या मैंने मन की शांति बनाए रखी?"]],
+            ["आज मैं NA में किसी ऐसे व्यक्ति पर भरोसा करूँगा जो मुझ पर विश्वास करता है और मेरी रिकवरी में मदद करना चाहता है", ["क्या आज मैंने अपने स्पॉन्सर से बात की?", "क्या आज मैं मीटिंग में गया? कहाँ?", "क्या मैंने अपना अनुभव, ताकत और उम्मीद साझा की?", "आज मेरी ज़िंदगी में वे लोग कौन हैं जिन पर मैं भरोसा करता हूँ?"]],
+            ["आज मैं प्रोग्राम के साथ रहूँगा और पूरी कोशिश करूँगा कि उसका पालन करूँ", ["क्या आज मैंने प्रोग्राम का साहित्य पढ़ा?", "मैंने जानबूझकर किस कदम पर काम किया?", "क्या आज मैंने अपनी बेबसी स्वीकार की?", "क्या आज मैं अपनी उच्च शक्ति पर भरोसा कर पाया?", "आज मैंने अपने बारे में क्या सीखा?", "क्या आज मैंने कदम 9 पर काम किया? (नुकसान की भरपाई)", "क्या आज मैंने किसी के सामने अपनी गलतियाँ मानीं?", "क्या मैं बीते कल या आने वाले कल को लेकर परेशान रहा?", "क्या आज मैं खुद को वैसा ही स्वीकार कर सकता हूँ जैसा मैं हूँ?"]],
+            ["आज NA की वजह से मैं अपनी ज़िंदगी को बेहतर नज़र से देखने की कोशिश करूँगा", ["क्या आज मैंने खुद को इंसानियत का हिस्सा महसूस किया?", "क्या आज मैंने किसी चीज़ को खुद पर हावी होने दिया?", "आज मैं भगवान का किस बात के लिए शुक्रगुज़ार हूँ?", "क्या आज मैंने कुछ ऐसा किया जिससे मुझे या किसी और को नुकसान हुआ? अगर हाँ, तो क्या?", "क्या आज मुझमें बदलने की इच्छा है?", "क्या आज मैंने प्रार्थना या ध्यान किया? इसका मेरी ज़िंदगी पर क्या असर हुआ?", "आज मैं अपनी ज़िंदगी में कौन-से आध्यात्मिक सिद्धांत लागू कर पाया?", "क्या आज नशे के बिना रहना मेरे लिए ज़रूरी था?"]],
+            ["आज मैं नहीं डरूँगा। मेरे विचार उन नए लोगों से मेरी जान-पहचान पर होंगे जो नशा नहीं करते और जिन्होंने ज़िंदगी का नया रास्ता चुना है। जब तक मैं इस नए रास्ते पर चल रहा हूँ, मुझे डरने की कोई बात नहीं", ["क्या आज मैंने बिना किसी बदले की उम्मीद के खुद से कुछ दिया?", "क्या आज मेरी ज़िंदगी में डर था?", "क्या मैंने बहुत ज़्यादा खुशी या बहुत ज़्यादा दर्द महसूस किया?", "क्या मैंने NA के किसी व्यक्ति को फ़ोन किया या उससे मिला?", "क्या आज मैंने किसी और की भलाई के लिए प्रार्थना की?", "क्या मैं आज शांत था?", "क्या आज मुझे अच्छी तरह याद रहा कि मेरे पास विकल्प है?"]],
+        ] },
+};
+const NA_UNLOCK_DAYS = 30;
+function NaInventory({ lang, onBack }) {
+    const E = React.createElement;
+    const L = NA_INV[lang] || NA_INV.en;
+    const [data, setData] = useSaved("naInv", {});
+    const today = new Date().toDateString();
+    const [day, setDay] = useState(today);
+    const cur = (data && data[day]) || {};
+    const ro = day !== today;
+    const put = (k, v) => setData(d => ({ ...(d || {}), [today]: { ...((d || {})[today] || {}), [k]: v } }));
+    const days = Object.keys(data || {}).filter(k => k !== today && Object.values(data[k] || {}).some(v => String(v || "").trim()))
+        .sort((a, b) => new Date(b) - new Date(a));
+    const fmt = (k) => { try { return new Date(k).toLocaleDateString(); } catch (e) { return k; } };
+    let n = 0;
+    return E("div", { style: { flex: 1, overflowY: "auto", padding: "14px 16px 24px" } },
+        E("button", { onClick: () => (ro ? setDay(today) : onBack()), style: { background: "none", border: "none", color: C.amber, fontSize: 14, fontWeight: 700, cursor: "pointer", padding: "4px 0", marginBottom: 6 } }, L.back),
+        E("div", { style: { fontSize: 22, fontWeight: 800, color: C.text } }, L.title),
+        E("div", { style: { fontSize: 12.5, color: C.amber, fontWeight: 700, margin: "2px 0 14px" } }, (ro ? fmt(day) : L.today) + " · " + L.sub),
+        L.s.map(([head, qs], si) => E("div", { key: si, style: { marginBottom: 16 } },
+            E("div", { style: { fontSize: 13.5, fontWeight: 800, color: C.text, lineHeight: 1.45, padding: "10px 12px", borderRadius: 12, background: C.amberSoft, border: `1px solid ${C.amber}44`, marginBottom: 10 } }, head),
+            qs.map((q) => { n += 1; const key = String(n); return E("div", { key: key, style: { marginBottom: 10 } },
+                E("div", { style: { fontSize: 13.5, color: C.textSoft, lineHeight: 1.4, marginBottom: 5 } }, `${n}. ${q}`),
+                ro ? E("div", { style: { fontSize: 14, color: C.text, lineHeight: 1.45, padding: "8px 12px", borderRadius: 12, background: C.card, whiteSpace: "pre-wrap" } }, cur[key] || "—")
+                   : E("textarea", { value: cur[key] || "", rows: 2, placeholder: L.ph, onChange: e => put(key, e.target.value), style: { width: "100%", boxSizing: "border-box", resize: "vertical", background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: "9px 12px", color: C.text, fontSize: 14, fontFamily: "inherit", outline: "none" } })); }))),
+        !ro && E("div", { style: { marginTop: 8 } },
+            E("div", { style: { fontSize: 15, fontWeight: 800, color: C.text, marginBottom: 8 } }, L.history),
+            days.length ? days.map(k => E("button", { key: k, onClick: () => { setDay(k); }, style: { width: "100%", textAlign: "left", padding: "12px 14px", marginBottom: 8, borderRadius: 14, background: C.card, border: `1px solid ${C.border}`, color: C.text, fontSize: 14, cursor: "pointer", display: "flex", justifyContent: "space-between" } },
+                E("span", null, fmt(k)), E("span", { style: { color: C.muted, fontSize: 12.5 } }, Object.values(data[k] || {}).filter(v => String(v || "").trim()).length + " " + L.answered)))
+                : E("div", { style: { fontSize: 13, color: C.muted } }, L.empty)));
+}
 function DiaryTab({ lang, onAskMentor, entries, setEntries, openNew, clearOpenNew }) {
     const dt = pickI18N(DT, lang);
     const FEELINGS = pickI18N(FEELINGS_I18N, lang);
@@ -8639,6 +8768,12 @@ function DiaryTab({ lang, onAskMentor, entries, setEntries, openNew, clearOpenNe
         setD({ situation: "", thought: "", feelings: [], body: [], correction: "" });
         setStep("list");
     };
+    // самоанализ открывается через месяц после первой записи в дневнике
+    const firstTs = (entries || []).reduce((m, e) => { const t = e && (e.ts || e.id); return t && t < m ? t : m; }, Date.now());
+    const naLeft = Math.max(0, NA_UNLOCK_DAYS - Math.floor((Date.now() - firstTs) / 86400000));
+    const openNa = () => { if (naLeft > 0) { alert((NA_INV[lang] || NA_INV.en).locked.replace("{n}", naLeft)); return; } setStep("na"); };
+    if (step === "na")
+        return React.createElement(NaInventory, { lang, onBack: () => setStep("choose") });
     // НОВАЯ ЗАПИСЬ ЧЕРЕЗ ЧАТ
     if (step === "chat")
         return React.createElement(DiaryChat, { lang, onBack: () => setStep("list"), onManual: () => setStep("entry"),
@@ -8656,13 +8791,13 @@ function DiaryTab({ lang, onAskMentor, entries, setEntries, openNew, clearOpenNe
                         React.createElement("div", { style: { fontSize: 12, color: C.amber, fontWeight: 600 } }, dt.startHere))),
                 React.createElement("div", { style: { fontSize: 12.5, color: C.textSoft, lineHeight: 1.5 } }, dt.diaryDesc),
                 React.createElement("div", { style: { fontSize: 11.5, color: C.success, fontWeight: 600, marginTop: 2 } }, dt.diaryRec)),
-            React.createElement("button", { onClick: () => alert(dt.selfAlert), style: { width: "100%", textAlign: "left", padding: 18, borderRadius: 20, cursor: "pointer", background: C.card, border: `1px solid ${C.border}`, display: "flex", flexDirection: "column", gap: 8, opacity: 0.75 } },
+            React.createElement("button", { onClick: openNa, style: { width: "100%", textAlign: "left", padding: 18, borderRadius: 20, cursor: "pointer", background: C.card, border: `1px solid ${naLeft > 0 ? C.border : C.success + "88"}`, display: "flex", flexDirection: "column", gap: 8, opacity: naLeft > 0 ? 0.85 : 1 } },
                 React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
                     React.createElement("span", { style: { fontSize: 28 } }, "\uD83C\uDF05"),
                     React.createElement("div", { style: { flex: 1 } },
                         React.createElement("div", { style: { fontSize: 17, fontWeight: 800, color: C.text } }, dt.selfName),
                         React.createElement("div", { style: { fontSize: 12, color: C.muted, fontWeight: 600 } }, dt.selfSub)),
-                    React.createElement("span", { style: { fontSize: 11, color: C.muted, background: C.card2, padding: "3px 8px", borderRadius: 999 } }, dt.soon)),
+                    naLeft > 0 ? React.createElement("span", { style: { fontSize: 15 } }, "\uD83D\uDD12") : null),
                 React.createElement("div", { style: { fontSize: 12.5, color: C.muted, lineHeight: 1.5 } }, dt.selfDesc)),
             React.createElement(OtAdSlot, { id: "diaryChoose" })));
     // ИНСТРУКТАЖ
@@ -9680,7 +9815,7 @@ function MsgLimitScreen({ lang, bonusDays, isPremium, onUseDay, onSubscribe, onW
                 ")")),
             React.createElement("button", { onClick: onWatchAd, style: { ...(isPremium ? S.btn : S.btnGhost), width: "100%", padding: "14px", marginBottom: 10 } },
                 "\u25B6\uFE0F ",
-                t.limAd),
+                String(t.limAd).replace("3", lang === "hi" ? "2" : "4")),
             React.createElement("button", { onClick: onClose, style: {
                     width: "100%", padding: "12px", background: "none", border: "none",
                     color: C.muted, fontSize: 13, fontWeight: 700, cursor: "pointer",
@@ -11490,19 +11625,78 @@ const TT = {
 // Каждые 2–3 ответа наставник спрашивает о состоянии и чувствах: человек отмечает их
 // из того же списка, что в дневнике. Ответы задания пишутся в обычные поля задания.
 const TCH = {
-    ru: { step: "Шаг {i} из {n}", thinking: "Наставник читает…", ph: "Напиши ответ…", form: "Открыть как форму", err: "Связь пропала. Ответ сохранён — идём дальше.", fin: "Все шаги пройдены. Перечитай свои ответы выше — это твоя честная работа.", finBtn: "Завершить задание", notDone: "Для завершения не хватает ответов. Вернись к пропущенным шагам в форме.", skip: "Пропустить", feelPick: "Отметь, что чувствуешь сейчас", feelPh: "Можешь добавить своими словами…", feelSend: "Отправить", feelMore: "Все чувства", self1: "Зависимое Я", self2: "Здоровое Я", ill: "Узнаёшь у себя?", illHint: "Если да — напиши свой пример. Если нет — жми «Пропустить»." },
-    en: { step: "Step {i} of {n}", thinking: "Mentor is reading…", ph: "Write your answer…", form: "Open as a form", err: "Connection lost. Your answer is saved — let's move on.", fin: "All steps done. Reread your answers above — this is your honest work.", finBtn: "Finish the task", notDone: "Some answers are missing to finish. Go back to the skipped steps in the form.", skip: "Skip", feelPick: "Mark what you feel right now", feelPh: "You can add in your own words…", feelSend: "Send", feelMore: "All feelings", self1: "Addicted self", self2: "Healthy self", ill: "Do you recognize this in yourself?", illHint: "If yes, write your example. If not, tap “Skip”." },
-    es: { step: "Paso {i} de {n}", thinking: "El mentor está leyendo…", ph: "Escribe tu respuesta…", form: "Abrir como formulario", err: "Se perdió la conexión. Tu respuesta está guardada — sigamos.", fin: "Has completado todos los pasos. Relee tus respuestas — es tu trabajo honesto.", finBtn: "Terminar la tarea", notDone: "Faltan respuestas para terminar. Vuelve a los pasos omitidos en el formulario.", skip: "Omitir", feelPick: "Marca lo que sientes ahora", feelPh: "Puedes añadir con tus palabras…", feelSend: "Enviar", feelMore: "Todos los sentimientos", self1: "Yo adicto", self2: "Yo sano", ill: "¿Lo reconoces en ti?", illHint: "Si sí, escribe tu ejemplo. Si no, pulsa «Omitir»." },
-    pt: { step: "Passo {i} de {n}", thinking: "O mentor está lendo…", ph: "Escreva sua resposta…", form: "Abrir como formulário", err: "A conexão caiu. Sua resposta foi salva — vamos seguir.", fin: "Todos os passos concluídos. Releia suas respostas — é o seu trabalho honesto.", finBtn: "Concluir a tarefa", notDone: "Faltam respostas para concluir. Volte aos passos pulados no formulário.", skip: "Pular", feelPick: "Marque o que você sente agora", feelPh: "Pode acrescentar com suas palavras…", feelSend: "Enviar", feelMore: "Todos os sentimentos", self1: "Eu dependente", self2: "Eu saudável", ill: "Você reconhece isso em si?", illHint: "Se sim, escreva seu exemplo. Se não, toque em «Pular»." },
-    kk: { step: "{n} қадамның {i}-і", thinking: "Тәлімгер оқып жатыр…", ph: "Жауабыңды жаз…", form: "Форма ретінде ашу", err: "Байланыс үзілді. Жауабың сақталды — әрі қарай жүрейік.", fin: "Барлық қадам өтілді. Жоғарыдағы жауаптарыңды қайта оқы — бұл сенің адал еңбегің.", finBtn: "Тапсырманы аяқтау", notDone: "Аяқтауға жауаптар жетпейді. Өткізіп жіберген қадамдарға формада орал.", skip: "Өткізу", feelPick: "Қазір не сезетініңді белгіле", feelPh: "Өз сөзіңмен қоса аласың…", feelSend: "Жіберу", feelMore: "Барлық сезімдер", self1: "Тәуелді Мен", self2: "Сау Мен", ill: "Мұны өзіңнен танисың ба?", illHint: "Иә болса — мысалыңды жаз. Жоқ болса — «Өткізу»." },
-    zh: { step: "第 {i} 步，共 {n} 步", thinking: "导师正在阅读…", ph: "写下你的回答…", form: "以表单打开", err: "连接中断。你的回答已保存——我们继续。", fin: "所有步骤都完成了。重读上面的回答——这是你诚实的努力。", finBtn: "完成任务", notDone: "还缺一些回答才能完成。请在表单中补上跳过的步骤。", skip: "跳过", feelPick: "标出你此刻的感受", feelPh: "也可以用自己的话补充…", feelSend: "发送", feelMore: "全部感受", self1: "成瘾的我", self2: "健康的我", ill: "你在自己身上认出它了吗？", illHint: "如果是，写下你的例子；如果不是，点“跳过”。" },
-    ar: { step: "الخطوة {i} من {n}", thinking: "المرشد يقرأ…", ph: "اكتب إجابتك…", form: "افتح كنموذج", err: "انقطع الاتصال. إجابتك محفوظة — لنكمل.", fin: "أنهيت كل الخطوات. أعد قراءة إجاباتك — هذا عملك الصادق.", finBtn: "أنهِ المهمة", notDone: "تنقص بعض الإجابات لإنهاء المهمة. عد إلى الخطوات التي تخطيتها في النموذج.", skip: "تخطَّ", feelPick: "حدّد ما تشعر به الآن", feelPh: "يمكنك الإضافة بكلماتك…", feelSend: "إرسال", feelMore: "كل المشاعر", self1: "الأنا المدمنة", self2: "الأنا السليمة", ill: "هل تتعرّف على هذا في نفسك؟", illHint: "إن نعم — اكتب مثالك. إن لا — اضغط «تخطَّ»." },
-    fr: { step: "Étape {i} sur {n}", thinking: "Le mentor lit…", ph: "Écris ta réponse…", form: "Ouvrir en formulaire", err: "Connexion perdue. Ta réponse est enregistrée — on continue.", fin: "Toutes les étapes sont faites. Relis tes réponses — c'est ton travail honnête.", finBtn: "Terminer l'exercice", notDone: "Il manque des réponses pour terminer. Reviens aux étapes passées dans le formulaire.", skip: "Passer", feelPick: "Coche ce que tu ressens maintenant", feelPh: "Tu peux ajouter avec tes mots…", feelSend: "Envoyer", feelMore: "Toutes les émotions", self1: "Moi dépendant", self2: "Moi sain", ill: "Tu le reconnais chez toi ?", illHint: "Si oui, écris ton exemple. Sinon, appuie sur « Passer »." },
-    de: { step: "Schritt {i} von {n}", thinking: "Der Mentor liest…", ph: "Schreib deine Antwort…", form: "Als Formular öffnen", err: "Verbindung weg. Deine Antwort ist gespeichert — weiter geht's.", fin: "Alle Schritte geschafft. Lies deine Antworten oben noch einmal — das ist deine ehrliche Arbeit.", finBtn: "Aufgabe abschließen", notDone: "Zum Abschließen fehlen Antworten. Geh im Formular zu den übersprungenen Schritten zurück.", skip: "Überspringen", feelPick: "Markiere, was du gerade fühlst", feelPh: "Du kannst es in eigenen Worten ergänzen…", feelSend: "Senden", feelMore: "Alle Gefühle", self1: "Süchtiges Ich", self2: "Gesundes Ich", ill: "Erkennst du das bei dir?", illHint: "Wenn ja, schreib dein Beispiel. Wenn nein, tippe auf „Überspringen“." },
-    hi: { step: "चरण {i} / {n}", thinking: "मेंटर पढ़ रहा है…", ph: "अपना जवाब लिखो…", form: "फ़ॉर्म की तरह खोलो", err: "कनेक्शन टूट गया। तुम्हारा जवाब सेव है — आगे चलते हैं।", fin: "सारे चरण पूरे हुए। ऊपर अपने जवाब फिर पढ़ो — यह तुम्हारी ईमानदार मेहनत है।", finBtn: "काम पूरा करो", notDone: "पूरा करने के लिए कुछ जवाब बाकी हैं। फ़ॉर्म में छोड़े गए चरणों पर लौटो।", skip: "छोड़ो", feelPick: "अभी जो महसूस हो रहा है, चुनो", feelPh: "अपने शब्दों में भी जोड़ सकते हो…", feelSend: "भेजो", feelMore: "सारी भावनाएँ", self1: "नशे वाला मैं", self2: "स्वस्थ मैं", ill: "क्या तुम इसे खुद में पहचानते हो?", illHint: "अगर हाँ — अपना उदाहरण लिखो। अगर नहीं — «छोड़ो» दबाओ।" },
+    ru: { step: "Шаг {i} из {n}", thinking: "Консультант читает…", ph: "Напиши ответ…", form: "Открыть как форму", err: "Связь пропала. Ответ сохранён — идём дальше.", fin: "Все шаги пройдены. Перечитай свои ответы выше — это твоя честная работа.", finBtn: "Завершить задание", notDone: "Для завершения не хватает ответов. Нажми, чтобы вернуться к пропущенным шагам.", skip: "Пропустить", feelPick: "Отметь, что чувствуешь сейчас", feelPh: "Можешь добавить своими словами…", feelSend: "Отправить", feelMore: "Все чувства", self1: "Зависимое Я", self2: "Здоровое Я", ill: "Узнаёшь у себя?", illHint: "Если да — напиши свой пример. Если нет — жми «Пропустить»." },
+    en: { step: "Step {i} of {n}", thinking: "Mentor is reading…", ph: "Write your answer…", form: "Open as a form", err: "Connection lost. Your answer is saved — let's move on.", fin: "All steps done. Reread your answers above — this is your honest work.", finBtn: "Finish the task", notDone: "Some answers are missing to finish. Tap to go back to the skipped steps.", skip: "Skip", feelPick: "Mark what you feel right now", feelPh: "You can add in your own words…", feelSend: "Send", feelMore: "All feelings", self1: "Addicted self", self2: "Healthy self", ill: "Do you recognize this in yourself?", illHint: "If yes, write your example. If not, tap “Skip”." },
+    es: { step: "Paso {i} de {n}", thinking: "El mentor está leyendo…", ph: "Escribe tu respuesta…", form: "Abrir como formulario", err: "Se perdió la conexión. Tu respuesta está guardada — sigamos.", fin: "Has completado todos los pasos. Relee tus respuestas — es tu trabajo honesto.", finBtn: "Terminar la tarea", notDone: "Faltan respuestas para terminar. Toca para volver a los pasos omitidos.", skip: "Omitir", feelPick: "Marca lo que sientes ahora", feelPh: "Puedes añadir con tus palabras…", feelSend: "Enviar", feelMore: "Todos los sentimientos", self1: "Yo adicto", self2: "Yo sano", ill: "¿Lo reconoces en ti?", illHint: "Si sí, escribe tu ejemplo. Si no, pulsa «Omitir»." },
+    pt: { step: "Passo {i} de {n}", thinking: "O mentor está lendo…", ph: "Escreva sua resposta…", form: "Abrir como formulário", err: "A conexão caiu. Sua resposta foi salva — vamos seguir.", fin: "Todos os passos concluídos. Releia suas respostas — é o seu trabalho honesto.", finBtn: "Concluir a tarefa", notDone: "Faltam respostas para concluir. Toque para voltar aos passos pulados.", skip: "Pular", feelPick: "Marque o que você sente agora", feelPh: "Pode acrescentar com suas palavras…", feelSend: "Enviar", feelMore: "Todos os sentimentos", self1: "Eu dependente", self2: "Eu saudável", ill: "Você reconhece isso em si?", illHint: "Se sim, escreva seu exemplo. Se não, toque em «Pular»." },
+    kk: { step: "{n} қадамның {i}-і", thinking: "Кеңесші оқып жатыр…", ph: "Жауабыңды жаз…", form: "Форма ретінде ашу", err: "Байланыс үзілді. Жауабың сақталды — әрі қарай жүрейік.", fin: "Барлық қадам өтілді. Жоғарыдағы жауаптарыңды қайта оқы — бұл сенің адал еңбегің.", finBtn: "Тапсырманы аяқтау", notDone: "Аяқтауға жауаптар жетпейді. Өткізіп жіберген қадамдарға оралу үшін бас.", skip: "Өткізу", feelPick: "Қазір не сезетініңді белгіле", feelPh: "Өз сөзіңмен қоса аласың…", feelSend: "Жіберу", feelMore: "Барлық сезімдер", self1: "Тәуелді Мен", self2: "Сау Мен", ill: "Мұны өзіңнен танисың ба?", illHint: "Иә болса — мысалыңды жаз. Жоқ болса — «Өткізу»." },
+    zh: { step: "第 {i} 步，共 {n} 步", thinking: "导师正在阅读…", ph: "写下你的回答…", form: "以表单打开", err: "连接中断。你的回答已保存——我们继续。", fin: "所有步骤都完成了。重读上面的回答——这是你诚实的努力。", finBtn: "完成任务", notDone: "还缺一些回答才能完成。点这里回到跳过的步骤。", skip: "跳过", feelPick: "标出你此刻的感受", feelPh: "也可以用自己的话补充…", feelSend: "发送", feelMore: "全部感受", self1: "成瘾的我", self2: "健康的我", ill: "你在自己身上认出它了吗？", illHint: "如果是，写下你的例子；如果不是，点“跳过”。" },
+    ar: { step: "الخطوة {i} من {n}", thinking: "المرشد يقرأ…", ph: "اكتب إجابتك…", form: "افتح كنموذج", err: "انقطع الاتصال. إجابتك محفوظة — لنكمل.", fin: "أنهيت كل الخطوات. أعد قراءة إجاباتك — هذا عملك الصادق.", finBtn: "أنهِ المهمة", notDone: "تنقص بعض الإجابات لإنهاء المهمة. اضغط للعودة إلى الخطوات التي تخطيتها.", skip: "تخطَّ", feelPick: "حدّد ما تشعر به الآن", feelPh: "يمكنك الإضافة بكلماتك…", feelSend: "إرسال", feelMore: "كل المشاعر", self1: "الأنا المدمنة", self2: "الأنا السليمة", ill: "هل تتعرّف على هذا في نفسك؟", illHint: "إن نعم — اكتب مثالك. إن لا — اضغط «تخطَّ»." },
+    fr: { step: "Étape {i} sur {n}", thinking: "Le mentor lit…", ph: "Écris ta réponse…", form: "Ouvrir en formulaire", err: "Connexion perdue. Ta réponse est enregistrée — on continue.", fin: "Toutes les étapes sont faites. Relis tes réponses — c'est ton travail honnête.", finBtn: "Terminer l'exercice", notDone: "Il manque des réponses pour terminer. Touche pour revenir aux étapes passées.", skip: "Passer", feelPick: "Coche ce que tu ressens maintenant", feelPh: "Tu peux ajouter avec tes mots…", feelSend: "Envoyer", feelMore: "Toutes les émotions", self1: "Moi dépendant", self2: "Moi sain", ill: "Tu le reconnais chez toi ?", illHint: "Si oui, écris ton exemple. Sinon, appuie sur « Passer »." },
+    de: { step: "Schritt {i} von {n}", thinking: "Der Mentor liest…", ph: "Schreib deine Antwort…", form: "Als Formular öffnen", err: "Verbindung weg. Deine Antwort ist gespeichert — weiter geht's.", fin: "Alle Schritte geschafft. Lies deine Antworten oben noch einmal — das ist deine ehrliche Arbeit.", finBtn: "Aufgabe abschließen", notDone: "Zum Abschließen fehlen Antworten. Tippe, um zu den übersprungenen Schritten zurückzukehren.", skip: "Überspringen", feelPick: "Markiere, was du gerade fühlst", feelPh: "Du kannst es in eigenen Worten ergänzen…", feelSend: "Senden", feelMore: "Alle Gefühle", self1: "Süchtiges Ich", self2: "Gesundes Ich", ill: "Erkennst du das bei dir?", illHint: "Wenn ja, schreib dein Beispiel. Wenn nein, tippe auf „Überspringen“." },
+    hi: { step: "चरण {i} / {n}", thinking: "मेंटर पढ़ रहा है…", ph: "अपना जवाब लिखो…", form: "फ़ॉर्म की तरह खोलो", err: "कनेक्शन टूट गया। तुम्हारा जवाब सेव है — आगे चलते हैं।", fin: "सारे चरण पूरे हुए। ऊपर अपने जवाब फिर पढ़ो — यह तुम्हारी ईमानदार मेहनत है।", finBtn: "काम पूरा करो", notDone: "पूरा करने के लिए कुछ जवाब बाकी हैं। छोड़े गए चरणों पर लौटने के लिए टैप करो।", skip: "छोड़ो", feelPick: "अभी जो महसूस हो रहा है, चुनो", feelPh: "अपने शब्दों में भी जोड़ सकते हो…", feelSend: "भेजो", feelMore: "सारी भावनाएँ", self1: "नशे वाला मैं", self2: "स्वस्थ मैं", ill: "क्या तुम इसे खुद में पहचानते हो?", illHint: "अगर हाँ — अपना उदाहरण लिखो। अगर नहीं — «छोड़ो» दबाओ।" },
 };
 // steps: [{ q, hint, get(), put(text), skip() }]
+// ── ЛИМИТ ПРИМЕРОВ В ЗАДАНИЯХ (без подписки) ─────────────────────────────────
+// 2 примера бесплатно, третий — после рекламы; больше в сутки — только с подпиской.
+const TASK_FREE = 2, TASK_DAY_MAX = 3;
+function otTaskQuota() { const d = new Date().toDateString(); let q = null; try { q = SAVED.taskQuota; } catch (e) { } if (!q || q.d !== d) q = { d: d, n: 0, ads: 0 }; return { ...q }; }
+function otTaskQuotaSave(q) { try { putSaved("taskQuota", q); flushStore(); } catch (e) { } }
+const TGATE = {
+    ru: { t: "Работа консультанта", x: "Каждый твой ответ разбирает консультант. Его работу оплачивают разработчики приложения, поэтому без подписки в день доступно 2 примера, а третий — после просмотра рекламы.", xMax: "На сегодня бесплатные примеры закончились. Оформи подписку, чтобы продолжить без ограничений, или возвращайся завтра.", sub: "Оформить подписку", ad: "Посмотреть рекламу", later: "Позже",
+        feelT: "Ты уверен в этих чувствах?", feelX: "Ты отметил чувства, которые редко бывают одновременно: {a} и {b}. Такое бывает, но проверь себя.", feelMany: "Ты отметил очень много чувств ({n}). Выбери те, что были на самом деле.", feelYes: "Да, уверен", feelEdit: "Изменить", feelNeed: "Отметь минимум 4 чувства", feelLbl: "Чувства", feelMoment: "Отметь минимум 4 чувства — что чувствовал в тот момент",
+        err: "Связь пропала. Ответ не отправлен — попробуй ещё раз." },
+    kk: { t: "Кеңесшінің жұмысы", x: "Әр жауабыңды кеңесші талдайды. Оның жұмысына қолданба әзірлеушілері төлейді, сондықтан жазылымсыз күніне 2 мысал қолжетімді, ал үшіншісі — жарнама көргеннен кейін.", xMax: "Бүгінгі тегін мысалдар таусылды. Шектеусіз жалғастыру үшін жазылым рәсімде немесе ертең қайта кел.", sub: "Жазылым рәсімдеу", ad: "Жарнама көру", later: "Кейінірек",
+        feelT: "Бұл сезімдерге сенімдісің бе?", feelX: "Сен сирек бірге болатын сезімдерді белгіледің: {a} және {b}. Бұлай болады, бірақ өзіңді тексер.", feelMany: "Сен тым көп сезім белгіледің ({n}). Шынымен болғандарын таңда.", feelYes: "Иә, сенімдімін", feelEdit: "Өзгерту", feelNeed: "Кемінде 4 сезімді белгіле", feelLbl: "Сезімдер", feelMoment: "Кемінде 4 сезімді белгіле — сол сәтте не сезіндің",
+        err: "Байланыс үзілді. Жауап жіберілмеді — қайта көр." },
+    en: { t: "The consultant's work", x: "A consultant reviews every answer you give. The app's developers pay for this work, so without a subscription you get 2 examples a day, and a third one after watching an ad.", xMax: "You've used today's free examples. Get a subscription to continue without limits, or come back tomorrow.", sub: "Get a subscription", ad: "Watch an ad", later: "Later",
+        feelT: "Are you sure about these feelings?", feelX: "You picked feelings that rarely come together: {a} and {b}. It happens, but check yourself.", feelMany: "You picked a lot of feelings ({n}). Choose the ones that were really there.", feelYes: "Yes, I'm sure", feelEdit: "Change", feelNeed: "Pick at least 4 feelings", feelLbl: "Feelings", feelMoment: "Pick at least 4 feelings — what you felt in that moment",
+        err: "Connection lost. Your answer wasn't sent — try again." },
+};
+// проверка чувств без запросов к серверу: радость вместе с гневом/страхом/грустью/стыдом
+// или слишком много отметок — просим подтвердить
+function otFeelCheck(FEELINGS, picked) {
+    const cats = Object.values(FEELINGS || {});
+    if (!cats.length || !picked || !picked.length) return null;
+    if (picked.length > 10) return { many: picked.length };
+    const pos = cats[cats.length - 1] || [];
+    const p = picked.find(f => pos.includes(f));
+    const n = picked.find(f => !pos.includes(f) && cats.slice(0, -1).some(c => c.includes(f)));
+    return p && n ? { a: p, b: n } : null;
+}
+function OtConfirmSheet({ title, text, yes, no, onYes, onNo, third, onThird }) {
+    const E = React.createElement;
+    return E("div", { onClick: onNo, style: { position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 60, display: "flex", flexDirection: "column", justifyContent: "flex-end" } },
+        E("div", { onClick: e => e.stopPropagation(), style: { background: C.bg2, borderRadius: "22px 22px 0 0", padding: "20px 18px 24px", border: `1px solid ${C.border}` } },
+            E("div", { style: { fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 8 } }, title),
+            E("div", { style: { fontSize: 14, color: C.textSoft, lineHeight: 1.55, marginBottom: 16 } }, text),
+            yes && E("button", { onClick: onYes, style: { width: "100%", padding: 14, borderRadius: 999, border: "none", marginBottom: 8, background: `linear-gradient(135deg, ${C.amber}, ${C.amber2})`, color: C.onAccent, fontWeight: 800, fontSize: 15, cursor: "pointer" } }, yes),
+            third && E("button", { onClick: onThird, style: { width: "100%", padding: 13, borderRadius: 999, border: `1px solid ${C.amber}88`, marginBottom: 8, background: "transparent", color: C.amber, fontWeight: 700, fontSize: 14.5, cursor: "pointer" } }, third),
+            no && E("button", { onClick: onNo, style: { width: "100%", padding: 12, borderRadius: 999, border: "none", background: "transparent", color: C.muted, fontWeight: 600, fontSize: 14, cursor: "pointer" } }, no)));
+}
+// ── ВЫБОР ЧУВСТВ СТОЛБИКАМИ (как в таблице чувств) ───────────────────────────
+// compact — по 5 слов в столбике и кнопка «Все чувства»; first — слова, которые поднять наверх
+function FeelColumns({ FEELINGS, FEEL_COLORS, selected, onToggle, moreLabel, lessLabel, first }) {
+    const E = React.createElement;
+    const [all, setAll] = useState(false);
+    const cats = Object.entries(FEELINGS || {});
+    const top = first || [];
+    return E("div", null,
+        E("div", { style: { display: "grid", gridTemplateColumns: `repeat(${cats.length}, minmax(0, 1fr))`, gap: 5 } },
+            cats.map(([cat, list]) => {
+                const col = (FEEL_COLORS && FEEL_COLORS[cat]) || C.amber;
+                const ordered = [...list.filter(f => top.includes(f) || selected.includes(f)), ...list.filter(f => !top.includes(f) && !selected.includes(f))];
+                const shown = all ? ordered : ordered.slice(0, Math.max(5, ordered.filter(f => selected.includes(f) || top.includes(f)).length));
+                return E("div", { key: cat, style: { minWidth: 0 } },
+                    E("div", { style: { fontSize: 10.5, fontWeight: 800, color: col, letterSpacing: 0.4, textAlign: "center", padding: "4px 0 6px", borderBottom: `2px solid ${col}66`, marginBottom: 5 } }, cat),
+                    shown.map(f => { const on = selected.includes(f); return E("div", { key: f, onClick: () => onToggle(f), style: { fontSize: 11.5, lineHeight: 1.25, padding: "6px 4px", marginBottom: 4, borderRadius: 9, textAlign: "center", cursor: "pointer", wordBreak: "break-word", hyphens: "auto", background: on ? col : "rgba(255,255,255,0.06)", color: on ? C.onAccent : C.textSoft, fontWeight: on ? 800 : 500, border: `1px solid ${on ? col : "transparent"}` } }, f); }));
+            })),
+        E("div", { onClick: () => setAll(a => !a), style: { textAlign: "center", fontSize: 13, color: C.amber, fontWeight: 700, padding: "8px 0 2px", cursor: "pointer" } }, all ? (lessLabel || "▴") : (moreLabel || "▾")));
+}
 function TaskChat({ lang, num, title, intro, steps, taskId, chatSaved, onChatSave, canFinish, onBack, onForm, onDone }) {
+    const g = pickI18N(TGATE, lang);
+    const [gate, setGate] = useState(null); // "ad" | "max"
+    const [fcheck, setFcheck] = useState(null);
     const k = pickI18N(TCH, lang);
     const FEELINGS = pickI18N(FEELINGS_I18N, lang);
     const FEEL_COLORS = pickI18N(FEEL_COLORS_I18N, lang);
@@ -11519,7 +11713,27 @@ function TaskChat({ lang, num, title, intro, steps, taskId, chatSaved, onChatSav
     const [allFeel, setAllFeel] = useState(false);
     const scrollRef = useRef(null);
     const qMsg = (i) => ({ from: "ai", q: i, text: steps[i].q, hint: steps[i].hint });
-    useEffect(() => { if (!log.length) setSt(s => ({ ...s, log: [{ from: "ai", text: intro }, qMsg(0)] })); }, []);
+    // первый вход: если ответы уже есть (задание делали раньше), показываем их в чате,
+    // чтобы человек видел свои примеры, и продолжаем с первого пустого шага
+    useEffect(() => {
+        if (log.length) return;
+        const L = [{ from: "ai", text: intro }];
+        let first = -1;
+        steps.forEach((s, i) => {
+            const v = String((s.get && s.get()) || "").trim();
+            if (v) { L.push(qMsg(i)); L.push({ from: "user", text: v }); }
+            else if (first < 0) first = i;
+        });
+        const ni = first < 0 ? steps.length : first;
+        if (ni < steps.length) L.push(qMsg(ni)); else L.push({ from: "ai", text: k.fin });
+        setSt(s => ({ ...s, log: L, i: ni }));
+    }, []);
+    // «не хватает ответов» — возвращаемся к первому пустому шагу прямо в чате
+    const resumeMissing = () => {
+        const first = steps.findIndex(s => !String((s.get && s.get()) || "").trim());
+        if (first < 0) return;
+        setSt(x => ({ ...x, i: first, log: [...(x.log || []), qMsg(first)] }));
+    };
     useEffect(() => { const el = scrollRef.current; if (el) el.scrollTop = el.scrollHeight; }, [log.length, busy, feel.length]);
     const last = log[log.length - 1] || {};
     const feelMode = !!last.feelAsk;
@@ -11537,7 +11751,8 @@ function TaskChat({ lang, num, title, intro, steps, taskId, chatSaved, onChatSav
     const histOf = (arr) => { const h = arr.filter(m => !m.err).slice(-8).map(m => ({ role: m.from === "user" ? "user" : "assistant", content: m.text + (m.hint ? ` (${m.hint})` : "") })); while (h.length && h[0].role !== "user") h.shift(); return h; };
     const allAnswers = () => steps.map((s, i) => { const v = (s.get() || "").trim(); return v ? `${i + 1}. ${s.q}: ${v}` : ""; }).filter(Boolean).join("\n");
     // ответ на шаг задания
-    const send = async (skipIt) => {
+    const send = async (skipIt, opts) => {
+        opts = opts || {};
         const text = input.trim();
         if (busy || stepIdx >= steps.length || (!text && !skipIt)) return;
         setInput("");
@@ -11549,31 +11764,68 @@ function TaskChat({ lang, num, title, intro, steps, taskId, chatSaved, onChatSav
             setSt(x => ({ ...x, i: ni, log: [...(x.log || []), ...add] }));
             return;
         }
+        // чувства на этом шаге отмечаются кнопками вместе с ответом
+        // минимум 4 чувства на каждом шаге с чувствами
+        if (s.feel && feel.length < 4) { setFcheck({ need: true }); setInput(text); return; }
+        if (s.feel && feel.length && !opts.feelOk) { const fc = otFeelCheck(FEELINGS, feel); if (fc) { setFcheck(fc); setInput(text); return; } }
+        // лимит примеров без подписки
+        const counts = !window.__OT_PREMIUM && (s.countEx !== false);
+        if (counts) {
+            const q = otTaskQuota();
+            if (q.n >= TASK_DAY_MAX) { setGate("max"); setInput(text); return; }
+            if (q.n >= TASK_FREE + q.ads * 1) { setGate("ad"); setInput(text); return; }
+        }
+        const feelsNow = s.feel ? feel.slice() : [];
+        const fullText = feelsNow.length ? `${text}\n${g.feelLbl || "Чувства"}: ${feelsNow.join(sep)}` : text;
         const prev = (s.get() || "").trim();
         const full = prev ? prev + "\n" + text : text;
-        s.put(full);
         const deep = log.filter(m => m.deep === stepIdx).length;
-        const since = (st.since || 0) + 1;
-        const askFeel = since >= 3 || (since >= 2 && Math.random() < 0.5);
         const isLast = stepIdx === steps.length - 1;
-        let cur = [...log, { from: "user", text }];
+        let cur = [...log, { from: "user", text: fullText }];
         setSt(x => ({ ...x, log: cur }));
         setBusy(true);
-        let reply = "", enough = true;
+        let reply = "", enough = true, valid = true, failed = false;
         try {
-            const j = await ask({ deep, askFeel, isLast },
+            const j = await ask({ deep, feelHere: !!feelsNow.length, isLast, nextFeel: !!(steps[stepIdx + 1] && steps[stepIdx + 1].feel) },
                 `ЗАДАНИЕ: ${title}\nШАГ ${stepIdx + 1} ИЗ ${steps.length}\nВОПРОС: ${s.q}\nПОДСКАЗКА: ${s.hint || "—"}\nОТВЕТ НА ЭТОТ ШАГ ЦЕЛИКОМ: ${full}\n` +
+                (feelsNow.length ? `Чувства: ${feelsNow.join(", ")}\n` : "") +
                 (isLast ? `ВСЕ ОТВЕТЫ ЗАДАНИЯ:\n${allAnswers()}\n` : `СЛЕДУЮЩИЙ ВОПРОС: ${steps[stepIdx + 1].q}\n`), histOf(cur));
             reply = j.reply.trim();
-            enough = deep >= 1 || j.enough !== false;
-        } catch (e) { reply = k.err; enough = true; }
+            valid = j.valid !== false;
+            enough = valid && (deep >= 1 || j.enough !== false);
+        } catch (e) { failed = true; }
+        if (failed) {
+            // без разбора консультанта ответ не засчитываем: вернём текст в поле
+            cur = [...cur, { from: "ai", text: g.err, err: true }];
+            setSt(x => ({ ...x, log: cur }));
+            setInput(text);
+            setBusy(false);
+            return;
+        }
+        if (!valid) {
+            // ответ не по теме — не сохраняем и не идём дальше
+            cur = [...cur, { from: "ai", text: reply }];
+            setSt(x => ({ ...x, log: cur }));
+            setBusy(false);
+            return;
+        }
+        // поле и чувства пишем одним вызовом, иначе второе обновление затирает первое
+        if (feelsNow.length && !s.putFeel) s.put(`${full}\n${g.feelLbl || "Чувства"}: ${feelsNow.join(sep)}`);
+        else s.put(full, feelsNow.length ? feelsNow.join(sep) : undefined);
+        // один полный пример считается один раз: уточнения по нему не считаем
+        if (counts && deep === 0 && !prev) { const q = otTaskQuota(); q.n += 1; otTaskQuotaSave(q); }
+        setFeel([]); setAllFeel(false);
         const ni = enough ? stepIdx + 1 : stepIdx;
-        const feelNow = enough && askFeel && reply !== k.err && ni < steps.length;
-        cur = [...cur, { from: "ai", text: reply, deep: enough ? undefined : stepIdx, feelAsk: feelNow || undefined }];
-        if (enough && !feelNow && ni < steps.length) cur.push(qMsg(ni));
+        cur = [...cur, { from: "ai", text: reply, deep: enough ? undefined : stepIdx }];
+        if (enough && ni < steps.length) cur.push(qMsg(ni));
         if (enough && ni >= steps.length) cur.push({ from: "ai", text: k.fin });
-        setSt(x => ({ ...x, log: cur, i: ni, since: feelNow ? 0 : (enough ? since : (st.since || 0)) }));
+        setSt(x => ({ ...x, log: cur, i: ni }));
         setBusy(false);
+    };
+    const watchAd = () => {
+        setGate(null);
+        const grant = () => { const q = otTaskQuota(); q.ads = Math.min(1, (q.ads || 0) + 1); otTaskQuotaSave(q); };
+        try { if (window.OT_ADS) window.OT_ADS.showInterstitial(grant); else grant(); } catch (e) { grant(); }
     };
     // ответ о чувствах: отражение и сразу следующий вопрос задания
     const sendFeel = async () => {
@@ -11596,12 +11848,14 @@ function TaskChat({ lang, num, title, intro, steps, taskId, chatSaved, onChatSav
     const bubble = { fontSize: 14, lineHeight: 1.5, padding: "10px 13px", marginBottom: 8, whiteSpace: "pre-wrap", wordBreak: "break-word" };
     const chip = (f, col) => { const on = feel.includes(f); return E("span", { key: f, onClick: () => setFeel(x => on ? x.filter(y => y !== f) : [...x, f]), style: { fontSize: 13, padding: "6px 11px", borderRadius: 999, cursor: "pointer", background: on ? col : "transparent", color: on ? C.onAccent : C.textSoft, border: `1px solid ${on ? col : C.border}`, fontWeight: on ? 700 : 500 } }, f); };
     const cats = Object.entries(FEELINGS);
-    return E("div", { style: { flex: 1, display: "flex", flexDirection: "column", minHeight: 0 } },
+    return E("div", { style: { flex: 1, display: "flex", flexDirection: "column", minHeight: 0, position: "relative" } },
+        gate && E(OtConfirmSheet, { title: g.t, text: gate === "max" ? g.xMax : g.x, yes: g.sub, onYes: () => { setGate(null); try { window.__OT_OPEN_SUB && window.__OT_OPEN_SUB(); } catch (e) { } }, third: gate === "ad" ? g.ad : null, onThird: watchAd, no: g.later, onNo: () => setGate(null) }),
+        fcheck && E(OtConfirmSheet, fcheck.need ? { title: g.feelNeed, text: g.feelMoment || k.feelPick, yes: g.feelEdit, onYes: () => setFcheck(null), onNo: () => setFcheck(null) }
+            : { title: g.feelT, text: fcheck.many ? g.feelMany.replace("{n}", fcheck.many) : g.feelX.replace("{a}", fcheck.a).replace("{b}", fcheck.b), yes: g.feelYes, onYes: () => { setFcheck(null); setTimeout(() => send(false, { feelOk: true }), 0); }, no: g.feelEdit, onNo: () => setFcheck(null) }),
         E("div", { style: { display: "flex", alignItems: "center", gap: 10, padding: "10px 16px 6px" } },
             E("div", { style: { flex: 1, minWidth: 0 } },
                 E("div", { style: { fontSize: 11, color: C.amber, fontWeight: 800, letterSpacing: 1 } }, `#${num} · ${k.step.replace("{i}", Math.min(stepIdx + 1, steps.length)).replace("{n}", steps.length)}`),
-                E("div", { style: { fontSize: 17, fontWeight: 800, color: C.text } }, title)),
-            E("button", { onClick: onForm, style: { background: "none", border: `1px solid ${C.border}`, borderRadius: 999, color: C.muted, fontSize: 11.5, padding: "6px 10px", cursor: "pointer", flexShrink: 0 } }, k.form)),
+                E("div", { style: { fontSize: 17, fontWeight: 800, color: C.text } }, title))),
         E("div", { style: { display: "flex", gap: 3, padding: "4px 16px 8px" } }, steps.map((_, i) => E("div", { key: i, style: { flex: 1, height: 4, borderRadius: 2, background: i < stepIdx ? C.amber : i === stepIdx ? C.amber + "66" : C.border } }))),
         E("div", { ref: scrollRef, style: { flex: 1, overflowY: "auto", padding: "4px 16px 10px" } },
             log.map((m, i) => E("div", { key: i, style: m.from === "user"
@@ -11611,14 +11865,12 @@ function TaskChat({ lang, num, title, intro, steps, taskId, chatSaved, onChatSav
                     : { ...bubble, maxWidth: "88%", borderRadius: "16px 16px 16px 4px", background: C.card, border: `1px solid ${C.border}`, color: C.text } },
                 (m.feel ? "❤️ " : "") + m.text, m.hint ? E("div", { style: { fontSize: 12.5, fontWeight: 500, color: C.muted, marginTop: 4 } }, m.hint) : null)),
             busy && E("div", { style: { ...bubble, maxWidth: "60%", borderRadius: "16px 16px 16px 4px", background: C.card, border: `1px solid ${C.border}`, color: C.muted } }, k.thinking),
-            feelMode && !busy && E("div", { style: { margin: "4px 0 8px" } },
-                E("div", { style: { fontSize: 13, color: C.amber, fontWeight: 700, marginBottom: 8 } }, k.feelPick),
-                E("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } },
-                    (allFeel ? cats : cats.map(([c, l]) => [c, l.slice(0, 4)])).map(([c, l]) => l.map(f => chip(f, FEEL_COLORS[c] || C.amber))),
-                    !allFeel && E("span", { onClick: () => setAllFeel(true), style: { fontSize: 13, padding: "6px 11px", borderRadius: 999, cursor: "pointer", color: C.amber, border: `1px solid ${C.amber}66`, fontWeight: 700 } }, k.feelMore))),
+            (feelMode || (!finished && steps[stepIdx] && steps[stepIdx].feel)) && !busy && E("div", { style: { margin: "4px 0 8px" } },
+                E("div", { style: { fontSize: 13, color: C.amber, fontWeight: 700, marginBottom: 8 } }, (feelMode ? k.feelPick : (g.feelMoment || k.feelPick))),
+                E(FeelColumns, { FEELINGS, FEEL_COLORS, selected: feel, onToggle: f => setFeel(x => x.includes(f) ? x.filter(y => y !== f) : [...x, f]), moreLabel: k.feelMore + " ▾", lessLabel: "▴" })),
             finished && (canFinish
                 ? E("button", { onClick: onDone, style: { width: "100%", padding: 14, borderRadius: 999, border: "none", margin: "6px 0 4px", background: `linear-gradient(135deg, ${C.amber}, ${C.amber2})`, color: C.onAccent, fontWeight: 800, fontSize: 15, cursor: "pointer" } }, k.finBtn)
-                : E("button", { onClick: onForm, style: { width: "100%", padding: 14, borderRadius: 16, border: `1px solid ${C.amber}66`, margin: "6px 0 4px", background: C.card, color: C.amber, fontWeight: 700, fontSize: 13.5, cursor: "pointer", lineHeight: 1.4 } }, k.notDone))),
+                : E("button", { onClick: resumeMissing, style: { width: "100%", padding: 14, borderRadius: 16, border: `1px solid ${C.amber}66`, margin: "6px 0 4px", background: C.card, color: C.amber, fontWeight: 700, fontSize: 13.5, cursor: "pointer", lineHeight: 1.4 } }, k.notDone))),
         !finished && E("div", { style: { padding: "6px 12px 12px" } },
             !feelMode && steps[stepIdx] && steps[stepIdx].skip && !busy && E("button", { onClick: () => send(true), style: { background: "none", border: "none", color: C.muted, fontSize: 12.5, textDecoration: "underline", cursor: "pointer", padding: "0 6px 6px" } }, k.skip),
             E("div", { style: { display: "flex", gap: 8, alignItems: "flex-end" } },
@@ -11627,6 +11879,12 @@ function TaskChat({ lang, num, title, intro, steps, taskId, chatSaved, onChatSav
                     style: { flex: 1, resize: "none", maxHeight: 110, background: C.card, border: `1px solid ${C.border}`, borderRadius: 22, padding: "12px 16px", color: C.text, fontSize: 15, fontFamily: "inherit", outline: "none" } }),
                 E("button", { onClick: () => feelMode ? sendFeel() : send(), disabled: busy || (feelMode ? !(feel.length || input.trim()) : !input.trim()), "aria-label": "send", style: { width: 46, height: 46, flexShrink: 0, borderRadius: "50%", border: "none", background: `linear-gradient(135deg, ${C.amber}, ${C.amber2})`, color: C.onAccent, fontSize: 20, fontWeight: 800, cursor: "pointer", opacity: busy || (feelMode ? !(feel.length || input.trim()) : !input.trim()) ? 0.5 : 1 } }, "↑"))));
 }
+// вступление к «Границам безопасности» в чате: как моделировать ситуацию
+const BOUND_INTRO = {
+    ru: "Эти границы написаны кровью и потом. Каждая важна — даже та, что кажется мелочью.\n\nКак работать: для каждой границы смоделируй одну самую реальную для тебя ситуацию и держись её до конца. Ситуация → мысль в тот момент (и сразу отметь чувства) → действие.\n\nПример: жена просит купить в аптеке спирт. Мысль: «Стоп, спирт — это тоже алкоголь, я от этого воздерживаюсь». Действие: спокойно объяснил жене, что не буду этого делать, и почему.\n\nДругой пример: жена просит купить обезболивающее, а я на нём сидел. Действие: отказал, разобрал своё состояние, написал консультанту, отследил свои чувства.",
+    kk: "Бұл шекаралар қан мен термен жазылған. Әрқайсысы маңызды — тіпті ұсақ-түйек болып көрінетіні де.\n\nҚалай жұмыс істеу керек: әр шекара үшін өзің үшін ең шынайы бір жағдайды елестетіп, соңына дейін соны ұстан. Жағдай → сол сәттегі ой (және бірден сезімдерді белгіле) → әрекет.\n\nМысал: әйелім дәріханадан спирт алуды сұрайды. Ой: «Тоқта, спирт те алкоголь, мен одан бас тартамын». Әрекет: әйеліме мұны істемейтінімді және неге екенін сабырмен түсіндірдім.\n\nТағы бір мысал: әйелім ауырсынуды басатын дәрі алуды сұрайды, ал мен соған тәуелді болғанмын. Әрекет: бас тарттым, күйімді талдадым, кеңесшіге жаздым, сезімдерімді бақыладым.",
+    en: "These boundaries were written in blood and sweat. Each one matters — even the one that seems like a trifle.\n\nHow to work: for each boundary, model one situation that is most real for you and stick to it to the end. Situation → the thought in that moment (and mark your feelings right away) → action.\n\nExample: my wife asks me to buy rubbing alcohol at the pharmacy. Thought: \"Stop, that's alcohol too, I'm abstaining from it.\" Action: I calmly explained to my wife that I won't do it, and why.\n\nAnother example: my wife asks me to buy painkillers, and I used to be hooked on them. Action: I said no, worked through my state, wrote to the consultant, tracked my feelings.",
+};
 function BoundariesTask({ onBack, onDone, lang, saved, onSave, chat }) {
     const tt = pickI18N(TT, lang);
     const BOUNDARIES = sozaPick(BOUNDARIES_I18N, SOZA_BOUNDARIES, lang);
@@ -11640,8 +11898,13 @@ function BoundariesTask({ onBack, onDone, lang, saved, onSave, chat }) {
     const doneCount = BOUNDARIES.filter(b => bDone(b.id)).length;
     const allDone = doneCount === BOUNDARIES.length;
     const [asForm, setAsForm] = useState(false);
-    if (!asForm && !otIsIOS()) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "boundaries", num: "1", title: tt.boundariesTitle, intro: tt.dangerNoteA + tt.dangerNoteB + tt.dangerNoteC, canFinish: allDone,
-        steps: [].concat(...BOUNDARIES.map(b => BFIELDS.map(f => ({ q: `${b.icon} ${b.title} · ${f.label}`, hint: f.key === "situation" ? b.danger : f.hint, get: () => ((answers[b.id] || [])[0] || {})[f.key] || "", put: v => setField(b.id, 0, f.key, v) })))) });
+    if (!asForm) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "boundaries", num: "1", title: tt.boundariesTitle, intro: (BOUND_INTRO[lang] || (tt.dangerNoteA + tt.dangerNoteB + tt.dangerNoteC)), canFinish: allDone,
+        // в чате чувства не отдельный шаг: их отмечают кнопками вместе с мыслью
+        steps: [].concat(...BOUNDARIES.map(b => BFIELDS.filter(f => f.key !== "feeling").map(f => ({ q: `${b.icon} ${b.title} · ${f.label}`, hint: f.key === "situation" ? b.danger : f.hint,
+            feel: f.key === "thought", feelRequired: f.key === "thought", countEx: f.key === "situation",
+            putFeel: f.key === "thought",
+            get: () => ((answers[b.id] || [])[0] || {})[f.key] || "",
+            put: (v, fe) => setAnswers(a => { const m = a[b.id] ? [...a[b.id]] : [{}, {}]; m[0] = { ...(m[0] || {}), [f.key]: v, ...(fe !== undefined ? { feeling: fe } : {}) }; return { ...a, [b.id]: m }; }) })))) });
     const maybeUnlock = (bid, bi) => { if (bi === unlocked - 1 && bDone(bid) && unlocked < BOUNDARIES.length)
         setUnlocked(u => u + 1); };
     return (React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "12px 14px 20px" } },
@@ -12022,7 +12285,7 @@ function PlusMinusTask({ onBack, onDone, lang, saved, onSave, chat }) {
     const set = (k, v) => setD(s => ({ ...s, [k]: v }));
     const done = (d.plus || "").trim() && (d.minus || "").trim() && (d.vyvod || "").trim();
     const [asForm, setAsForm] = useState(false);
-    if (!asForm && !otIsIOS()) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "plusminus", num: "3", title: t3.title, intro: t3.intro, canFinish: !!done,
+    if (!asForm) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "plusminus", num: "3", title: t3.title, intro: t3.intro, canFinish: !!done,
         steps: [["plus", t3.plusFieldLabel, t3.plusHint], ["minus", t3.minusFieldLabel, t3.minusHint], ["vyvod", t3.conclusion, t3.conclusionHint]].map(([key, q, hint]) => ({ q, hint, get: () => d[key] || "", put: v => set(key, v) })) });
     return (React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "12px 14px 20px" } },
         React.createElement(TaskHeader, { onBack: onBack, num: "3", title: t3.title, lang: lang }),
@@ -12122,7 +12385,7 @@ function LossesTask({ onBack, onDone, lang, saved, onSave, chat }) {
     const filled = LOSS_SPHERES.filter(s => (d[s.key] || "").trim()).length;
     const done = filled >= 3;
     const [asForm, setAsForm] = useState(false);
-    if (!asForm && !otIsIOS()) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "losses", num: "5", title: t5.title, intro: t5.intro + "\n\n" + t5.fillAtLeast, canFinish: done,
+    if (!asForm) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "losses", num: "5", title: t5.title, intro: t5.intro + "\n\n" + t5.fillAtLeast, canFinish: done,
         steps: LOSS_SPHERES.map(x => ({ q: `${x.icon} ${x.label}`, hint: x.hint, get: () => d[x.key] || "", put: v => set(x.key, v), skip: () => { } })) });
     return (React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "12px 14px 20px" } },
         React.createElement(TaskHeader, { onBack: onBack, num: "5", title: t5.title, lang: lang }),
@@ -12316,8 +12579,8 @@ function IllusionsTask({ onBack, onDone, lang, saved, onSave, chat }) {
     const pickedCount = Object.values(picked).filter(Boolean).length;
     const done = pickedCount >= 1 && Object.keys(picked).filter(i => picked[i]).every(i => (examples[i] || "").trim());
     const [asForm, setAsForm] = useState(false);
-    if (!asForm && !otIsIOS()) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "illusions", num: "6", title: t6.title, intro: t6.intro, canFinish: !!done,
-        steps: DENIAL.map((m, i) => ({ q: `${m.t} — ${m.d}\n${pickI18N(TCH, lang).ill}`, hint: pickI18N(TCH, lang).illHint, get: () => examples[i] || "", put: v => { setPicked(p => ({ ...p, [i]: true })); setExamples(e => ({ ...e, [i]: v })); }, skip: () => setPicked(p => ({ ...p, [i]: false })) })) });
+    if (!asForm) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "illusions", num: "6", title: t6.title, intro: t6.intro, canFinish: !!done,
+        steps: DENIAL.map((m, i) => ({ q: `${m.t} — ${m.d}\n${pickI18N(TCH, lang).ill}`, hint: pickI18N(TCH, lang).illHint, feel: true, get: () => examples[i] || "", put: v => { setPicked(p => ({ ...p, [i]: true })); setExamples(e => ({ ...e, [i]: v })); }, skip: () => setPicked(p => ({ ...p, [i]: false })) })) });
     return (React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "12px 14px 20px" } },
         React.createElement(TaskHeader, { onBack: onBack, num: "6", title: t6.title, lang: lang }),
         React.createElement(TaskIntro, { lang: lang }, t6.intro),
@@ -12420,7 +12683,7 @@ function SubpersonsTask({ onBack, onDone, lang, saved, onSave, chat }) {
     const partDone = p => (p.name || "").trim() && (p.voice || "").trim();
     const done = parts.filter(partDone).length >= 2; // минимум зависимое + здоровое Я
     const [asForm, setAsForm] = useState(false);
-    if (!asForm && !otIsIOS()) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "subpersons", num: "7", title: t7.title, intro: t7.intro + "\n\n" + String(t7.steps).replace(/<br\s*\/?>/g, "\n"), canFinish: !!done,
+    if (!asForm) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "subpersons", num: "7", title: t7.title, intro: t7.intro + "\n\n" + String(t7.steps).replace(/<br\s*\/?>/g, "\n"), canFinish: !!done,
         steps: [].concat(...[0, 1].map(pi => [["name", t7.nameImg, t7.nameImgHint], ["image", t7.image, t7.imageHint], ["needs", t7.needs, t7.needsHint], ["voice", t7.voice, t7.voiceHint]].map(([key, lbl, hint]) => ({
             q: `${pi ? pickI18N(TCH, lang).self2 : pickI18N(TCH, lang).self1} · ${lbl}`, hint, get: () => (parts[pi] || {})[key] || "",
             put: v => setParts(p => { const c = [...(p || [])]; while (c.length <= pi) c.push({ name: "", image: "", needs: "", voice: "" }); c[pi] = { ...c[pi], [key]: v }; return c; }) })))) });
@@ -12522,7 +12785,7 @@ function SubHistoryTask({ onBack, onDone, addiction, lang, saved, onSave, chat }
     const a = Array.isArray(addiction) ? addiction[0] : addiction;
     const subst = a === "gaming" || a === "gambling" ? t4.substGame : a === "codependency" ? t4.substSoza : t4.substUse;
     const [asForm, setAsForm] = useState(false);
-    if (!asForm && !otIsIOS()) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "chemhistory", num: "4", title: t4.title, intro: typeof t4.intro === "function" ? t4.intro(subst) : t4.intro, canFinish: !!done,
+    if (!asForm) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "chemhistory", num: "4", title: t4.title, intro: typeof t4.intro === "function" ? t4.intro(subst) : t4.intro, canFinish: !!done,
         steps: [["start", t4.startQ, t4.startHint, 0], ["childhood", t4.childhoodQ, t4.childhoodHint, 0], ["development", t4.devQ, t4.devHint, 1], ["model", t4.modelQ, t4.modelHint, 1]].map(([key, q, hint, opt]) => ({ q, hint, get: () => d[key] || "", put: v => set(key, v), skip: opt ? () => { } : undefined })) });
     return (React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "12px 14px 20px" } },
         React.createElement(TaskHeader, { onBack: onBack, num: "4", title: t4.title, lang: lang }),
@@ -12629,8 +12892,8 @@ function PowerlessTask({ onBack, onDone, lang, saved, onSave, chat }) {
     const filled = POWERLESS_Q.filter(q => (d[q.k] || "").trim()).length;
     const done = filled >= 3;
     const [asForm, setAsForm] = useState(false);
-    if (!asForm && !otIsIOS()) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "powerless", num: "8", title: t8.title, intro: t8.intro, canFinish: done,
-        steps: POWERLESS_Q.map(x => ({ q: x.label, hint: x.hint, get: () => d[x.k] || "", put: v => set(x.k, v), skip: () => { } })) });
+    if (!asForm) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "powerless", num: "8", title: t8.title, intro: t8.intro, canFinish: done,
+        steps: POWERLESS_Q.map(x => ({ q: x.label, hint: x.hint, feel: true, get: () => d[x.k] || "", put: v => set(x.k, v), skip: () => { } })) });
     return (React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "12px 14px 20px" } },
         React.createElement(TaskHeader, { onBack: onBack, num: "8", title: t8.title, lang: lang }),
         React.createElement(TaskIntro, { lang: lang }, t8.intro),
@@ -12684,8 +12947,8 @@ function UnmanageTask({ onBack, onDone, lang, saved, onSave, chat }) {
     const set = (k, v) => setD(s => ({ ...s, [k]: v }));
     const done = (d.ext || "").trim() && (d.int || "").trim();
     const [asForm, setAsForm] = useState(false);
-    if (!asForm && !otIsIOS()) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "unmanage", num: "9", title: t9.title, intro: t9.intro, canFinish: !!done,
-        steps: [["ext", t9.externalLabel, t9.externalHint], ["int", t9.internalLabel, t9.internalHint], ["resp", t9.respQ, ""]].map(([key, q, hint]) => ({ q, hint, get: () => d[key] || "", put: v => set(key, v), skip: key === "resp" ? () => { } : undefined })) });
+    if (!asForm) return React.createElement(TaskChat, { lang, chatSaved: chat && chat.saved, onChatSave: chat && chat.onSave, onBack, onDone, onForm: () => setAsForm(true), taskId: "unmanage", num: "9", title: t9.title, intro: t9.intro, canFinish: !!done,
+        steps: [["ext", t9.externalLabel, t9.externalHint], ["int", t9.internalLabel, t9.internalHint], ["resp", t9.respQ, ""]].map(([key, q, hint]) => ({ q, hint, feel: key !== "resp", get: () => d[key] || "", put: v => set(key, v), skip: key === "resp" ? () => { } : undefined })) });
     return (React.createElement("div", { style: { flex: 1, overflowY: "auto", padding: "12px 14px 20px" } },
         React.createElement(TaskHeader, { onBack: onBack, num: "9", title: t9.title, lang: lang }),
         React.createElement(TaskIntro, { lang: lang }, t9.intro),
@@ -13689,6 +13952,9 @@ function App() {
     const [sosOpen, setSosOpen] = useState(false);
     // Клавиатура открыта — нижнее меню мешает полю ввода, прячем его
     const [kbOpen, setKbOpen] = useState(false);
+    // пока открыт чат дневника — нижнее меню прячем
+    const [chatOpen, setChatOpen] = useState(false);
+    useEffect(() => { const f = (e) => setChatOpen(!!(e && e.detail)); window.addEventListener("ot-chat", f); return () => window.removeEventListener("ot-chat", f); }, []);
     useEffect(() => {
         const onFocus = (e) => {
             const el = e.target;
@@ -13740,7 +14006,7 @@ function App() {
             const pend = SAVED.pendingAdBonus;
             if (pend > 0) {
                 putSaved("pendingAdBonus", 0);
-                setAdBonus(n => Math.min(9, n + pend));
+                setAdBonus(n => Math.min(12, n + pend));
             }
         }
         catch (e) { }
@@ -13750,6 +14016,7 @@ function App() {
     const FREE_REVIEW_DAYS = 14;
     const aiDiaryLocked = !isPremium && (Date.now() - (firstSeenMs || Date.now())) >= FREE_REVIEW_DAYS * 86400000;
     const openSub = () => { setSubFromMenu(true); setScreen("adWarning"); };
+    window.__OT_OPEN_SUB = openSub;
     // любой экран поверх основного — при нём нижнее меню не нужно
     // активировать сутки премиума из копилки; нажатия складываются
     const useBonusDay = () => {
@@ -14578,8 +14845,9 @@ function App() {
         showPaywall && React.createElement(MsgLimitScreen, { lang: lang, bonusDays: bonusDays, isPremium: isPremium, onUseDay: () => { useBonusDay(); setShowPaywall(false); }, onSubscribe: () => { setShowPaywall(false); setScreen("adWarning"); }, onWatchAd: () => {
                 // сколько сообщений открывает один ролик — зависит от рынка:
                 // доход с показа в СНГ ниже, поэтому там меньше
-                const perAd = 3;
-                const AD_BONUS_CAP = 9; // не больше трёх роликов в сутки
+                // один ролик — 4 сообщения (на хинди — 2), не больше трёх роликов в сутки
+                const perAd = lang === "hi" ? 2 : 4;
+                const AD_BONUS_CAP = perAd * 3;
                 // Бонус помечаем в хранилище ДО показа ролика. Если человек
                 // убьёт приложение во время рекламы, отметка переживёт перезапуск
                 // и сообщения начислятся при следующем открытии — потерять их нельзя.
@@ -14633,7 +14901,7 @@ function App() {
             ...(C.tabs === "poster" ? { background: "#111111", borderTop: "none", paddingTop: 0, alignItems: "stretch" } : {}),
             ...(C.tabs === "native" ? { background: C.bg2, borderTop: `0.5px solid ${C.border}`, paddingTop: 4 } : {}),
             ...(C.tabs === "dawn" ? { background: "rgba(24,22,56,0.94)", borderTop: "none", margin: "0 12px 10px", borderRadius: 34, paddingTop: 4, boxShadow: "0 12px 30px rgba(8,6,30,0.55)" } : {}),
-            display: (anyOverlay || kbOpen || tab === "mentor" || tab === "groups") ? "none" : S.tabBar.display } }, TABS.map(tb => {
+            display: (anyOverlay || kbOpen || chatOpen || tab === "mentor" || tab === "groups") ? "none" : S.tabBar.display } }, TABS.map(tb => {
             // вставляем SOS между diary и groups
             const sosBtn = tb.id === (trackerOnly ? "mentor" : "groups") ? (React.createElement("button", { key: "sos", onClick: () => { setSosOpen(true); setTab("groups"); }, style: {
                     flex: 1, display: "flex", flexDirection: "column", alignItems: "center", background: "none", border: "none", cursor: "pointer", marginTop: C.tabs === "poster" ? 0 : C.tabs === "native" ? 0 : -10, position: "relative", zIndex: 2, touchAction: "manipulation", maxWidth: 74, padding: C.tabs === "poster" ? 0 : undefined, justifyContent: C.tabs === "poster" ? "stretch" : undefined,
@@ -14704,7 +14972,28 @@ function App() {
       `)));
 }
 
-    ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
+    // Страховка: если экран упадёт с ошибкой, вместо пустого фиолетового фона
+    // показываем сообщение и кнопку перезапуска. Данные не трогаем.
+    class OtErrorBoundary extends React.Component {
+        constructor(p) { super(p); this.state = { err: null }; }
+        static getDerivedStateFromError(err) { return { err: err }; }
+        componentDidCatch(err) { try { console.error("[OT crash]", err); } catch (e) { } }
+        render() {
+            if (!this.state.err) return this.props.children;
+            let L = "ru";
+            try { L = (SAVED && SAVED.lang) || "ru"; } catch (e) { }
+            const TX = {
+                ru: ["Что-то пошло не так", "Твои данные на месте. Нажми, чтобы перезапустить приложение.", "Перезапустить"],
+                kk: ["Бірдеңе дұрыс болмады", "Деректерің сақтаулы. Қолданбаны қайта іске қосу үшін бас.", "Қайта іске қосу"],
+            };
+            const tx = TX[L] || ["Something went wrong", "Your data is safe. Tap to restart the app.", "Restart"];
+            return React.createElement("div", { style: { minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 28, textAlign: "center", color: "#fff", fontFamily: "inherit" } },
+                React.createElement("div", { style: { fontSize: 20, fontWeight: 800, marginBottom: 10 } }, tx[0]),
+                React.createElement("div", { style: { fontSize: 14, opacity: 0.8, marginBottom: 22, maxWidth: 300 } }, tx[1]),
+                React.createElement("button", { onClick: () => { try { window.location.reload(); } catch (e) { } }, style: { padding: "13px 28px", borderRadius: 14, border: "none", background: "#F4A261", color: "#1E1E45", fontSize: 15, fontWeight: 800 } }, tx[2]));
+        }
+    }
+    ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(OtErrorBoundary, null, React.createElement(App)));
     if (splash) { splash.classList.add("hide"); setTimeout(function () { splash.remove(); }, 400); }
   } catch (e) {
     fail('Ошибка при запуске приложения.<br><span style="font-size:13px;color:rgba(255,255,255,.5)">' +
