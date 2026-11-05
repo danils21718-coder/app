@@ -6300,6 +6300,85 @@ function AddictionScreen({ lang, onSelect }) {
                 t.next, " \u2192"))));
 }
 // ── SCREEN: START DATE ───────────────────────────────────────────────────────
+// ── КРУТИЛКА ДАТЫ (Android): колёсики день / месяц / год, как на iPhone ─────
+function WheelCol({ items, index, onPick, width }) {
+    const IH = 40;
+    const ref = useRef(null);
+    const timer = useRef(null);
+    const lock = useRef(false);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const want = index * IH;
+        if (Math.abs(el.scrollTop - want) > 2) { lock.current = true; el.scrollTop = want; setTimeout(() => { lock.current = false; }, 60); }
+    }, [index, items.length]);
+    const onScroll = () => {
+        if (lock.current) return;
+        if (timer.current) clearTimeout(timer.current);
+        timer.current = setTimeout(() => {
+            const el = ref.current;
+            if (!el) return;
+            let i = Math.round(el.scrollTop / IH);
+            i = Math.max(0, Math.min(items.length - 1, i));
+            if (i !== index) onPick(i);
+            else el.scrollTop = i * IH;
+        }, 110);
+    };
+    return React.createElement("div", { ref: ref, onScroll: onScroll, className: "ot-wheel", style: {
+            flex: width, minWidth: 0, height: IH * 5, overflowY: "scroll", scrollSnapType: "y mandatory",
+            WebkitOverflowScrolling: "touch", position: "relative", zIndex: 2,
+            maskImage: "linear-gradient(180deg, transparent, #000 35%, #000 65%, transparent)",
+            WebkitMaskImage: "linear-gradient(180deg, transparent, #000 35%, #000 65%, transparent)",
+        } },
+        React.createElement("div", { style: { height: IH * 2 } }),
+        items.map((it, i) => React.createElement("div", { key: i, onClick: () => onPick(i), style: {
+                height: IH, lineHeight: IH + "px", textAlign: "center", scrollSnapAlign: "center",
+                fontSize: i === index ? 18 : 15, fontWeight: i === index ? 800 : 500,
+                color: i === index ? C.text : C.muted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", cursor: "pointer",
+            } }, it)),
+        React.createElement("div", { style: { height: IH * 2 } }));
+}
+// value — "ГГГГ-ММ-ДД" (или "ГГГГ-ММ-ДДTЧЧ:ММ" при withTime), maxMs — нельзя позже этого момента
+function WheelDatePicker({ lang, value, onChange, maxMs, withTime }) {
+    const max = new Date(maxMs || Date.now());
+    const parse = (s) => {
+        const m = /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/.exec(s || "");
+        if (!m) return { y: max.getFullYear(), mo: max.getMonth(), d: max.getDate(), hh: max.getHours(), mi: max.getMinutes() };
+        return { y: +m[1], mo: +m[2] - 1, d: +m[3], hh: m[4] ? +m[4] : max.getHours(), mi: m[5] ? +m[5] : max.getMinutes() };
+    };
+    const cur = parse(value);
+    const pad = (n) => String(n).padStart(2, "0");
+    const MIN_Y = max.getFullYear() - 70;
+    const years = []; for (let y = MIN_Y; y <= max.getFullYear(); y++) years.push(y);
+    let monthNames;
+    try {
+        const f = new Intl.DateTimeFormat(lang || "en", { month: "long" });
+        monthNames = Array.from({ length: 12 }, (_, i) => { const s = f.format(new Date(2020, i, 1)); return s.charAt(0).toUpperCase() + s.slice(1); });
+    }
+    catch (e) { monthNames = Array.from({ length: 12 }, (_, i) => pad(i + 1)); }
+    const dim = new Date(cur.y, cur.mo + 1, 0).getDate();
+    const emit = (n) => {
+        const last = new Date(n.y, n.mo + 1, 0).getDate();
+        if (n.d > last) n.d = last;
+        let d = new Date(n.y, n.mo, n.d, n.hh, n.mi);
+        if (d.getTime() > max.getTime()) d = new Date(max.getFullYear(), max.getMonth(), max.getDate(), withTime ? max.getHours() : n.hh, withTime ? max.getMinutes() : n.mi);
+        const s = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` + (withTime ? `T${pad(d.getHours())}:${pad(d.getMinutes())}` : "");
+        onChange(s);
+    };
+    // первый показ: сразу сообщаем выбранное значение (сегодня), чтобы кнопка работала без прокрутки
+    useEffect(() => { if (!value) emit({ ...cur }); }, []);
+    const days = Array.from({ length: dim }, (_, i) => i + 1);
+    const hours = Array.from({ length: 24 }, (_, i) => pad(i));
+    const mins = Array.from({ length: 60 }, (_, i) => pad(i));
+    return React.createElement("div", { dir: "ltr", style: { position: "relative", display: "flex", justifyContent: "center", gap: 4,
+            background: C.card, border: `1.5px solid ${C.amber}`, borderRadius: 16, padding: "6px 8px", marginBottom: 8, boxSizing: "border-box", width: "100%" } },
+        React.createElement("div", { style: { position: "absolute", left: 8, right: 8, top: 6 + 80, height: 40, borderRadius: 10, background: C.amberSoft, zIndex: 1, pointerEvents: "none" } }),
+        React.createElement(WheelCol, { items: days, index: Math.min(cur.d, dim) - 1, width: 50, onPick: (i) => emit({ ...cur, d: i + 1 }) }),
+        React.createElement(WheelCol, { items: monthNames, index: cur.mo, width: withTime ? 104 : 130, onPick: (i) => emit({ ...cur, mo: i }) }),
+        React.createElement(WheelCol, { items: years, index: Math.max(0, cur.y - MIN_Y), width: 66, onPick: (i) => emit({ ...cur, y: years[i] }) }),
+        withTime && React.createElement(WheelCol, { items: hours, index: cur.hh, width: 40, onPick: (i) => emit({ ...cur, hh: i }) }),
+        withTime && React.createElement(WheelCol, { items: mins, index: cur.mi, width: 40, onPick: (i) => emit({ ...cur, mi: i }) }));
+}
 function StartDateScreen({ lang, onConfirm }) {
     const t = tr(lang);
     const [mode, setMode] = useState(null);
@@ -6362,7 +6441,7 @@ function StartDateScreen({ lang, onConfirm }) {
             } }, label))),
         mode === "custom" && (React.createElement("div", { style: { marginBottom: 16 } },
             React.createElement("div", { style: { fontSize: 12, color: C.muted, marginBottom: 8 } }, t.startDateLabel),
-            React.createElement("input", { type: "date", value: dateVal, max: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10), onChange: e => { setDateVal(e.target.value); setError(""); }, onClick: e => { try {
+            (otIsIOS() ? React.createElement("input", { type: "date", value: dateVal, max: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10), onChange: e => { setDateVal(e.target.value); setError(""); }, onClick: e => { try {
                     e.currentTarget.showPicker && e.currentTarget.showPicker();
                 }
                 catch (err) { } }, style: {
@@ -6371,7 +6450,7 @@ function StartDateScreen({ lang, onConfirm }) {
                     color: dateVal ? C.text : C.muted, fontSize: 16, outline: "none", colorScheme: C.scheme,
                     textAlign: "center", fontWeight: 700, boxSizing: "border-box",
                     minHeight: 54, cursor: "pointer",
-                } }),
+                } }) : React.createElement(WheelDatePicker, { lang: lang, value: dateVal, maxMs: Date.now(), onChange: v => { setDateVal(v); setError(""); } })),
             error && React.createElement("div", { style: { color: C.danger, fontSize: 12 } }, error),
             dateVal && !error && days >= 0 && (React.createElement("div", { style: { color: C.amber, fontSize: 15, fontWeight: 800, textAlign: "center", marginTop: 8 } },
                 "\uD83D\uDD25 ",
@@ -13186,15 +13265,79 @@ function loadStore() {
         return {};
     }
 }
+// ── ЗАПАСНАЯ КОПИЯ В ПАМЯТИ ТЕЛЕФОНА (Capacitor Preferences) ────────────────
+// Хранилище браузера внутри приложения телефон может очистить сам. Копия
+// данных лежит в настройках приложения Android/iOS и стирается только при удалении.
+const BACKUP_KEY = "onlytoday.backup";
+function otPrefs(method, args) {
+    try {
+        const Cap = window.Capacitor;
+        if (Cap && Cap.isNativePlatform && Cap.isNativePlatform() && Cap.isPluginAvailable && Cap.isPluginAvailable("Preferences") && Cap.nativePromise)
+            return Cap.nativePromise("Preferences", method, args);
+    }
+    catch (e) { }
+    return null;
+}
+let backupTimer = null;
+function writeBackup(json) {
+    if (backupTimer) clearTimeout(backupTimer);
+    backupTimer = setTimeout(() => {
+        backupTimer = null;
+        try {
+            let done = null;
+            try { done = window.localStorage.getItem("onlytoday.done"); } catch (e) { }
+            const pr = otPrefs("set", { key: BACKUP_KEY, value: JSON.stringify({ v1: json, done: done }) });
+            pr && pr.catch(function () { });
+        }
+        catch (e) { }
+    }, 300);
+}
 function saveStore(data) {
     if (!storeAvailable)
         return;
+    let json = "";
     try {
-        window.localStorage.setItem(STORE_KEY, JSON.stringify(data));
+        json = JSON.stringify(data);
+        window.localStorage.setItem(STORE_KEY, json);
     }
     catch (e) { }
+    // копию пишем, только если в данных есть язык (то есть это не пустой объект)
+    // фото (аватар, свой фон) в копию не кладём: они большие
+    if (json && data && data.lang) {
+        let light = json;
+        if (data.avatar || data.ownBg) { try { light = JSON.stringify({ ...data, avatar: null, ownBg: null, design: data.design === "own" ? "green" : data.design }); } catch (e) { } }
+        writeBackup(light);
+    }
 }
 const SAVED = loadStore();
+// Данных нет, а копия есть → восстанавливаем и перезапускаем страницу один раз
+(function restoreFromBackup() {
+    if (SAVED.lang) {
+        // данные на месте: обновим копию (для тех, кто обновился со старой версии)
+        try { const raw = window.localStorage.getItem(STORE_KEY); raw && writeBackup(raw); } catch (e) { }
+        return;
+    }
+    const pr = otPrefs("get", { key: BACKUP_KEY });
+    if (!pr) return;
+    pr.then(function (r) {
+        try {
+            if (!r || !r.value) return;
+            const b = JSON.parse(r.value);
+            const data = b && b.v1 ? JSON.parse(b.v1) : null;
+            if (!data || !data.lang) return;
+            if (window.sessionStorage.getItem("ot_restored")) return;
+            window.sessionStorage.setItem("ot_restored", "1");
+            // данные и в память тоже: при перезапуске страница дописывает память на диск
+            Object.keys(SAVED).forEach(k => { delete SAVED[k]; });
+            Object.assign(SAVED, data);
+            if (flushTimer) { clearTimeout(flushTimer); flushTimer = null; }
+            window.localStorage.setItem(STORE_KEY, b.v1);
+            if (b.done === "1") window.localStorage.setItem("onlytoday.done", "1");
+            window.location.reload();
+        }
+        catch (e) { }
+    }).catch(function () { });
+})();
 // ── ЗАПИСЬ В ХРАНИЛИЩЕ ───────────────────────────────────────────────────────
 // Раньше каждое изменение любого поля перечитывало и переписывало ВЕСЬ объект
 // (parse + stringify + запись на диск), синхронно. Полей 43, и на старых
@@ -13243,6 +13386,9 @@ function wipeStore() {
         }
         Object.keys(SAVED).forEach(k => { delete SAVED[k]; });
         window.localStorage.removeItem(STORE_KEY);
+        if (backupTimer) { clearTimeout(backupTimer); backupTimer = null; }
+        const pr = otPrefs("remove", { key: BACKUP_KEY });
+        pr && pr.catch(function () { });
     }
     catch (e) { }
 }
@@ -13258,7 +13404,8 @@ function App() {
     // закрыли, и выбор языка пропадает. Пройденный онбординг определяем по имени.
     const [screen, setScreen] = useState(() => {
         try {
-            return window.localStorage.getItem("onlytoday.done") === "1" ? "main" : "lang";
+            // без языка главный экран падает (фиолетовый экран) — тогда начинаем с выбора языка
+            return (window.localStorage.getItem("onlytoday.done") === "1" && SAVED.lang) ? "main" : "lang";
         }
         catch (e) {
             return "lang";
@@ -14013,9 +14160,9 @@ function App() {
                     React.createElement("span", { style: { flex: 1 } },
                         React.createElement("span", { style: { display: "block", fontSize: 15, fontWeight: 600, color: C.text } }, t.stMyDate),
                         React.createElement("span", { style: { display: "block", fontSize: 11.5, color: C.muted, marginTop: 3, marginBottom: 8 } }, t.stMyDateSub),
-                        React.createElement("input", { type: "datetime-local", max: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), value: new Date(startMs - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), onChange: e => { const v = e.target.value; if (!v)
+                        (otIsIOS() ? React.createElement("input", { type: "datetime-local", max: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), value: new Date(startMs - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), onChange: e => { const v = e.target.value; if (!v)
                                 return; const d = new Date(v); if (!isNaN(d.getTime()) && d.getTime() <= Date.now())
-                                setStartMs(d.getTime()); }, style: { ...S.input, width: "100%", padding: "9px 11px", fontSize: 14, colorScheme: C.scheme } }))),
+                                setStartMs(d.getTime()); }, style: { ...S.input, width: "100%", padding: "9px 11px", fontSize: 14, colorScheme: C.scheme } }) : React.createElement(WheelDatePicker, { lang: lang, withTime: true, maxMs: Date.now(), value: new Date(startMs - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), onChange: v => { const p = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v); if (!p) return; const d = new Date(+p[1], +p[2] - 1, +p[3], +p[4], +p[5]); if (!isNaN(d.getTime()) && d.getTime() <= Date.now() && d.getTime() !== startMs) setStartMs(d.getTime()); } })))),
 
                 React.createElement("div", { style: { ...stRow, flexDirection: "column", alignItems: "stretch", gap: 10, cursor: "default" } },
                     React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
@@ -14305,6 +14452,8 @@ function App() {
         ::-webkit-scrollbar { width: 0; }
         /* Поле даты: нативное колесо должно открываться по тапу в любое место.
            Для этого невидимый picker-indicator растянут на всё поле. */
+        .ot-wheel::-webkit-scrollbar { display: none; }
+        .ot-wheel { scrollbar-width: none; }
         input[type="date"] { position: relative; }
         input[type="date"]::-webkit-date-and-time-value { text-align: center; }
         input[type="date"]::-webkit-calendar-picker-indicator {
