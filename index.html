@@ -199,7 +199,6 @@ html[data-skin="poster"] #root [style*="font-size: 40px"][style*="font-weight: 8
 }catch(e){}})();
 </script>
 <script>window.nativelyOnLoad = window.nativelyOnLoad || function () {};</script>
-<script async onload="nativelyOnLoad()" src="https://cdn.jsdelivr.net/npm/natively@2.26.0/natively-frontend.min.js"></script>
 <script>
 /* ── РЕКЛАМА AdMob ───────────────────────────────────────────────────────────
    Работает только в собранном приложении. В браузере SDK нет — весь модуль
@@ -374,6 +373,8 @@ window.__OT_AD_READY = adReady;
   window.OT_ADS_UNIT = "ca-app-pub-1286571991466831/8828247168";
   window.OT_BANNER = { hide: function () {} }; // нижний баннер убран
   if (platform === "android") {
+    // мост к нативному модулю баннеров; без этой строки баннеры не показывались совсем
+    window.__OT_INLINE = Cap.registerPlugin("OtAds");
 
 try {
     var otAdsListener = Cap.addListener("OtAds", "otad", function (e) {
@@ -5722,7 +5723,7 @@ function TrackerSkin({ skin, d, h, mi, se, startMs, lang, hide, mini }) {
     const DN = hide ? "✦" : String(d);
     const time = hide ? "··:··:··" : `${pad(h)}:${pad(mi)}:${pad(se)}`;
     let since = "";
-    if (!hide) try { since = (pickI18N({ ru: "с", en: "since", es: "desde", pt: "desde", kk: "", zh: "自", ar: "منذ", fr: "depuis", de: "seit", hi: "" }, lang) + " " + new Date(startMs).toLocaleDateString(lang === "zh" ? "zh-CN" : lang === "kk" ? "kk-KZ" : lang === "hi" ? "hi-IN" : lang, { day: "numeric", month: "long", year: "numeric" }) + (lang === "kk" ? " бастап" : lang === "hi" ? " से" : "")).trim(); } catch (e) { }
+    if (!hide) try { since = (pickI18N({ ru: "с", en: "since", es: "desde", pt: "desde", kk: "", zh: "自", ar: "منذ", fr: "depuis", de: "seit", hi: "" }, lang) + " " + (lang === "kk" ? otKkDate(startMs, true) : new Date(startMs).toLocaleDateString(lang === "zh" ? "zh-CN" : lang === "kk" ? "kk-KZ" : lang === "hi" ? "hi-IN" : lang, { day: "numeric", month: "long", year: "numeric" })) + (lang === "kk" ? " бастап" : lang === "hi" ? " से" : "")).trim(); } catch (e) { }
     const parts = hide ? [] : [[d, k.days], [Math.floor(d / 7), k.wk], [d % 7, k.dn]];
     const big = String(DN).length > 3 ? 0.78 : 1;
     const sans = "'OT Manrope', system-ui, sans-serif", unb = "'OT Unbounded', sans-serif", pf = "'OT Playfair', Georgia, serif";
@@ -5904,7 +5905,7 @@ function RingCounter({ startMs, lang, hideDate, skin }) {
         const prev = [...MS_LIST].reverse().find(x => x <= d) || 0;
         const frac = Math.max(0.02, Math.min(1, (d - prev) / Math.max(1, next - prev)));
         let since = "";
-        try { since = new Date(startMs).toLocaleDateString(lang === "zh" ? "zh-CN" : lang === "kk" ? "kk-KZ" : lang, { day: "numeric", month: "long" }); } catch (e) { }
+        try { since = lang === "kk" ? otKkDate(startMs, false) : new Date(startMs).toLocaleDateString(lang === "zh" ? "zh-CN" : lang, { day: "numeric", month: "long" }); } catch (e) { }
         return (React.createElement("div", { style: { margin: "4px 0 6px", padding: "16px 16px 14px", borderRadius: 12, background: C.card } },
             React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8 } },
                 React.createElement("span", { style: { fontSize: 60, fontWeight: 700, letterSpacing: -2, lineHeight: 1, color: C.text, fontVariantNumeric: "tabular-nums" } }, DN),
@@ -5957,7 +5958,7 @@ function RingCounter({ startMs, lang, hideDate, skin }) {
         const wk = Math.floor(d / 7), dd = d % 7;
         const MSL = [1, 3, 7, 14, 30, 60, 90, 180, 270, 365, 500, 730, 1000];
         const nxt = MSL.find(x => x > d) || d + 365, prv = [...MSL].reverse().find(x => x <= d) || 0;
-        let since = ""; try { since = new Date(startMs).toLocaleDateString(lang === "zh" ? "zh-CN" : lang === "kk" ? "kk-KZ" : lang, { day: "numeric", month: "long" }); } catch (e) { }
+        let since = ""; try { since = lang === "kk" ? otKkDate(startMs, false) : new Date(startMs).toLocaleDateString(lang === "zh" ? "zh-CN" : lang, { day: "numeric", month: "long" }); } catch (e) { }
         return E("div", { style: { margin: "14px 0 14px", textAlign: "center" } },
             E("div", { style: { fontSize: 14, color: SOFT, letterSpacing: 0.2 } }, CL.clean),
             E("div", { style: { fontSize: 104, fontWeight: 800, letterSpacing: -5, lineHeight: 1, color: "transparent", WebkitTextStroke: "2px " + W, marginTop: 4 } }, DN),
@@ -5994,6 +5995,9 @@ function RingCounter({ startMs, lang, hideDate, skin }) {
 // ── SCREEN: LANGUAGE ─────────────────────────────────────────────────────────
 // UI translations exist for ru/en; other languages fall back to English UI
 // but the language code is preserved so the AI mentor replies in that language.
+// казахские названия месяцев: в некоторых сборках браузера нет казахских данных и вместо месяца выходит «M09»
+const KK_MONTHS = ["қаңтар", "ақпан", "наурыз", "сәуір", "мамыр", "маусым", "шілде", "тамыз", "қыркүйек", "қазан", "қараша", "желтоқсан"];
+function otKkDate(ms, withYear) { const d = new Date(ms); return withYear ? `${d.getFullYear()} ж. ${d.getDate()} ${KK_MONTHS[d.getMonth()]}` : `${d.getDate()} ${KK_MONTHS[d.getMonth()]}`; }
 const UI_LANG = (code) => (T[code] ? code : "en");
 function tr(code) { return T[UI_LANG(code)]; }
 function pickI18N(dict, lang) { return dict[lang] || (lang === "kk" || lang === "ky" || lang === "uz" ? dict.ru : null) || dict.en || dict.ru; }
@@ -6052,11 +6056,11 @@ function LangScreen({ onSelect }) {
         return (React.createElement("div", { style: { ...S.screen, padding: "48px 22px 24px" } },
             React.createElement("div", { style: { fontSize: 30, textAlign: "center", marginBottom: 10 } }, "\uD83C\uDF0D"),
             React.createElement("div", { style: { fontSize: 20, fontWeight: 800, color: C.text, textAlign: "center", marginBottom: 28, letterSpacing: 0.2 } }, detected.other),
-            React.createElement("div", { style: { overflowY: "auto" } }, LANGS_MENU.map(l => (React.createElement("button", { key: l.code, onClick: () => onSelect(l.code), style: {
+            React.createElement("div", { style: { overflowY: "auto" } }, LANGS_MENU.map(l => (React.createElement("button", { key: l.code, disabled: !!l.soon, onClick: () => { if (!l.soon) onSelect(l.code); }, style: { opacity: l.soon ? 0.45 : 1, cursor: l.soon ? "default" : "pointer",
                     width: "100%", display: "flex", alignItems: "center", gap: 14,
                     padding: "16px 18px", marginBottom: 10, borderRadius: 16,
                     background: C.card, border: `1px solid ${C.border}`,
-                    color: C.text, fontSize: 16, fontWeight: 600, cursor: "pointer",
+                    color: C.text, fontSize: 16, fontWeight: 600, 
                 } },
                 React.createElement("span", { style: { fontSize: 24 } }, l.flag),
                 React.createElement("span", { style: { flex: 1, textAlign: "left" } }, l.native),
@@ -6352,10 +6356,11 @@ function WheelDatePicker({ lang, value, onChange, maxMs, withTime }) {
     const years = []; for (let y = MIN_Y; y <= max.getFullYear(); y++) years.push(y);
     let monthNames;
     try {
+        if (lang === "kk") throw 0;
         const f = new Intl.DateTimeFormat(lang || "en", { month: "long" });
         monthNames = Array.from({ length: 12 }, (_, i) => { const s = f.format(new Date(2020, i, 1)); return s.charAt(0).toUpperCase() + s.slice(1); });
     }
-    catch (e) { monthNames = Array.from({ length: 12 }, (_, i) => pad(i + 1)); }
+    catch (e) { monthNames = lang === "kk" ? KK_MONTHS.map(s => s.charAt(0).toUpperCase() + s.slice(1)) : Array.from({ length: 12 }, (_, i) => pad(i + 1)); }
     const dim = new Date(cur.y, cur.mo + 1, 0).getDate();
     const emit = (n) => {
         const last = new Date(n.y, n.mo + 1, 0).getDate();
@@ -6378,6 +6383,23 @@ function WheelDatePicker({ lang, value, onChange, maxMs, withTime }) {
         React.createElement(WheelCol, { items: years, index: Math.max(0, cur.y - MIN_Y), width: 66, onPick: (i) => emit({ ...cur, y: years[i] }) }),
         withTime && React.createElement(WheelCol, { items: hours, index: cur.hh, width: 40, onPick: (i) => emit({ ...cur, hh: i }) }),
         withTime && React.createElement(WheelCol, { items: mins, index: cur.mi, width: 40, onPick: (i) => emit({ ...cur, mi: i }) }));
+}
+// ── «Своя дата начала» в настройках: меняется только по кнопке «Сохранить» ──
+function SettingsStartDate({ lang, t, startMs, setStartMs }) {
+    const toLocal = (ms) => new Date(ms - new Date(ms).getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    const [draft, setDraft] = useState(toLocal(startMs));
+    const [saved, setSaved] = useState(false);
+    useEffect(() => { setDraft(toLocal(startMs)); }, [startMs]);
+    const parse = (v) => { const p = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v || ""); if (!p) return NaN; return new Date(+p[1], +p[2] - 1, +p[3], +p[4], +p[5]).getTime(); };
+    const ms = parse(draft);
+    const changed = !isNaN(ms) && Math.abs(ms - startMs) >= 60000;
+    const ok = changed && ms <= Date.now();
+    const save = () => { if (!ok) return; setStartMs(ms); setSaved(true); setTimeout(() => setSaved(false), 1800); };
+    return React.createElement("div", null,
+        otIsIOS()
+            ? React.createElement("input", { type: "datetime-local", max: toLocal(Date.now()), value: draft, onChange: e => { if (e.target.value) { setDraft(e.target.value); setSaved(false); } }, style: { ...S.input, width: "100%", padding: "9px 11px", fontSize: 14, colorScheme: C.scheme } })
+            : React.createElement(WheelDatePicker, { lang: lang, withTime: true, maxMs: Date.now(), value: draft, onChange: v => { setDraft(v); setSaved(false); } }),
+        (changed || saved) && React.createElement("button", { onClick: save, disabled: !ok, style: { ...S.btn, width: "100%", marginTop: 8, padding: "11px", fontSize: 14, opacity: ok || saved ? 1 : 0.5 } }, saved ? t.dailySaved : t.pfSave));
 }
 function StartDateScreen({ lang, onConfirm }) {
     const t = tr(lang);
@@ -7280,8 +7302,218 @@ const RECOVERY_LONG_AR = {
     selfharm: [[14, "تضعف الرغبة وتلتئم الأنسجة. الدفء والعناية بنفسك يساعدان."], [30, "تضعف الصلة بين الألم والارتياح — هناك طرق أخرى لعيش المشاعر."], [60, "تتطوّر مهارات تحمّل المشاعر الصعبة."], [90, "تأتي المحفّزات الاندفاعية أقل تكرارًا وأضعف."], [180, "يقترب الهدوء النفسي المستقر."], [365, "تقبّل الذات والقدرة على معالجة المشاعر بأمان. دعم المختص يثبّت النتيجة."]],
     custom: [[14, "الدماغ يعيد توصيل روابطه — تضعف الرغبة."], [30, "تتشكّل عادات صحية جديدة."], [90, "يتوازن الدوبامين — تعود الفرحة بالأشياء البسيطة."], [180, "تغييرات دائمة في التفكير والسلوك."], [365, "يترسّخ أسلوب الحياة الجديد."]],
 };
+const RECOVERY_KK = {
+    alcohol: [
+        [1, "Алкоголь қаннан толық шықты. Ұйқы безі инсулинді тұрақтандырады, қант деңгейі теңеледі."],
+        [2, "Бауыр ацетальдегидті шығарады. Иіс пен дәм сезу өткірленеді — жүйке ұштары қайта тіріледі."],
+        [3, "Негізгі улар шығарылды, дене ауыруы басылуда. Ми терең ұйқыны қайта іске қосады."],
+        [5, "Асқазан-ішек жолының шырышты қабаты жазылады, B тобындағы дәрумендер қайта сіңеді — бұл жүйке жүйесінің отыны."],
+        [7, "Ми тіндерінің ісінуі қайтады — «тұман» сейіледі. Бауыр жиналған майды ыдырата бастайды."],
+        [9, "Кортизол қалыпқа түседі. Тыныштықтағы тамыр соғысы баяулайды, дене физикалық тұрғыда тынышталады."],
+        [11, "ГАМК рецепторлары сезімталдығын қалпына келтіреді. Есте сақтау мен зейін жақсарады, мазасыздық әлсірейді."],
+        [14, "Ми аман қалу режимінен шықты: сұр заттың қалпына келуі басталады, REM-ұйқы қалыпқа келеді."],
+        [17, "Қандағы қабыну күрт төмендейді. Қан айналымы жақсарады, беттегі қан тамырлары торы бозарады."],
+        [21, "Дофамин рецепторлары сезімталдығын қалпына келтіреді — қарапайым нәрселер қайта қуантады. Қан қысымы қалыпты."],
+        [25, "Иммунитет 100% жұмыс істейді: ақ қан жасушаларының түзілуі артады."],
+        [28, "Бауырдағы май 15%-ға азайды. Ми қыртысы қалыңдайды, көңіл күй тұрақтырақ."],
+        [35, "Маңдай алды қыртысы — ерік пен өзін-өзі бақылау нығаяды. Импульстарға «жоқ» деу оңайырақ."],
+        [45, "Жүрек ырғағының құбылмалылығы қалыпқа келеді, қан қысымы тәуліктік ырғақты сақтайды."],
+        [60, "Дофамин рецепторларының тығыздығы қалыпқа жақын — өмірдің «сұрғылттығы» кетеді."],
+        [75, "Қабыну белгілері ішпейтін адамдағыдай. Төзімділік артады, бұлшықет қысылуы кетеді."],
+        [90, "Бауыр ферменттері (АЛТ, АСТ, ГГТ) қалыпқа келеді. МРТ сұр заттың өскенін көрсетеді."],
+        [180, "Нейропластиканың шыңы: есте сақтау мен ойлау жылдамдығы жас нормасында. Ескі триггерлер әлсірейді."],
+        [220, "Ғылыми межелік: мидың 34 негізгі аймағының 25-інде қыртыс қалыңдығы қалпына келеді."],
+        [365, "Бір жыл! Инфаркт пен инсульт қаупі 40–50%-ға төмендеді. Ұйқы безі глюкозаны бақылауды қалпына келтірді."],
+        [548, "Стресс осі (ГГБО) қайта бапталды — дене күнделікті жағдайларға «соғыс не қаш» деп жауап бермейді."],
+        [730, "Екі жыл: ойлаудың икемділігі ешқашан ішпеген адамдағыдай. Айықтық үйреншікті әдетке айналды."],
+        [1095, "Үш жыл: асқазан-ішек жолы мен бауыр тіндері жаңарды, онкологиялық қауіп тұрақты төмендеуде."],
+        [1825, "Бес жыл: ағза толыққа жуық қалпына келді. Жүрек пен қан тамырларының денсаулығы ішпейтін адамның деңгейінде."],
+    ],
+    drugs: [
+        [1, "Вегетативтік ақаудың шыңы: жүрекке жүктеме түсуде, дене заттардың қалдығын шығаруда."],
+        [2, "Дофаминнің күрт жетіспеуі: енжарлық, қалтырау, сүйек сырқырауы — ми үйреншікті ынталандыруды іздейді."],
+        [3, "Дене ауыруының шыңы: ашушаңдық пен бас ауруы ең жоғары деңгейде — әрі қарай жеңілдейді."],
+        [4, "Жедел улану басылуда: сана ашылады, ауырсыну шегінеді."],
+        [5, "Орталық жүйке жүйесі қалпына келу кезіндегі жалпы әлсіздік."],
+        [6, "Қан қысымы мен жүрек ырғағы тұрақтала бастайды."],
+        [7, "Детокстың жедел кезеңі аяқталды — тұрақты көңіл күйдің алғашқы белгілері."],
+    ],
+    gambling: [
+        [1, "Адреналин дауылы мен ұтылғанды қайтару ойлары — стресс реакциясының шыңы."],
+        [2, "Дофамин аштығы: мазасыздық, қол дірілі, әбігерлік."],
+        [3, "Ашу-ыза және «соңғы рет ойнап көрейін» деген ішкі саудаласу."],
+        [4, "Үрей басылады — болған жағдайдың ауқымын салқын қанмен түсіну келеді."],
+        [5, "Депрессиялық кезең: ми жоғалтқан уақыт пен ақшаны түсінеді."],
+        [6, "Кортизол төмендейді, дене физикалық тұрғыда тынышталады."],
+        [7, "Артық адреналин биологиялық нормаға дейін түседі."],
+    ],
+    gaming: [
+        [1, "FOMO мен ойынға кіруге құмарлық — «саусақтардың қышуы»."],
+        [2, "Ашушаңдық, уақыт баяу жылжиды."],
+        [3, "Енжарлық: шынайы әлем сұрғылт көрінеді — ми дофаминді қайта баптауда."],
+        [4, "Дофамин деңгейі теңеле бастайды, құмарлық әлсірейді."],
+        [5, "Көздің шаршауы азаяды, бас ауруы сиреді."],
+        [6, "Экранның көк жарығынсыз ұйқы жақсарады."],
+        [7, "Тәуліктік ырғақтар қалпына келеді, сезім мүшелерінің шамадан тыс жүктемесі басылады."],
+    ],
+    food: [
+        [1, "Инсулин әткеншегі мен қанттың секіруі — стресті тамақпен басу құмарлығы."],
+        [2, "«Калориялы дофаминнің» азаюы, тұрақты ашушаңдық."],
+        [3, "Триггер тағамдарға құмарлықтың шыңы — ми көмірсу талап етеді."],
+        [4, "Ісіну кетеді: дене ұсталып тұрған суды шығарады."],
+        [5, "Аштық гормоны — грелинге сезімталдық қалпына келеді."],
+        [6, "Асқазан-ішек жолы жақсы жұмыс істейді, кебу азаяды."],
+        [7, "Жалған компульсивті аштық шегінеді, тәбет тұрақталады."],
+    ],
+    porn: [
+        [1, "Миға жабысқан бейнелер мен механикалық итермелеу — әдет триггер іздейді."],
+        [2, "Мазасыздық, көңіл күйдің құбылуы, құмарлықтың шыңы."],
+        [3, "Сезімдер мен либидо уақытша солғындауы мүмкін."],
+        [4, "Ми үйреншікті шамадан тыс ынталандыру мөлшерін талап етеді."],
+        [5, "Көру қыртысының шамадан тыс ынталануы төмендейді."],
+        [6, "Ой анықталады, «ми тұманы» сейіледі."],
+        [7, "Тестостерон артады, көңіл-күй тұрақталады."],
+    ],
+    tobacco: [
+        [1, "Көмірқышқыл газы кетеді, қандағы оттегі артады — құмарлықтың шыңы."],
+        [2, "Дәм мен иіс сезу өткірленеді, ашушаңдық."],
+        [3, "Никотин толық шығарылды — ауырсыну мен бас ауруының шыңы."],
+        [4, "Қан тамырлары босаңсиды, оттегіден аздап бас айналуы мүмкін."],
+        [5, "Бронхтар тазарады — қақырықты жөтел пайда болуы мүмкін."],
+        [6, "Құмарлық ұстамалары сирек әрі әлсіз."],
+        [7, "Негізгі улар шығарылды, дәм сезу жарқынырақ."],
+    ],
+    procrastination: [
+        [1, "Таза парақтан қорқу, әлеуметтік желіге қашқысы келу."],
+        [2, "Зейін қоюға тырысқанда жеңіл ойын-сауыққа деген құмарлық."],
+        [3, "Мидың терең шоғырлануға қатты қарсылығы."],
+        [4, "Зейінді іске ұстап тұрудың алғашқы белгілері."],
+        [5, "Кінә сезімі азаяды — іс орнынан қозғалды."],
+        [6, "«Әрекет → қанағат» байланысы нығаяды."],
+        [7, "Тұрақты жаттығудың арқасында қателесуден қорқу әлсірейді."],
+    ],
+    social: [
+        [1, "«Елес қоңырау»: қол телефонға өзінен-өзі созылады."],
+        [2, "Дофамин жетіспеуі: зерігу мен мазасыздық."],
+        [3, "FOMO — жаңалықтар мен хабарламаларды өткізіп алудан қорқу."],
+        [4, "Ми шексіз лентаның жоқтығына үйренеді."],
+        [5, "Көздің шамадан тыс жүктемесі мен шаршауы азаяды."],
+        [6, "Зейін шынайы нәрседе 5 минуттан ұзақ тұрады."],
+        [7, "Шоғырлану қалыпқа келеді, бастағы шу басылады."],
+    ],
+    codependency: [
+        [1, "Арақашықтықтағы үрей, бәрін бақылағысы келу."],
+        [2, "Тұрақты байланыссыз бостық пен жалғыздық."],
+        [3, "Жоғары стресс реакциясы, басқа адам туралы мазалайтын ойлар."],
+        [4, "Серіктеске деген жедел адреналин реакциясы басылады."],
+        [5, "Өз жеке шекараларыңның алғашқы белгілері."],
+        [6, "Өзіңнің шынайы қажеттіліктеріңді түсіну."],
+        [7, "Эмоциялық жарылыстар сирек әрі әлсіз."],
+    ],
+    shopping: [
+        [1, "Стресті сатып алумен басу итермелеуі — «қолдың қышуы»."],
+        [2, "Жаңа заттарға дофамин аштығы, бос себеттен мазасыздық."],
+        [3, "Ми ақтау іздейді: «пайдалы», «жеңілдік»."],
+        [4, "Шопингтің лезде қуанышынсыз ашушаңдық."],
+        [5, "Назар сатып алу іздеуден бар нәрсеге ауысады."],
+        [6, "Витриналар мен акциялардан толқу азаяды."],
+        [7, "Импульсивті құмарлық басылады, үнемделген ақша жиналады."],
+    ],
+    work: [
+        [1, "Тоқтауға тырысқанда мазасыздық, демалғаның үшін кінә."],
+        [2, "Бос уақытта мерзімдер туралы мазалайтын ойлар."],
+        [3, "Дене босаңсымайды: қысылу, тамыр соғысының жиілеуі."],
+        [4, "Жиналған шаршау басады — дене кернеуді түсіреді."],
+        [5, "Стресс азайған сайын ұйқы тереңдейді."],
+        [6, "Кортизол мен адреналин төмендейді."],
+        [7, "Үй шаруасы мен хоббиге ынта пайда болады."],
+    ],
+    debt: [
+        [1, "Ақшасыз қалудан қорқу мен жаңа қарыз алу итермелеуі."],
+        [2, "Эмоциялық дауыл, қарызды немен жабу керегін іздеу."],
+        [3, "Шындықты қабылдау, депрессиялық кезең."],
+        [4, "Үрей шегінеді, ми ақылға қонымды шешім іздейді."],
+        [5, "Қарыз туралы ойларға адреналин реакциясы әлсірейді."],
+        [6, "«Енді несиеге кірмеймін» деген шешім нығаяды."],
+        [7, "Үрей азаяды — нақты жазбаша жоспар бар."],
+    ],
+    cyberstalking: [
+        [1, "Біреудің парақшасына «бір қарап шығуға» кіру итермелеуі."],
+        [2, "Адреналин мен сол адам туралы жаңа ақпаратқа құмарлық."],
+        [3, "Басқаның өміріне тұйықталу, мазасыздық."],
+        [4, "Іздеуге автоматты түрде ұмтылу сөнеді."],
+        [5, "Назар өз мақсаттарыңа ауысады."],
+        [6, "Күдікшілдік пен өзіңді басқалардың суреттерімен салыстыру азаяды."],
+        [7, "Байланысты тақырыптарға триггер реакциясы әлсірейді."],
+    ],
+    sugar: [
+        [1, "Қантты тастау синдромы: бас ауруы, әлсіздік, ашушаңдық."],
+        [2, "Көмірсуға құмарлықтың шыңы — тәттіге және ұннан жасалған тағамға құштарлық."],
+        [3, "Зат алмасу қайта құрылуы кезіндегі көңіл күйдің құбылуы."],
+        [4, "Глюкоза мен инсулин тұрақталады — «әткеншек» кетеді."],
+        [5, "Түстен кейінгі ұйқышылдық пен бастағы тұман жоғалады."],
+        [6, "Ісіну басылады: қант ұстап тұрған су кетеді."],
+        [7, "Инсулин деңгейі теңеледі, тәбет әлсірейді."],
+    ],
+    series: [
+        [1, "«Шыңылдаған тыныштық» мазалайды — фондық шу жетіспейді."],
+        [2, "Тамақтанғанда және іс істегенде фондық видео қосқысы келу."],
+        [3, "Зерігу: ми баяу ақпарат көздеріне қарсылық көрсетеді."],
+        [4, "Ұйықтап кету жеңілдейді — мелатонин қалпына келеді."],
+        [5, "Зейін қарапайым үй шаруаларында ұсталып тұрады."],
+        [6, "Көру мен есту жүктемесі азаяды."],
+        [7, "Тәуліктік ырғақтар мен биологиялық сағат қалпына келеді."],
+    ],
+    anger: [
+        [1, "Ішкі кернеу, «бәрі ашуландырады», бұрқ ете түсуге сылтау іздеу."],
+        [2, "Адреналин жарылыстары, қысылған жақ, жиі тыныс алу."],
+        [3, "Созылмалы бұлшықет кернеуінен шаршау."],
+        [4, "Тітіркендіргіш пен реакция арасында шағын үзіліс пайда болады."],
+        [5, "Маңдай алды қыртысының тежеу қызметі нығаяды."],
+        [6, "Фондық норадреналин төмендейді."],
+        [7, "Себепсіз ашушаңдық пен ашу сиреді."],
+    ],
+    selfharm: [
+        [1, "Эмоция қатты қызып тұр. Сен мұны жалғыз көтеруге міндетті емессің — жаныңда қолдауға дайын адамдар бар."],
+        [2, "Ауыр эмоциялар алғашқы күндері ең өткір болады — және олар өтеді. Өзіңе қауіпсіздік пен жылулық сыйла."],
+        [3, "Қазір көңіл күйдің әткеншегі — қалыпты жағдай. Өзіңе жұмсақ болу кез келген ережеден маңызды."],
+        [4, "Стресс шыңынан кейін әлсіздік келеді — демалыс пен өзіңе қамқорлық күш береді."],
+        [5, "Дене жазыла бастайды. Өзіңе зиян келтірмеген әр күн — тұрақтылыққа қадам."],
+        [6, "Жедел дағдарыс жағдайы бірте-бірте шегінеді."],
+        [7, "Итермелеу әлсірейді. Қиын болса — маманға немесе қолдау желісіне хабарлас: бұл әлсіздік емес, күш."],
+    ],
+    custom: [
+        [1, "Бірінші күн — ең батыл қадам. Дене қайта құрылуды бастап кетті."],
+        [2, "Ми үйреншікті ынталандыруды іздейді — құмарлық күшті, бірақ мәңгі емес."],
+        [3, "Ауырудың шыңы: әрі қарай жеңілдейді."],
+        [4, "Жедел кезең басылуда, сана ашылады."],
+        [5, "Жүйке жүйесі қалпына келеді, күш оралады."],
+        [6, "Кортизол төмендейді — дене физикалық тұрғыда тынышталады."],
+        [7, "Тұрақты көңіл күй мен бақылаудың алғашқы белгілері."],
+    ],
+};
+const RECOVERY_LONG_KK = {
+    drugs: [[14, "Нейрорецепторлардың қалпына келуі басталды, «ми тұманы» әлсірейді."], [30, "Мидың нейропластикалық қалпына келуінің басы."], [60, "D2-дофамин рецепторларының тығыздығы арта бастайды."], [90, "Ми биохимиясының қалыпқа келу межесі."], [180, "Жұмыс жады мен логика жақсарады."], [365, "Дофамин жүйесінің терең қайта сезімталдануы."]],
+    gambling: [[14, "Мазалайтын ойлар әлсірейді, ұйқы қалыпқа келеді."], [30, "Дофамин жүйесі қайта бапталады."], [60, "Тәуекелді ақылмен бағалау қайта оралады."], [90, "Сыртқы триггерлерге сезімталдық төмендейді."], [180, "Қаржылық ойлау тұрақталады."], [365, "Құндылықтардың толық қайта құрылуы."]],
+    gaming: [[14, "Зейін шынайы тітіркендіргіштерге қайта оралады."], [30, "Хобби мен күнделікті тұрмысқа қызығушылық пайда болады."], [60, "Зейінді ұстап тұру көлемі артады."], [90, "Импульсивтілік азаяды, тірі қарым-қатынасқа құштарлық артады."], [180, "Таным саласы қайта бапталады."], [365, "Зейін мен ойлаудың толық қайта құрылуы."]],
+    food: [[14, "Лептиннің реттелуі қалпына келеді."], [30, "Көңіл күй теңеледі."], [60, "Тамақ жұбаныш емес, отын ретінде қабылданады."], [90, "Зат алмасудың физиологиялық қалыпқа келуі."], [180, "Тұрақты ремиссия, интуитивті тамақтану."], [365, "Тамақпен тұрақты сау қарым-қатынас."]],
+    porn: [[14, "Сезімталдықтың төмендеуі кетеді — аса күшті ынталандыру қажет емес."], [30, "Эмпатия қабілеті қалпына келеді."], [60, "Эректильді дисфункция (PIED) азаяды."], [90, "Нейрондық байланыстардың толық қайта жүктелуі."], [180, "Нейрондық жолдардың қалпына келуі."], [365, "Тұрақты қалпына келу, сау жақындық."]],
+    tobacco: [[14, "Қанның микроайналымы қалпына келеді."], [30, "Өкпе тазарады, төзімділік артады."], [60, "Психологиялық құмарлық ең төменгі деңгейге дейін әлсірейді."], [90, "Өкпе қызметі 10–15%-ға артады."], [180, "Тұрақты тыныс пен төзімділік."], [365, "Инфаркт қаупі екі есе төмендейді."]],
+    procrastination: [[14, "«Әрекет → аяқтау» көпірі қалыптасады."], [30, "Маңдай алды қыртысындағы байланыстар нығаяды."], [60, "Қарсылықсыз ағынға кіру."], [90, "Кортизолдың созылмалы деңгейі төмендейді."], [180, "Сау жұмыс әдеттері автоматты түрге енеді."], [365, "Жұмыс пен демалыс арасындағы нақты шекаралар."]],
+    social: [[14, "Мидың енжар режимдегі желісі қалпына келеді."], [30, "Мазасыздық деңгейі төмендейді."], [60, "Терең шоғырлану қабілеті жақсарады."], [90, "Құрылғыларды саналы пайдалану."], [180, "Ой анықтығы, «осы жерде және қазір» болу."], [365, "Телефон — рефлекс емес, құрал."]],
+    codependency: [[14, "Бадамша бездің реактивтілігі төмендейді."], [30, "Дербестік пен өз бетіңше шешім қабылдау оралады."], [60, "«Құтқарушы» мен шектен тыс бақылау үлгісі сөнеді."], [90, "Бақылау локусы ішкіге ауысады."], [180, "Тең әрі сау қарым-қатынасқа қабілет пайда болады."], [365, "Өзара құрмет пен дербестікке негізделген байланыстар."]],
+    shopping: [[14, "«Қалаймын немесе керек» бағалауы іске қосылады."], [30, "Үнемдеу қуанышы жұмсау қуанышынан асады."], [60, "Саналы бюджет дағдысы қалыптасады."], [90, "Ақылға қонымды тұтыну бекиді."], [180, "Қаржылық тұрақтылық пен қауіпсіздік."], [365, "Саналы минимализм қалыпты нормаға айналды."]],
+    work: [[14, "Қалпына келу қалыпқа түседі, 8 сағат ұйқы."], [30, "Жұмыс эмоциялардан қашу жолы болудан қалады."], [60, "Жеке өмір мен отбасына қызығушылық оралады."], [90, "Жұмыс пен өмір арасында сау тепе-теңдік қалыптасады."], [180, "Күйіп кетуден қалпына келу."], [365, "Өнімділік пен демалыс тепе-теңдігі бекіді."]],
+    debt: [[14, "Аман қалу режимінен жоспарлауға көшу."], [30, "Қаржылық стрестің алғашқы айқын төмендеуі."], [60, "«Қалтаңа қарай өмір сүру» үлгісі нығаяды."], [90, "Ақша ағындарын толық бақылау."], [180, "Қаржылық тәуелсіздік қалпына келеді."], [365, "Өз тапқан қаражатыңмен өмір сүру."]],
+    cyberstalking: [[14, "Ақпарат іздеу әдеті сөнеді."], [30, "Ойлау өз мақсаттарыңа ауысады."], [60, "Сол адам аталғанда тамыр соғысы секірмейді."], [90, "Бақылаудың мазалайтын үлгісі бұзылады."], [180, "Эмоциялық еркіндік пен тәуелсіздік."], [365, "Күш-қуат — тек өз өміріңе."]],
+    sugar: [[14, "Дәм сезу рецепторлары қалпына келеді."], [30, "Жүйелі қабыну азаяды, тері тазарады."], [60, "Ішек микробиотасы сау жаққа өзгереді."], [90, "Табиғи дәмдерге дофамин реакциясы қалыпты."], [180, "Метаболикалық икемділік артады."], [365, "Зауыттық өнімдерсіз тұрақты тамақтану."]],
+    series: [[14, "Оқу мен зейін қою қабілеті оралады."], [30, "Контентсіз ішкі диалог қалпына келеді."], [60, "Жеке өнімділік пен белсенділік артады."], [90, "Контентті «бой алдырмай» сау тұтыну."], [180, "Өмір салты енжардан жасампаз түрге ауысады."], [365, "Өз нәтижеңді жасауға назар."]],
+    anger: [[14, "Ашу жарылыстары сиреді."], [30, "Саналылықтың нейрондық жолдары нығаяды."], [60, "Агрессияны қорғаныс ретінде қолдану әдеті кетеді."], [90, "Эмоциялық кемелдік, сындарлы диалог."], [180, "Бадамша бездің реактивтілігі қайта бапталады."], [365, "Стресс кезіндегі ішкі тыныштық."]],
+    selfharm: [[14, "Итермелеу әлсірейді, тіндер жазылады. Жылулық пен өзіңе ұқыпты қарау көмектеседі."], [30, "«Ауырсыну = жеңілдену» байланысы әлсірейді — эмоцияны бастан кешірудің басқа жолдары бар."], [60, "Ауыр сезімдерді бастан кешіру дағдылары дамиды."], [90, "Импульсивті триггерлер сирек әрі әлсіз."], [180, "Тұрақты психологиялық ремиссия жақындай түседі."], [365, "Өзіңді қабылдау және эмоцияларды зиянсыз бастан кешіре білу. Маманның қолдауы нәтижені бекітеді."]],
+    custom: [[14, "Ми байланыстарын қайта құрады — құмарлық әлсірейді."], [30, "Жаңа сау әдеттер қалыптасады."], [90, "Дофамин теңеледі — қарапайым нәрселерден қуаныш оралады."], [180, "Ойлау мен мінез-құлықтағы тұрақты өзгерістер."], [365, "Жаңа өмір салты бекіді."]],
+};
 // банки фактов по языкам; язык без банка просто не показывает факты (без подмены чужим языком)
-const RECOVERY_BANKS = { hi: [RECOVERY_HI, RECOVERY_LONG_HI], de: [RECOVERY_DE, RECOVERY_LONG_DE], fr: [RECOVERY_FR, RECOVERY_LONG_FR], ru: [RECOVERY_RU, RECOVERY_LONG_RU], en: [RECOVERY_EN, RECOVERY_LONG_EN], ar: [RECOVERY_AR, RECOVERY_LONG_AR] };
+const RECOVERY_BANKS = { kk: [RECOVERY_KK, RECOVERY_LONG_KK], hi: [RECOVERY_HI, RECOVERY_LONG_HI], de: [RECOVERY_DE, RECOVERY_LONG_DE], fr: [RECOVERY_FR, RECOVERY_LONG_FR], ru: [RECOVERY_RU, RECOVERY_LONG_RU], en: [RECOVERY_EN, RECOVERY_LONG_EN], ar: [RECOVERY_AR, RECOVERY_LONG_AR] };
 function hasRecoveryFacts(lang) { return !!RECOVERY_BANKS[lang]; }
 function recoveryList(id, lang) {
     const bank = RECOVERY_BANKS[lang];
@@ -8091,6 +8323,7 @@ function OtAdSlot({ id }) {
                 if (OT_SLOTS[id]) OT_SLOTS[id].failed = false;
             } else if (data.ev === "fail" || data.ev === "error") {
                 if (OT_SLOTS[id]) OT_SLOTS[id].failed = true;
+                try { const r = window.__OT_INLINE && window.__OT_INLINE.hide({ id: id }); r && r.catch && r.catch(function () { }); } catch (e) { }
                 setDiagnostic(data.message || (
                     data.ev === "fail" ? "AdMob не загрузил рекламу" : "Ошибка нативного модуля"
                 ));
@@ -8115,12 +8348,13 @@ function OtAdSlot({ id }) {
     }, [on, id]);
 
     if (!on) return null;
+    if (diagnostic) { try { console.warn("[OtAds]", id, diagnostic); } catch (e) { } }
 
     return React.createElement(
         "div",
         {
             ref: ref,
-            style: {
+            style: diagnostic ? { height: 0, margin: 0, overflow: "hidden" } : {
                 height: 50,
                 margin: "4px 0 14px",
                 borderRadius: 8,
@@ -8133,7 +8367,7 @@ function OtAdSlot({ id }) {
                 overflowWrap: "anywhere"
             }
         },
-        diagnostic ? "ОШИБКА БАННЕРА: " + diagnostic : null
+        null
     );
 }
 // iOS сейчас на проверке в App Store: всё новое включаем только на Android и в браузере
@@ -9275,7 +9509,18 @@ function InviteScreen({ lang, onClose, bonusDays, invites, premiumUntil, onUseDa
     // код, который этот пользователь показывает тому, кто его позвал
     const myConfirmCode = invitedBy ? otMakeCode(invitedBy, myRef) : "";
     const isRu = String(lang || "ru").slice(0, 2) === "ru";
-    const L = isRu ? {
+    const L = lang === "kk" ? {
+        hasCode: "СЕНІҢ РАСТАУ КОДЫҢ",
+        hasCodeHint: "Бұл кодты сені шақырған адамға жібер — оған 3 күн қосылады.",
+        copy: "Кодты көшіру", copied: "Көшірілді",
+        enterTitle: "ДОСЫҢ ОРНАТЫП ҚОЙДЫ МА?",
+        enterHint: "Одан осы экрандағы растау кодын сұрап, осында енгіз.",
+        placeholder: "7 таңбалы код",
+        apply: "3 күн алу",
+        okText: "Дайын! 3 күн қосылды.",
+        badText: "Код сәйкес келмейді. Оның сенің шақыруыңнан екенін тексер.",
+        dupText: "Бұл код бұрын есептелген.",
+    } : isRu ? {
         hasCode: "ТВОЙ КОД ПОДТВЕРЖДЕНИЯ",
         hasCodeHint: "Отправь этот код тому, кто тебя позвал — ему начислятся 3 дня.",
         copy: "Скопировать код", copied: "Скопировано",
@@ -13102,11 +13347,7 @@ function ProfileScreen({ lang, initial, onSave, onClose }) {
                 React.createElement("div", { style: { fontSize: 19, fontWeight: 800, color: C.text } }, t.pfTitle),
                 React.createElement("button", { onClick: onClose, style: { background: "none", border: "none", color: C.muted, fontSize: 13, fontWeight: 700, cursor: "pointer" } }, t.stClose)),
             React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 18 } },
-                React.createElement(AvatarRing, { avatar: avatar, name: name, days: days, size: 78, onClick: () => fileRef.current && fileRef.current.click() }),
-                React.createElement("input", { ref: fileRef, type: "file", accept: "image/*", onChange: pickFile, style: { display: "none" } }),
-                React.createElement("button", { onClick: () => fileRef.current && fileRef.current.click(), style: { marginTop: 10, background: "none", border: "none", color: C.amber, fontSize: 13, fontWeight: 700, cursor: "pointer" } },
-                    "\uD83D\uDCF7 ",
-                    t.pfPhoto)),
+                React.createElement(AvatarRing, { avatar: null, name: name, days: days, size: 78 })),
             React.createElement("div", { style: { fontSize: 12, color: C.muted, marginBottom: 6 } }, t.pfName),
             React.createElement("input", { value: name, onChange: e => setName(e.target.value), style: { ...S.input, marginBottom: 14 } }),
             React.createElement("div", { style: { fontSize: 12, color: C.muted, marginBottom: 6 } }, t.genderTitle),
@@ -13310,6 +13551,8 @@ function saveStore(data) {
     }
 }
 const SAVED = loadStore();
+// фото-аватар убран: старое фото удаляем, чтобы оно не занимало место в хранилище
+if (SAVED.avatar) { SAVED.avatar = null; saveStore(SAVED); }
 // Данных нет, а копия есть → восстанавливаем и перезапускаем страницу один раз
 (function restoreFromBackup() {
     if (SAVED.lang) {
@@ -13925,7 +14168,7 @@ function App() {
     return (React.createElement("div", { style: shellStyle },
         React.createElement("div", { style: { ...S.topBar, justifyContent: "space-between" } },
             tab === "home" && (React.createElement("button", { onClick: () => setShowProfile(true), style: { display: "flex", alignItems: "center", gap: 11, background: "none", border: "none", padding: 0, cursor: "pointer", minWidth: 0 } },
-                React.createElement(AvatarRing, { avatar: avatar, name: name, days: daysElapsed, size: 44 }),
+                React.createElement(AvatarRing, { avatar: null, name: name, days: daysElapsed, size: 44 }),
                 React.createElement("div", { style: { textAlign: "left", minWidth: 0 } },
                     React.createElement("div", { style: { fontSize: 17, fontWeight: 800, color: C.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } },
                         t.greeting,
@@ -14160,9 +14403,7 @@ function App() {
                     React.createElement("span", { style: { flex: 1 } },
                         React.createElement("span", { style: { display: "block", fontSize: 15, fontWeight: 600, color: C.text } }, t.stMyDate),
                         React.createElement("span", { style: { display: "block", fontSize: 11.5, color: C.muted, marginTop: 3, marginBottom: 8 } }, t.stMyDateSub),
-                        (otIsIOS() ? React.createElement("input", { type: "datetime-local", max: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), value: new Date(startMs - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), onChange: e => { const v = e.target.value; if (!v)
-                                return; const d = new Date(v); if (!isNaN(d.getTime()) && d.getTime() <= Date.now())
-                                setStartMs(d.getTime()); }, style: { ...S.input, width: "100%", padding: "9px 11px", fontSize: 14, colorScheme: C.scheme } }) : React.createElement(WheelDatePicker, { lang: lang, withTime: true, maxMs: Date.now(), value: new Date(startMs - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16), onChange: v => { const p = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(v); if (!p) return; const d = new Date(+p[1], +p[2] - 1, +p[3], +p[4], +p[5]); if (!isNaN(d.getTime()) && d.getTime() <= Date.now() && d.getTime() !== startMs) setStartMs(d.getTime()); } })))),
+                        React.createElement(SettingsStartDate, { lang: lang, t: t, startMs: startMs, setStartMs: setStartMs }))),
 
                 React.createElement("div", { style: { ...stRow, flexDirection: "column", alignItems: "stretch", gap: 10, cursor: "default" } },
                     React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } },
